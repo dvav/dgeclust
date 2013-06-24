@@ -60,8 +60,8 @@ def generateData(N = 1000, M = 2, L = 4, ):
 
 ################################################################################
 
-def rParams(rate):    
-    return st.gamma_shape_scale(rate)
+def rParams(rate, shape, scale):    
+    return st.gamma_shape_scale(rate, shape, scale)
     
 ################################################################################
     
