@@ -8,19 +8,18 @@ Created on Apr 20, 2013
 import numpy as np
 import stats as st
 import utils as ut
-import stats as st
 
 ################################################################################
 
-_GAMMA_SHAPE = 1.
+_GAMMA_SHAPE = 0.8
 
 ################################################################################
         
 def rParams(x0, mean, var, scale):
-    alpha = x0[:, 0]
+    phi   = x0[:, 0]
     beta  = x0[:, 1] 
 
-    scale = st.gamma_scale(alpha, shape = _GAMMA_SHAPE)	
+    scale = st.gamma_scale(phi, shape = _GAMMA_SHAPE)	
     mean, var = st.normal_mean_var(beta)
     
     return mean, var, scale
@@ -28,10 +27,10 @@ def rParams(x0, mean, var, scale):
 ################################################################################
     
 def rPrior(N, mean, var, scale):    
-    alpha = st.gamma(shape = _GAMMA_SHAPE, scale = scale, N = (N, 1)) 
+    phi   = st.gamma(shape = _GAMMA_SHAPE, scale = scale, N = (N, 1)) 
     beta  = st.normal(mean, var, (N, 1))
     
-    return np.hstack((alpha, beta))
+    return np.hstack((phi, beta))
     
 ################################################################################
    
@@ -55,9 +54,11 @@ def rPost(x0, idx, C, Z, data, *pars):
 def dLogLik(X0, counts, exposure):
     X0 = np.atleast_2d(X0)
     
-    alpha = X0[:,0] 
-    beta  = X0[:,1]
+    phi  = X0[:,0] 
+    beta = X0[:,1]
     
+    alpha = 1. / phi
+
     mu = exposure * np.exp(beta)
     p  = alpha / (alpha + mu)
     
@@ -66,12 +67,12 @@ def dLogLik(X0, counts, exposure):
 ################################################################################
         
 def _dLogPrior(x0, mean, var, scale):
-    alpha, beta = x0
+    phi, beta = x0
     
-    logprior_alpha = st.dLogGamma(alpha, shape = _GAMMA_SHAPE, scale = scale)
+    logprior_phi   = st.dLogGamma(phi, shape = _GAMMA_SHAPE, scale = scale)
     logprior_beta  = st.dLogNormal(beta, mean, var)
     
-    return logprior_alpha + logprior_beta 
+    return logprior_phi + logprior_beta 
     
 ################################################################################
     

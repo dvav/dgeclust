@@ -61,8 +61,9 @@ def plotModel(X0, c, z, exposure, model = 'NegBinomial', xmin = -1., xmax = 12.,
         mu   = np.exp(beta) * exposure
         Y    = np.exp(x) * np.exp(st.dLogPoisson(np.exp(x), mu))
     else:
-        alpha = X0[Ki, 0]
+        phi   = X0[Ki, 0]
         beta  = X0[Ki, 1]       
+        alpha = 1. / phi
         mu    = np.exp(beta) * exposure
         p     = alpha /  (alpha + mu)
         Y     = np.exp(x) * np.exp(st.dLogNegBinomial(np.exp(x), alpha, p))
