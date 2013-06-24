@@ -118,24 +118,27 @@ def gamma_scale(data, shape = 2., a0 = 2., b0 = 1.):
 ################################################################################
 
 def gamma_shape_scale(data, shape, scale, lp0 = 0., q0 = 0., r0 = 0., s0 = 0.):
+    ## compute rate
+    rate = 1. / scale
+    
     ## compute log(p), q, r, s
     lp = lp0 + np.log(data).sum()
     q  = q0  + data.sum() 
     r  = r0  + data.size
     s  = s0  + data.size
-    
+        
     ## proposals    
     shape_ = shape * np.exp(0.01 * np.random.randn())
-    scale_ = scale * np.exp(0.01 * np.random.randn())
+    rate_  = rate  * np.exp(0.01 * np.random.randn())
     
     ## compute log-densities
-    ll  = (shape  - 1.) * lp - q / scale  - r * sp.gammaln(shape)  - shape  * s * np.log(scale) 
-    ll_ = (shape_ - 1.) * lp - q / scale_ - r * sp.gammaln(shape_) - shape_ * s * np.log(scale_)
+    ll  = (shape  - 1.) * lp - rate  * q - r * sp.gammaln(shape)  + shape  * s * np.log(rate) 
+    ll_ = (shape_ - 1.) * lp - rate_ * q - r * sp.gammaln(shape_) + shape_ * s * np.log(rate_)
 
     ## make Metropolis step     
     if ( ll_ > ll ) or ( np.random.rand() < np.exp(ll_ - ll) ):
         shape = shape_
-        scale = scale_
+        scale = 1. / rate_
     
     ## return
     return shape, scale
