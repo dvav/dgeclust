@@ -10,24 +10,20 @@ import stats as st
 import utils as ut
 
 ################################################################################
-
-_GAMMA_SHAPE = 0.8
-
-################################################################################
         
-def rParams(x0, mean, var, scale):
+def rParams(x0, mean, var, shape, scale):
     phi   = x0[:, 0]
     beta  = x0[:, 1] 
 
-    scale = st.gamma_scale(phi, shape = _GAMMA_SHAPE)	
-    mean, var = st.normal_mean_var(beta)
+    shape, scale = st.gamma_shape_scale(phi, shape, scale)	
+    mean, var    = st.normal_mean_var(beta)
     
-    return mean, var, scale
+    return mean, var, shape, scale
 
 ################################################################################
     
-def rPrior(N, mean, var, scale):    
-    phi   = st.gamma(shape = _GAMMA_SHAPE, scale = scale, N = (N, 1)) 
+def rPrior(N, mean, var, shape, scale):    
+    phi   = st.gamma(shape, scale, (N, 1)) 
     beta  = st.normal(mean, var, (N, 1))
     
     return np.hstack((phi, beta))
@@ -66,10 +62,10 @@ def dLogLik(X0, counts, exposure):
     
 ################################################################################
         
-def _dLogPrior(x0, mean, var, scale):
+def _dLogPrior(x0, mean, var, shape, scale):
     phi, beta = x0
     
-    logprior_phi   = st.dLogGamma(phi, shape = _GAMMA_SHAPE, scale = scale)
+    logprior_phi   = st.dLogGamma(phi, shape, scale)
     logprior_beta  = st.dLogNormal(beta, mean, var)
     
     return logprior_phi + logprior_beta 
