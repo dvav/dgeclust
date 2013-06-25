@@ -57,36 +57,36 @@ class Recorder(object):
         
         ## write X0
         with open(self.fX0, 'w') as f: 
-            np.savetxt(f, hdp.X0, fmt='%f')
+            np.savetxt(f, hdp.X0, fmt='%f', delimiter = '\t')
 
         ## write lw0
         with open (self.flw0, 'w') as f: 
-            np.savetxt(f, hdp.lw0, fmt='%f')
+            np.savetxt(f, hdp.lw0, fmt='%f', delimiter = '\t')
 
         ## write C
         with open (self.fC, 'w') as f: 
-            np.savetxt(f, hdp.C, fmt='%d')
+            np.savetxt(f, hdp.C, fmt='%d', delimiter = '\t')
 
         ## write Z
         with open (self.fZ, 'w') as f: 
-            np.savetxt(f, hdp.Z, fmt='%d')
+            np.savetxt(f, hdp.Z, fmt='%d', delimiter = '\t')
 
         ## write LW
         with open (self.fLW, 'w') as f: 
-            np.savetxt(f, hdp.LW, fmt='%f')
+            np.savetxt(f, hdp.LW, fmt='%f', delimiter = '\t')
 
         ## write eta
         with open (self.feta, 'a') as f: 
-            np.savetxt(f, np.atleast_2d(np.r_[t, hdp.eta0, hdp.eta]), fmt='%d %f ' + '%f ' * np.size(hdp.eta))
+            np.savetxt(f, np.atleast_2d(np.r_[t, hdp.eta0, hdp.eta]), fmt='\t%d\t%f' + '\t%f ' * np.size(hdp.eta))
 
         ## write pars
         with open (self.fpars, 'a') as f: 
-            np.savetxt(f, np.atleast_2d(np.r_[t, Ka, hdp.pars]), fmt='%d %d ' + '%f ' * np.size(hdp.pars))
+            np.savetxt(f, np.atleast_2d(np.r_[t, Ka, hdp.pars]), fmt='\t%d\t%d' + '\t%f' * np.size(hdp.pars))
 
         ## write Z
         if (self.dt > 0) and not (t % self.dt):
             with open (os.path.join(self.dZ, str(t)), 'w') as f: 
-                np.savetxt(f, Z, fmt='%d')
+                np.savetxt(f, Z, fmt='%d', delimiter = '\t')
 
         
 ################################################################################
