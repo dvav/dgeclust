@@ -13,26 +13,34 @@ import stats                    as st
 
 ################################################################################
 
-def plotRA(sample1, sample2, epsilon = 0.5, *args, **kargs):        
-    sample1 = sample1.astype('double')
-    sample2 = sample2.astype('double')
+def plotRA(samples1, samples2, ids = None, epsilon = 0.5, *args, **kargs):        
+    samples1 = samples1.astype('double')
+    samples2 = samples2.astype('double')
     
     ## set zero elements to epsilon
-    sample1[sample1 < 1.] = epsilon     
-    sample2[sample2 < 1.] = epsilon     
+    samples1[samples1 < 1.] = epsilon     
+    samples2[samples2 < 1.] = epsilon     
     
-    ## compute R and A
-    R =   np.log2(sample1) - np.log2(sample2)
-    A = ( np.log2(sample1) + np.log2(sample2) ) * 0.5
+    ## compute means
+    lmeans1 = np.log2(samples1).mean(0)
+    lmeans2 = np.log2(samples2).mean(0)
+     
+    ## compute A and R
+    A = ( lmeans1 + lmeans2 ) * 0.5
+    R =   lmeans1 - lmeans2
         
     ## generate RA plot
-    pl.plot(A, R, '.')
+    if ids is not None:
+        pl.plot(A[~ids], R[~ids], 'k.', A[ids], R[ids], 'r.')
+    else:
+        pl.plot(A, R, 'k.')
+        
     pl.plot(pl.gca().get_xlim(),(0.,0.),'k--')
-    pl.xlabel('( log2(S1) + log2(S2) ) / 2')
-    pl.ylabel('log2(S1) - log2(S2)')
+    pl.xlabel('mean')
+    pl.ylabel('log2 fold change')
     
     return A, R
-    
+        
 ################################################################################
 
 def plotSample(sample, epsilon = 0.5, bins = 100, normed = True, *args, **kargs):        
