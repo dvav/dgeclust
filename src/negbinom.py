@@ -10,22 +10,27 @@ import stats as st
 import utils as ut
 
 ################################################################################
+
+PHI_MIN = 1e-6
+
+################################################################################
         
 def rParams(x0, mean, var, shape, scale):
     phi   = x0[:, 0]
     beta  = x0[:, 1] 
 
-    scale     = st.gamma_scale(phi, shape)	
-    mean, var = st.normal_mean_var(beta)
+    # shape, scale = st.gamma_shape_scale(phi, shape, scale)    
+    scale        = st.gamma_scale(phi, shape)    
+    mean, var    = st.normal_mean_var(beta)
     
     return mean, var, shape, scale  
 
 ################################################################################
-    
+
 def rPrior(N, mean, var, shape, scale):    
-    phi   = st.gamma(shape, scale, (N, 1)) 
+    phi   = st.gamma(shape, scale, (N, 1)) + PHI_MIN;       ## make sure phi never becomes zero   
     beta  = st.normal(mean, var, (N, 1))
-    
+        
     return np.hstack((phi, beta))
     
 ################################################################################
