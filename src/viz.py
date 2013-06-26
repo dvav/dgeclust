@@ -83,7 +83,9 @@ def plotModel(X0, c, z, exposure, model = 'NegBinomial', xmin = -1., xmax = 12.,
     if draw_clusters:
         pl.plot(x, Y, color='0.75', linewidth=0.5)        
             
-    pl.plot(x, y, color = color, *args, **kargs)          
+    pl.plot(x, y, color = color, *args, **kargs)    
+    
+    return x, y, Y      
     
 ################################################################################
 
