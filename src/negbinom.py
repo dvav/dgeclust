@@ -19,8 +19,8 @@ def rParams(x0, mean, var, shape, scale):
     phi   = x0[:, 0]
     beta  = x0[:, 1] 
 
-    # shape, scale = st.gamma_shape_scale(phi, shape, scale)    
-    scale        = st.gamma_scale(phi, shape)    
+    shape, scale = st.gamma_shape_scale(phi, shape, scale)    
+    #scale        = st.gamma_scale(phi, shape)    
     mean, var    = st.normal_mean_var(beta)
     
     return mean, var, shape, scale  
