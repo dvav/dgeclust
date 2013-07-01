@@ -1,7 +1,7 @@
-# Copyright (C) 2012-2013 Dimitrios V. Vavoulis
-# Computational Genomics Group (http://bioinformatics.bris.ac.uk/)
-# Department of Computer Science
-# University of Bristol
+## Copyright (C) 2012-2013 Dimitrios V. Vavoulis
+## Computational Genomics Group (http://bioinformatics.bris.ac.uk/)
+## Department of Computer Science
+## University of Bristol
 
 ################################################################################
 
@@ -14,19 +14,25 @@ import utils as ut
 PHI_MIN = 1e-6
 
 ################################################################################
+
+class _rParamsFtor(object):
+    def __init__(self):
+        self.pa = [0., 0., 0.]      ## ldsum, lsum, N
+        self.pb = [0., 0., 0.]      ## dsum, d2sum, N
         
-def rParams(x0, mean, var, shape, scale):
-    phi   = x0[:, 0]
-    beta  = x0[:, 1] 
+    def __call__(self, x0, mean, var, shape, scale):
+        phi   = x0[:,0]
+        beta  = x0[:,1] 
+        
+        shape, scale, self.pa = st.gamma_shape_scale(phi, shape, scale, *self.pa) 
+        mean, var, self.pb    = st.normal_mean_var(beta, *self.pb)   
+        
+        return mean, var, shape, scale  
 
-    shape, scale = st.gamma_shape_scale(phi, shape, scale)    
-    #scale        = st.gamma_scale(phi, shape)    
-    mean, var    = st.normal_mean_var(beta)
-    
-    return mean, var, shape, scale  
-
+rParams = _rParamsFtor()
+        
 ################################################################################
-
+        
 def rPrior(N, mean, var, shape, scale):    
     phi   = st.gamma(shape, scale, (N, 1)) + PHI_MIN;       ## make sure phi never becomes zero   
     beta  = st.normal(mean, var, (N, 1))

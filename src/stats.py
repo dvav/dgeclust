@@ -95,37 +95,35 @@ def rEta(eta, K, N, a = 2., b = 1.):
 
 ## conjugate pairs
 
-def exponential_rate(data, a0 = 2., b0 = 1.):
+def gamma_scale(data, shape, dsum, N, a0 = 2., b0 = 1.):
+    ## update dsum and N
+    dsum += data.sum()
+    N    += data.size
+    
     ## compute shape and rate    
-    a = a0 + data.size;
-    b = b0 + data.sum();
+    a = a0 + N * shape;
+    b = b0 + dsum;
 
     ## return
-    return rn.gamma(a, 1. / b);
+    return 1. / gamma(a, 1. / b), (dsum, N);
 
 
 ################################################################################
 
-def gamma_scale(data, shape = 2., a0 = 2., b0 = 1.):
-    ## compute shape and rate    
-    a = a0 + data.size * shape;
-    b = b0 + data.sum();
-
-    ## return
-    return 1. / gamma(a, 1. / b);
-
-
-################################################################################
-
-def gamma_shape_scale(data, shape, scale, lp0 = 0., q0 = 0., r0 = 0., s0 = 0.):
+def gamma_shape_scale(data, shape, scale, ldsum, lsum, N, lp0 = 0., q0 = 0., r0 = 0., s0 = 0.):
     ## compute rate
     rate = 1. / scale
     
+    ## update ldsum, lsum and N
+    ldsum += np.log(data).sum()
+    lsum  += data.sum() 
+    N     += data.size
+    
     ## compute log(p), q, r, s
-    lp = lp0 + np.log(data).sum()
-    q  = q0  + data.sum() 
-    r  = r0  + data.size
-    s  = s0  + data.size
+    lp = lp0 + ldsum
+    q  = q0  + lsum 
+    r  = r0  + N
+    s  = s0  + N
         
     ## proposals    
     shape_ = shape * np.exp(0.01 * np.random.randn())
@@ -141,41 +139,31 @@ def gamma_shape_scale(data, shape, scale, lp0 = 0., q0 = 0., r0 = 0., s0 = 0.):
         scale = 1. / rate_
     
     ## return
-    return shape, scale
-
-
-################################################################################
-
-
-#def invgamma_rate(data, shape = 2., a0 = 2., b0 = 1.):
-#    ## compute shape and rate    
-#    a = a0 + data.size * shape;
-#    b = b0 + (1. / data).sum();
-#
-#    ## return
-#    return 1. / gamma(a, 1. / b);
-
+    return shape, scale, (ldsum, lsum, N)
 
 ################################################################################
 
-def normal_mean_var(data, mu0 = -10., n0 = 1., a0 = 2., s0 = 1.):
-    N      = data.size
-    avg    = data.sum() / N
-    dot    = ( (data - avg) ** 2 ).sum()
-    resid0 = avg - mu0;
+def normal_mean_var(data, dsum, d2sum, N, mu0 = -10., n0 = 1., a0 = 2., s0 = 1.):
+    ## update dsum, dsum2 and N
+    N     += data.size
+    dsum  += data.sum()
+    d2sum += (data ** 2).sum()
     
     ## compute mu, n, a, s
-    mu = (n0 * mu0 + N * avg) / (n0 + N);
+    avg = dsum / N
+    dot = d2sum - 2. * avg * dsum + N * avg ** 2
+
+    mu = (n0 * mu0 + dsum) / (n0 + N);
     n  = n0 + N;
     a  = a0 + N;
-    s  = s0 + dot + N * n0 / (N + n0) * resid0 * resid0;    
+    s  = s0 + dot + N * n0 / (N + n0) * (avg - mu0) * (avg - mu0);    
     
     ## compute var and mean
     var  = invgamma(a * 0.5, s * 0.5);
     mean = normal(mu, var / n);
 
     ## return
-    return mean, var
+    return mean, var, (dsum, d2sum, N)
 
  
 ################################################################################

@@ -1,8 +1,7 @@
-# Copyright (C) 2012-2013 Dimitrios V. Vavoulis
-# Computational Genomics Group (http://bioinformatics.bris.ac.uk/)
-# Department of Computer Science
-# University of Bristol
-
+## Copyright (C) 2012-2013 Dimitrios V. Vavoulis
+## Computational Genomics Group (http://bioinformatics.bris.ac.uk/)
+## Department of Computer Science
+## University of Bristol
 
 ################################################################################
 
@@ -27,9 +26,9 @@ parser = ArgumentParser(description='Cluster digital gene expression data')
 parser.add_argument('data', type=str, help='data file to process')
 
 parser.add_argument('-O',  metavar='OUTDIR',     type=str,   help='output directory',                       default='./DGEclust_output/')    
-parser.add_argument('-T',  metavar='NITERS',     type=int,   help='number of iterations',                   default=10000)    
-parser.add_argument('-DT', metavar='NLOG',       type=int,   help='save-to-disk interval',                  default=100)    
-parser.add_argument('-P',  metavar='PARS',       type=float, help='initial model parameters',               default=[-10., 100., 0.1, 10.], nargs='+')
+parser.add_argument('-T',  metavar='NITERS',     type=int,   help='number of iterations',                   default=100000)    
+parser.add_argument('-DT', metavar='NLOG',       type=int,   help='save-to-disk interval',                  default=10)    
+parser.add_argument('-P',  metavar='PARS',       type=float, help='initial model parameters',               default=[-7., 10., 10., 0.1], nargs='+')
 parser.add_argument('-TP', metavar='TPARS',      type=int,   help='sample interval for model parameters',   default=1)
 parser.add_argument('-K0', metavar='TRUNC0',     type=int,   help='truncation at level 0',                  default=100)
 parser.add_argument('-K',  metavar='TRUNC1',     type=int,   help='truncation at level 1',                  default=100)

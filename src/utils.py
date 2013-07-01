@@ -130,9 +130,9 @@ def computeAverageSimilarityMatrix(path, T0, T, step, compare_samples = True):
     print >> sys.stderr, 'Start sampling at iteration {0} ...'.format(fnames[0])        
     for fname in fnames.astype('str'): 
         ## read indicators
-        Z = np.loadtxt(path + fname, dtype = 'int')
+        Z = np.loadtxt(os.path.join(path,fname), dtype = 'int')
         Z = Z.T if compare_samples is False else Z
-        
+                
         ## update average similarity matrix
         sim += _computeSimilarityMatrix(Z)
 
