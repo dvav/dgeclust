@@ -5,8 +5,8 @@
 
 ################################################################################
 
-from GibbsSampler   import GibbsSampler
-from HDP            import HDP
-from Monitor        import Monitor
-from CountData      import CountData
+from plotRA      import plotRA
+from plotSample  import plotSample
+from plotModel   import plotModel
+from plotHeatmap import plotHeatmap
 

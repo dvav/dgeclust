@@ -5,9 +5,11 @@
 
 ################################################################################
 
-import numpy as np
-import stats as st
-import utils as ut
+import numpy               as np
+import DGEclust.stats.rand as rn
+import DGEclust.stats.conj as cj
+import DGEclust.stats.dist as ds
+import DGEclust.utils      as ut
 
 ################################################################################
 
@@ -24,8 +26,8 @@ class _rParamsFtor(object):
         phi   = x0[:,0]
         beta  = x0[:,1] 
         
-        shape, scale, self.pa = st.gamma_shape_scale(phi, shape, scale, *self.pa) 
-        mean, var, self.pb    = st.normal_mean_var(beta, *self.pb)   
+        shape, scale, _ = cj.gamma_shape_scale(phi, shape, scale, *self.pa) 
+        mean, var, _    = cj.normal_mean_var(beta, *self.pb)   
         
         return mean, var, shape, scale  
 
@@ -34,23 +36,23 @@ rParams = _rParamsFtor()
 ################################################################################
         
 def rPrior(N, mean, var, shape, scale):    
-    phi   = st.gamma(shape, scale, (N, 1)) + PHI_MIN;       ## make sure phi never becomes zero   
-    beta  = st.normal(mean, var, (N, 1))
+    phi   = rn.gamma(shape, scale, (N, 1)) + PHI_MIN;       ## make sure phi never becomes zero   
+    beta  = rn.normal(mean, var, (N, 1))
         
     return np.hstack((phi, beta))
     
 ################################################################################
    
-def rPost(x0, idx, C, Z, data, *pars):     
-    # # make proposal
-    x0_ = x0 * np.exp(0.01 * st.normal(N=2)) 
+def rPost(x0, idx, C, Z, counts, exposures, *pars):     
+    ## make proposal
+    x0_ = x0 * np.exp(0.01 * rn.normal(N=2)) 
 
-    # # compute posterior densities
-    lp  = _dLogPost(x0,  idx, C, Z, data, *pars)
-    lp_ = _dLogPost(x0_, idx, C, Z, data, *pars)        
+    ## compute posterior densities
+    lp  = _dLogPost(x0,  idx, C, Z, counts, exposures, *pars)
+    lp_ = _dLogPost(x0_, idx, C, Z, counts, exposures, *pars)        
     
     # # do Metropolis step
-    if (lp_ > lp) or (st.uniform() < np.exp(lp_ - lp)):
+    if (lp_ > lp) or (rn.uniform() < np.exp(lp_ - lp)):
         x0 = x0_
 
     # return        
@@ -69,23 +71,23 @@ def dLogLik(X0, counts, exposure):
     mu = exposure * np.exp(beta)
     p  = alpha / (alpha + mu)
     
-    return st.dLogNegBinomial(counts.reshape(-1,1), alpha, p)
+    return ds.dLogNegBinomial(counts.reshape(-1,1), alpha, p)
     
 ################################################################################
         
 def _dLogPrior(x0, mean, var, shape, scale):
     phi, beta = x0
     
-    logprior_phi   = st.dLogGamma(phi, shape, scale)
-    logprior_beta  = st.dLogNormal(beta, mean, var)
+    logprior_phi   = ds.dLogGamma(phi, shape, scale)
+    logprior_beta  = ds.dLogNormal(beta, mean, var)
     
     return logprior_phi + logprior_beta 
     
 ################################################################################
     
-def _dLogPost(x0, idx, C, Z, data, *pars):
+def _dLogPost(x0, idx, C, Z, counts, exposures, *pars):
     logprior = _dLogPrior(x0, *pars)
-    loglik = [ dLogLik(x0, counts[c[z] == idx], exposure).sum() for c, z, counts, exposure in zip(C, Z, data.counts, data.exposures) ]
+    loglik = [ dLogLik(x0, cnts[c[z] == idx], exposure).sum() for c, z, cnts, exposure in zip(C, Z, counts, exposures) ]
         
     return logprior + np.sum(loglik)
     

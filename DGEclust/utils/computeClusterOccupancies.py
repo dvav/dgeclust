@@ -4,11 +4,15 @@
 ## University of Bristol
 
 ################################################################################
-
-#!/bin/bash
+ 
+import numpy as np
 
 ################################################################################
 
-BINPATH=`dirname $0`
-python "$BINPATH/../main.py" $@
+def computeClusterOccupancies(K, indicators):
+    labs = np.arange(K).reshape(-1,1);                      ## cluster labels
+    Z    = (indicators == labs)                             ## indicators
+    
+    return Z.sum(1)
 
+################################################################################

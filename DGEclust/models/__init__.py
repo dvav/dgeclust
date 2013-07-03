@@ -5,8 +5,6 @@
 
 ################################################################################
 
-from GibbsSampler   import GibbsSampler
-from HDP            import HDP
-from Monitor        import Monitor
-from CountData      import CountData
-
+import NegBinom
+import Poisson
+import Gaussian

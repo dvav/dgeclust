@@ -4,11 +4,15 @@
 ## University of Bristol
 
 ################################################################################
-
-#!/bin/bash
+ 
+import numpy as np
 
 ################################################################################
 
-BINPATH=`dirname $0`
-python "$BINPATH/../main.py" $@
+def normalizeLogWeights(lw):
+    ref  = lw.max(0)
+    lsum = np.log( np.exp(lw - ref).sum(0) ) + ref
 
+    return lw - lsum
+ 
+################################################################################

@@ -1,7 +1,7 @@
-# Copyright (C) 2012-2013 Dimitrios V. Vavoulis
-# Computational Genomics Group (http://bioinformatics.bris.ac.uk/)
-# Department of Computer Science
-# University of Bristol
+## Copyright (C) 2012-2013 Dimitrios V. Vavoulis
+## Computational Genomics Group (http://bioinformatics.bris.ac.uk/)
+## Department of Computer Science
+## University of Bristol
 
 ################################################################################
 
@@ -38,8 +38,6 @@ class HDP(object):
         Ka = np.count_nonzero(Ko > 0)  
         
         return Z, Ko, Ka
-    
-    
     
     ############################################################################
 
