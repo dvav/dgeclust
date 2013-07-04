@@ -19,8 +19,8 @@ class Results(object):
         lw0  = np.loadtxt(os.path.join(fld,'lw0.txt'))
         LW   = np.loadtxt(os.path.join(fld,'LW.txt'))
         X0   = np.loadtxt(os.path.join(fld,'X0.txt'))
-        C    = np.loadtxt(os.path.join(fld,'C.txt', dtype='int'))
-        Z    = np.loadtxt(os.path.join(fld,'Z.txt', dtype='int'))
+        C    = np.loadtxt(os.path.join(fld,'C.txt'), dtype='int')
+        Z    = np.loadtxt(os.path.join(fld,'Z.txt'), dtype='int')
                 
         ## read everything into object attributes        
         t = pars[:,0]
