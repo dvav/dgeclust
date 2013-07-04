@@ -5,10 +5,10 @@
 
 ################################################################################
 
-import pylab    as pl
-import numpy    as np
-import ..utils  as ut
-import ..stats  as st
+import pylab            as pl
+import numpy            as np
+import DGEclust.utils   as ut
+import DGEclust.stats   as st
 
 ################################################################################
 

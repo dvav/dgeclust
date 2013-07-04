@@ -13,7 +13,7 @@ import scipy.cluster.hierarchy  as hr
 
 ################################################################################
 
-def plotHeatmap(D, fig = None, method = 'average', metric = 'euclidean', xticklabels = None, yticklabels = None, cmap = pl.cm.warm): 
+def plotHeatmap(D, fig = None, method = 'average', metric = 'euclidean', xticklabels = None, yticklabels = None, cmap = pl.cm.coolwarm): 
     ## create figure
     if fig is None:
         fig = pl.figure(figsize = (10,10))
