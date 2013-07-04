@@ -9,11 +9,17 @@ import pandas as pd
 
 ################################################################################
 
-class CountData(pd.DataFrame):
-    def __init__(self, fname, *args, **kargs):    
-        super(CountData, self).__init__(pd.read_table(fname, *args, **kargs))
+def readCountData(fname, classes = None, *args, **kargs):    
+    df = pd.read_table(fname, *args, **kargs))
+
+    ## add attributes      
+    df.counts    = df.values  
+    df.exposures = df.sum() 
+    df.samples   = df.columns
+    df.genes     = df.index
     
-        ## add attributes        
-        self.exposures = self.sum() 
+    ## classes ??
                     
+    return df
+    
 ################################################################################

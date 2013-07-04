@@ -53,7 +53,7 @@ if __name__ == '__main__':
     ################################################################################
 
     ## load data and prepare output
-    data = cl.CountData(dataFile)
+    data = cl.readCountData(dataFile)
     mtr  = cl.Monitor(outDir, dt, extend)   
 
     ################################################################################
