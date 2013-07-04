@@ -18,7 +18,5 @@ def plotSample(sample, epsilon = 0.5, bins = 100, normed = True, *args, **kargs)
     
     ## generate plot
     pl.hist(np.log(sample), bins = bins, normed = normed, *args, **kargs)
-    pl.xlabel('log(S)')
-    pl.ylabel('frequency')
             
 ################################################################################
