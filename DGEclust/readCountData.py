@@ -10,7 +10,7 @@ import pandas as pd
 ################################################################################
 
 def readCountData(fname, classes = None, *args, **kargs):    
-    df = pd.read_table(fname, *args, **kargs))
+    df = pd.read_table(fname, *args, **kargs)
 
     ## add attributes      
     df.counts    = df.values  
