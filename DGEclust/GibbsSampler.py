@@ -33,7 +33,7 @@ class GibbsSampler(object):
             mtr.update(0, hdp, Z, Ka)    
     
         ## loop
-        print >> sys.stderr, 'Iteration {0}/{1} -- {2}/{3} active clusters'.format(0, T, Ka, Ko.size)         
+        # print >> sys.stderr, 'Iteration {0}/{1} -- {2}/{3} active clusters'.format(0, T, Ka, Ko.size)         
         for t in range(1, T+1):
             ## sample
             self._sample(t, counts, exposures, model, hdp)
@@ -44,7 +44,7 @@ class GibbsSampler(object):
             
             ## save state and log progress 
             mtr.update(t, hdp, Z, Ka)        
-            print >> sys.stderr, 'Iteration {0}/{1} -- {2}/{3} active clusters'.format(t, T, Ka, Ko.size)             
+            # print >> sys.stderr, 'Iteration {0}/{1} -- {2}/{3} active clusters'.format(t, T, Ka, Ko.size)             
 
     ############################################################################
 
