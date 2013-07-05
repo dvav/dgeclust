@@ -5,6 +5,7 @@
 
 ################################################################################
 
+import numpy  as np
 import pandas as pd
 
 ################################################################################
@@ -18,7 +19,11 @@ def readCountData(fname, classes = None, *args, **kargs):
     df.samples   = df.columns
     df.genes     = df.index
     
-    ## classes ??
+    ## classes
+    if classes is None:
+        df.classes = np.arange(df.samples.size).astype('str')
+    else:
+        df.classes = classes
                     
     return df
     
