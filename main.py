@@ -78,6 +78,7 @@ if __name__ == '__main__':
         Z    = np.random.randint(0, K,  (M,N))   #[ np.zeros(N, dtype = 'int') for i in range(M) ]
         eta0 = 1.
         eta  = np.ones(M)
+        pars = np.r_[pars, 0., 0., 0., 0., 0., 0.]
 
     hdp  = cl.HDP(X0, lw0, LW, C, Z, eta0, eta, pars)
 

@@ -21,22 +21,22 @@ def gamma_scale(data, shape, dsum = 0., N = 0, a0 = 2., b0 = 1.):
     b = b0 + dsum;
 
     ## return
-    return 1. / rn.gamma(a, 1. / b), (dsum, N);
+    return 1. / rn.gamma(a, 1. / b), dsum, N;
 
 ################################################################################
 
-def gamma_shape_scale(data, shape, scale, ldsum, lsum, N, lp0 = 0., q0 = 0., r0 = 0., s0 = 0.):
+def gamma_shape_scale(data, shape, scale, ldsum = 0., dsum = 0., N = 0, lp0 = 0., q0 = 0., r0 = 0., s0 = 0.):
     ## compute rate
     rate = 1. / scale
     
     ## update ldsum, lsum and N
     ldsum += np.log(data).sum()
-    lsum  += data.sum() 
+    dsum  += data.sum() 
     N     += data.size
     
     ## compute log(p), q, r, s
     lp = lp0 + ldsum
-    q  = q0  + lsum 
+    q  = q0  + dsum 
     r  = r0  + N
     s  = s0  + N
         
@@ -54,7 +54,7 @@ def gamma_shape_scale(data, shape, scale, ldsum, lsum, N, lp0 = 0., q0 = 0., r0 
         scale = 1. / rate_
     
     ## return
-    return shape, scale, (ldsum, lsum, N)
+    return shape, scale, ldsum, dsum, N
 
 ################################################################################
 
@@ -78,7 +78,7 @@ def normal_mean_var(data, dsum, d2sum, N, mu0 = -10., n0 = 1., a0 = 2., s0 = 1.)
     mean = rn.normal(mu, var / n);
 
     ## return
-    return mean, var, (dsum, d2sum, N)
+    return mean, var, dsum, d2sum, N
 
  
 ################################################################################

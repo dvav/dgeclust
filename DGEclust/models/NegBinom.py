@@ -17,25 +17,18 @@ PHI_MIN = 1e-6
 
 ################################################################################
 
-class _rParamsFtor(object):
-    def __init__(self):
-        self.pa = [0., 0., 0.]      ## ldsum, lsum, N
-        self.pb = [0., 0., 0.]      ## dsum, d2sum, N
-        
-    def __call__(self, x0, mean, var, shape, scale):
-        phi   = x0[:,0]
-        beta  = x0[:,1] 
-        
-        shape, scale, _ = cj.gamma_shape_scale(phi, shape, scale, *self.pa) 
-        mean, var, _    = cj.normal_mean_var(beta, *self.pb)   
-        
-        return mean, var, shape, scale  
-
-rParams = _rParamsFtor()
+def rParams(x0, mean, var, shape, scale, dsum, d2sum, N, ldsum, dsum2, N2):
+    phi   = x0[:,0]
+    beta  = x0[:,1] 
+    
+    mean,  var,   dsum,  d2sum, N  = cj.normal_mean_var(beta,  dsum,  d2sum, N)   
+    shape, scale, ldsum, dsum2, N2 = cj.gamma_shape_scale(phi, shape, scale, ldsum, dsum2, N2) 
+    
+    return mean, var, shape, scale, dsum, d2sum, N, ldsum, dsum2, N2  
         
 ################################################################################
         
-def rPrior(N, mean, var, shape, scale):    
+def rPrior(N, mean, var, shape, scale, *args):    
     phi   = rn.gamma(shape, scale, (N, 1)) + PHI_MIN;       ## make sure phi never becomes zero   
     beta  = rn.normal(mean, var, (N, 1))
         
@@ -75,7 +68,7 @@ def dLogLik(X0, counts, exposure):
     
 ################################################################################
         
-def _dLogPrior(x0, mean, var, shape, scale):
+def _dLogPrior(x0, mean, var, shape, scale, *args):
     phi, beta = x0
     
     logprior_phi   = ds.dLogGamma(phi, shape, scale)
