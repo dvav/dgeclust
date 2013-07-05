@@ -10,29 +10,18 @@ import numpy as np
  
 ################################################################################
 
-def computeAverageSimilarityMatrix(path, T0, T, dt = 1, compare_samples = True):
-    ## read directory
-    fnames = os.listdir(path)
-    fnames = np.sort(np.asarray(fnames, dtype='int'))
-    fnames = fnames[(fnames >= T0) & (fnames <= T)]    ## T0 <= fnames <= T 
-    fnames = fnames[range(0, fnames.size, dt)]         ## keep every dt-th sample
-        
-    ## sample size
-    nsamples = fnames.size
-    
+def computeAverageSimilarityMatrix(res, T0, T, dt = 1, compare_samples = True):    
     ## loop
-    sim = 0.
-    print >> sys.stderr, 'Start sampling at iteration {0} ...'.format(fnames[0])        
-    for fname in fnames.astype('str'): 
-        ## read indicators
-        Z = np.loadtxt(os.path.join(path,fname), dtype = 'int')
+    nsamples, sim = 0, 0.    
+    for _, Z in res.clusts(T0, T, dt): 
+        ## transpose, in case genes are compared, instead of samples
         Z = Z.T if compare_samples is False else Z
                 
         ## update average similarity matrix
         sim += _computeSimilarityMatrix(Z)
+        nsamples += 1
 
     ## log
-    print >> sys.stderr, 'Finish sampling at iteration {0} ...'.format(fnames[-1])                    
     print >> sys.stderr, '{0} samples processed'.format(nsamples)        
     
     ## return

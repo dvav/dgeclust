@@ -21,7 +21,9 @@ class Results(object):
         X0   = np.loadtxt(os.path.join(fld,'X0.txt'))
         C    = np.loadtxt(os.path.join(fld,'C.txt'), dtype='int')
         Z    = np.loadtxt(os.path.join(fld,'Z.txt'), dtype='int')
-                
+        path = os.path.join(fld,'clust')
+        Zf   = os.listdir(path)
+
         ## read everything into object attributes        
         t = pars[:,0]
         
@@ -38,6 +40,20 @@ class Results(object):
         self.LW  = LW
         self.X0  = X0
         
-        self.Zd  = np.asarray([ c[z] for c, z in zip(C,Z) ])
+        self.Zd  = np.asarray([ c[z] for c, z in zip(C,Z) ])     ## current direct clustering
+
+        self._Zf   = np.sort(np.asarray(Zf, dtype='int'))        ## ordered list of clustering file names                       
+        self._path = path                                        ## directory where these filenames are kept
         
+    ##############################################################################
+
+    def clusts(self, T0, T, dt):
+        ids = (self._Zf >= T0) & (self._Zf <= T) & (np.arange(self._Zf.size) % dt == 0)   ## keep every dt-th sample between T0 and T
+        Zf  = self._Zf[ids] 
+        
+        for f in Zf:
+            yield f, np.loadtxt(os.path.join(self._path, str(f)), dtype = 'int')
+
+
 ################################################################################
+
