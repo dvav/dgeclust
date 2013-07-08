@@ -10,13 +10,13 @@ import numpy as np
 
 ################################################################################
 
-def plotSample(sample, epsilon = 0.5, bins = 100, normed = True, *args, **kargs):        
+def plotSample(sample, epsilon = 0.5, bins = 100, histtype='stepfilled', color='grey', *args, **kargs):        
     sample = sample.astype('double')
     
     ## set zero elements to epsilon
     sample[sample < 1.] = epsilon     
     
     ## generate plot
-    pl.hist(np.log(sample), bins = bins, normed = normed, *args, **kargs)
+    pl.hist(np.log(sample), bins= bins, histtype=histtype, color=color, linewidth=0, *args, **kargs)
             
 ################################################################################
