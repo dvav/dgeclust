@@ -5,14 +5,13 @@
 
 ################################################################################
 
-import pylab            as pl
-import numpy            as np
+import numpy as np
 
 from . import getClusterInfo
 
 ################################################################################
 
-def plotModel(X0, zd, exposure, model, xlimits = [-1., 12.], npoints = 1000):        
+def computeFittedModel(X0, zd, exposure, model, xlimits = [-1., 12.], npoints = 1000):        
     ## compute cluster occupancies
     Ko, Ki, _ = getClusterInfo(X0.shape[0], zd)
     Ko = Ko[Ki]    
