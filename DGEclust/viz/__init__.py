@@ -6,8 +6,6 @@
 ################################################################################
 
 from plotRA          import plotRA
-from plotSample      import plotSample
-from plotModel       import plotModel
 from plotHeatmap     import plotHeatmap
 from plotChains      import plotChains
 from plotBaseDists   import plotBaseDists
