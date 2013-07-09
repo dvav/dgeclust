@@ -10,3 +10,4 @@ from computeClusterOccupancies          import computeClusterOccupancies
 from getClusterInfo                     import getClusterInfo
 from computeGenePosteriorProbabilities  import computeGenePosteriorProbabilities
 from computeAverageSimilarityMatrix     import computeAverageSimilarityMatrix
+from computeFittedModel                 import computeFittedModel
