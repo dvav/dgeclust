@@ -46,15 +46,18 @@ def plotHeatmap(D, method = 'average', metric = 'euclidean', xticklabels = None,
     D    = D[:,idx2]
     
     im = axmatrix.matshow(D, aspect = 'auto', origin = 'lower', cmap = cmap)   
-    axmatrix.xaxis.set_ticks_position('bottom')
-    axmatrix.yaxis.set_ticks_position('right')    
     axmatrix.set_xticks(range(len(xticklabels)))
     axmatrix.set_yticks(range(len(yticklabels)))
+    axmatrix.xaxis.set_tick_params(which = 'major', size=0)
+    axmatrix.yaxis.set_tick_params(which = 'major', size=0)
+    axmatrix.xaxis.set_ticks_position('bottom')
+    axmatrix.yaxis.set_ticks_position('right')        
     axmatrix.set_xticklabels(xticklabels, rotation = 'vertical') 
-    axmatrix.set_yticklabels(yticklabels) 
+    axmatrix.set_yticklabels(yticklabels)
     
     # Plot colorbar
-    axcolor = pl.subplot(grid[0]) 
-    axcolor.set_position([0.15,0.8,0.12,0.05])
+    # axcolor = pl.subplot(grid[0]) 
+    # axcolor.set_position([0.15,0.8,0.12,0.05])
+    axcolor = pl.gcf().add_axes([0.02,0.9,0.12,0.05])
     pl.colorbar(im, cax = axcolor, orientation = 'horizontal', ticks = (0,0.5,1))
     
