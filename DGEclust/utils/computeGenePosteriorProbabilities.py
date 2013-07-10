@@ -6,7 +6,8 @@
 ################################################################################
 
 import sys, os
-import numpy as np
+import numpy  as np
+import pandas as pd
 
 ################################################################################
 
@@ -20,11 +21,18 @@ def computeGenePosteriorProbabilities(res, T0, T, dt = 1, idxs1 = [0], idxs2 = [
 
         nsamples += 1
 
+    ## normalise p and adjust
+    p       /= (len(idxs1) * len(idxs2) * nsamples)
+    ii       = p.argsort()
+    tmp      = p[ii].cumsum() / np.arange(1, p.size+1)
+    padj     = np.zeros(p.shape)
+    padj[ii] = tmp
+     
     ## log
     print >> sys.stderr, '{0} samples processed'.format(nsamples)        
-        
-    ## return
-    return p / (len(idxs1) * len(idxs2) * nsamples)
+
+    ## return    
+    return pd.DataFrame({'p':p, 'padj':padj}, index = res.genes) 
 
 ################################################################################
 
