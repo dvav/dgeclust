@@ -10,7 +10,7 @@ import numpy as np
 
 ################################################################################
 
-def plotRA(samples1, samples2, ids = None, epsilon = 0.5, *args, **kargs):        
+def plotRA(samples1, samples2, ids = None, epsilon = 1., *args, **kargs):        
     samples1 = samples1.astype('double')
     samples2 = samples2.astype('double')
     
