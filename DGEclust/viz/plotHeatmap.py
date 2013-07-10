@@ -56,8 +56,6 @@ def plotHeatmap(D, method = 'average', metric = 'euclidean', xticklabels = None,
     axmatrix.set_yticklabels(yticklabels)
     
     # Plot colorbar
-    # axcolor = pl.subplot(grid[0]) 
-    # axcolor.set_position([0.15,0.8,0.12,0.05])
     axcolor = pl.gcf().add_axes([0.02,0.9,0.12,0.05])
     pl.colorbar(im, cax = axcolor, orientation = 'horizontal', ticks = (0,0.5,1))
     
