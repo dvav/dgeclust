@@ -12,7 +12,7 @@ import pandas as pd
 ################################################################################
 
 class Results(object):
-    def __init__(self, fld, *args, **kargs):    
+    def __init__(self, fld, samples = None, genes = None, *args, **kargs):    
         ## load results from disk
         pars = np.loadtxt(os.path.join(fld,'pars.txt'))
         eta  = np.loadtxt(os.path.join(fld,'eta.txt'))
@@ -45,15 +45,16 @@ class Results(object):
         self._Zf   = np.sort(np.asarray(Zf, dtype='int'))        ## ordered list of clustering file names                       
         self._path = path                                        ## directory where these filenames are kept
         
+        self.samples = np.arange(self.Zd.shape[0]) if samples is None else samples
+        self.genes   = np.arange(self.Zd.shape[1]) if genes   is None else genes
+
     ##############################################################################
 
     def clusts(self, T0, T, dt):
         ids = (self._Zf >= T0) & (self._Zf <= T) & (np.arange(self._Zf.size) % dt == 0)   ## keep every dt-th sample between T0 and T
         Zf  = self._Zf[ids] 
         
-        for f in Zf:
-            yield f, np.loadtxt(os.path.join(self._path, str(f)), dtype = 'int')
-
+        for f in Zf: yield f, np.loadtxt(os.path.join(self._path, str(f)), dtype = 'int')
 
 ################################################################################
 
