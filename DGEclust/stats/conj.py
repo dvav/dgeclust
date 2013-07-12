@@ -58,7 +58,7 @@ def gamma_shape_scale(data, shape, scale, ldsum = 0., dsum = 0., N = 0, lp0 = 0.
 
 ################################################################################
 
-def normal_mean_var(data, dsum, d2sum, N, mu0 = -10., n0 = 1., a0 = 2., s0 = 1.):
+def normal_mean_var(data, dsum = 0., d2sum = 0., N = 0., mu0 = -10., n0 = 1., a0 = 2., s0 = 1.):
     ## update dsum, dsum2 and N
     N     += data.size
     dsum  += data.sum()

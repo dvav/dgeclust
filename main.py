@@ -20,14 +20,14 @@ def parseArgs():
     parser.add_argument('-O',  metavar='OUTDIR',     type=str,   help='output directory',                       default='./DGEclust_output/')    
     parser.add_argument('-T',  metavar='NITERS',     type=int,   help='number of iterations',                   default=100000)    
     parser.add_argument('-DT', metavar='NLOG',       type=int,   help='save-to-disk interval',                  default=10)    
-    parser.add_argument('-P',  metavar='PARS',       type=float, help='initial model parameters',               default=[-7., 10., 10., 0.1], nargs='+')
+    parser.add_argument('-P',  metavar='PARS',       type=float, help='initial model parameters',               default=[0., 10., 2., 1.], nargs='+')
     parser.add_argument('-K0', metavar='TRUNC0',     type=int,   help='truncation at level 0',                  default=100)
     parser.add_argument('-K',  metavar='TRUNC1',     type=int,   help='truncation at level 1',                  default=100)
     parser.add_argument('-M',  metavar='MODEL',      type=str,   help='model to use',                           default='NegBinom', choices=['NegBinom','Poisson','Gaussian'])
     parser.add_argument('-R',  metavar='NTHREADS',   type=int,   help='number of threads',                      default=1)
     
     parser.add_argument('-E', dest='E', help='extend previous simulation', action='store_true', default=False)
-    parser.add_argument('-U', dest='U', help='update parameters', action='store_true',default=True)
+    parser.add_argument('-U', dest='U', help='update parameters', action='store_true',default=False)
             
     return parser.parse_args()
     
@@ -78,7 +78,7 @@ if __name__ == '__main__':
         Z    = np.random.randint(0, K,  (M,N))   #[ np.zeros(N, dtype = 'int') for i in range(M) ]
         eta0 = 1.
         eta  = np.ones(M)
-        pars = np.r_[pars, 0., 0., 0., 0., 0., 0.]
+        # pars = pars
 
     hdp  = cl.HDP(X0, lw0, LW, C, Z, eta0, eta, pars)
 

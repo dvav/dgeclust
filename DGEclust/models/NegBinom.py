@@ -17,14 +17,17 @@ PHI_MIN = 1e-6
 
 ################################################################################
 
-def rParams(x0, mean, var, shape, scale, dsum, d2sum, N, ldsum, dsum2, N2):
+def rParams(x0, mean, var, shape, scale):
     phi   = x0[:,0]
     beta  = x0[:,1] 
     
-    mean,  var,   dsum,  d2sum, N  = cj.normal_mean_var(beta,  dsum,  d2sum, N)   
-    shape, scale, ldsum, dsum2, N2 = cj.gamma_shape_scale(phi, shape, scale, ldsum, dsum2, N2) 
+    # mean,  var,   dsum,  d2sum, N  = cj.normal_mean_var(beta,  dsum,  d2sum, N)   
+    # shape, scale, ldsum, dsum2, N2 = cj.gamma_shape_scale(phi, shape, scale, ldsum, dsum2, N2) 
+
+    mean,  var,   _,  _, _  = cj.normal_mean_var(beta)   
+    shape, scale, _, _, _   = cj.gamma_shape_scale(phi, shape, scale) 
     
-    return mean, var, shape, scale, dsum, d2sum, N, ldsum, dsum2, N2  
+    return mean, var, shape  
         
 ################################################################################
         
