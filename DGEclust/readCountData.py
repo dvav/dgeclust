@@ -15,7 +15,7 @@ def readCountData(fname, classes = None, *args, **kargs):
 
     ## add attributes      
     df.counts    = df.values  
-    df.exposures = df.sum() 
+    df.exposures = pd.DataFrame(np.ones(df.columns.size)) #df.sum() / df.sum().max().astype('double') 
     df.samples   = df.columns
     df.genes     = df.index
     
