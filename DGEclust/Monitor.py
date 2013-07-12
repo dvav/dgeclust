@@ -63,11 +63,11 @@ class Monitor(object):
 
         ## write eta
         with open (self.feta, 'a') as f: 
-            np.savetxt(f, np.atleast_2d(np.r_[t, hdp.eta0, hdp.eta]), fmt='\t%d\t%f' + '\t%f ' * np.size(hdp.eta))
+            np.savetxt(f, np.atleast_2d(np.r_[t, hdp.eta0, hdp.eta]), fmt='%d\t%f' + '\t%f ' * np.size(hdp.eta))
 
         ## write pars
         with open (self.fpars, 'a') as f: 
-            np.savetxt(f, np.atleast_2d(np.r_[t, Ka, hdp.pars]), fmt='\t%d\t%d' + '\t%f' * np.size(hdp.pars))
+            np.savetxt(f, np.atleast_2d(np.r_[t, Ka, hdp.pars]), fmt='%d\t%d' + '\t%f' * np.size(hdp.pars))
 
         ## write Z
         if (self.dt > 0) and not (t % self.dt):
