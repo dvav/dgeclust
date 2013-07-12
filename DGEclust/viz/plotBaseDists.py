@@ -12,7 +12,7 @@ import DGEclust.stats.dist as ds
 
 ################################################################################
 
-def plotBaseDists(res, xlimits_normal = [-20, 20], xlimits_gamma = [0, 5], npoints = 1000):
+def plotBaseDists(res, xlimits_normal = [-20, 20], xlimits_gamma = [1e-6, 5], npoints = 1000):
     _, Ki, _ = ut.getClusterInfo(len(res.X0), res.Zd.ravel())
 
     ## plot base dist for beta
