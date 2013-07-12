@@ -12,11 +12,11 @@ import DGEclust.stats.dist as ds
 
 ################################################################################
 
-def plotBaseDists(res):
+def plotBaseDists(res, xlimits_normal = [-20, 20], xlimits_gamma = [0, 5], npoints = 1000):
     _, Ki, _ = ut.getClusterInfo(len(res.X0), res.Zd.ravel())
 
     ## plot base dist for beta
-    x  = np.linspace(-20, 5, 100); 
+    x  = np.linspace(xlimits_normal[0], xlimits_normal[1], npoints); 
     y  = np.exp(ds.dLogNormal(x, res.mu[-1], res.s2[-1])); 
     y0 = np.exp(ds.dLogNormal(x, res.mu[0],  res.s2[0])); 
     pl.subplot(1,2,1); 
@@ -24,7 +24,7 @@ def plotBaseDists(res):
     pl.xlabel(r'$\beta^*$'); pl.ylabel('density');  
 
     ## plot base dist for phi
-    x  = np.linspace(0,5,400);
+    x  = np.linspace(xlimits_gamma[0], xlimits_gamma[1], npoints);
     y  = np.exp(ds.dLogGamma(x,  res.sh[-1], res.sc[-1])); 
     y0 = np.exp(ds.dLogGamma(x,  res.sh[0], res.sc[0])); 
     pl.subplot(1,2,2); 
