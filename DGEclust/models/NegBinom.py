@@ -31,7 +31,7 @@ def rParams(x0, mean, var, shape, scale):
         
 ################################################################################
         
-def rPrior(N, mean, var, shape, scale, *args):    
+def rPrior(N, mean, var, shape, scale):    
     phi   = rn.gamma(shape, scale, (N, 1)) + PHI_MIN;       ## make sure phi never becomes zero   
     beta  = rn.normal(mean, var, (N, 1))
         
@@ -71,7 +71,7 @@ def dLogLik(X0, counts, exposure):
     
 ################################################################################
         
-def _dLogPrior(x0, mean, var, shape, scale, *args):
+def _dLogPrior(x0, mean, var, shape, scale):
     phi, beta = x0
     
     logprior_phi   = ds.dLogGamma(phi, shape, scale)
