@@ -27,7 +27,7 @@ def rParams(x0, mean, var, shape, scale):
     mean,  var,   _,  _, _  = cj.normal_mean_var(beta)   
     shape, scale, _, _, _   = cj.gamma_shape_scale(phi, shape, scale) 
     
-    return mean, var, shape  
+    return mean, var, shape, scale  
         
 ################################################################################
         
