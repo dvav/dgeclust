@@ -58,6 +58,25 @@ def gamma_shape_scale(data, shape, scale, ldsum = 0., dsum = 0., N = 0, lp0 = 0.
 
 ################################################################################
 
+def normal_var(data, mean, dsum = 0., d2sum = 0., N = 0., a0 = 2., s0 = 1.):
+    ## update dsum, dsum2 and N
+    N     += data.size
+    dsum  += data.sum()
+    d2sum += (data ** 2).sum()
+    
+    ## compute a, s
+    a  = a0 + 0.5 * N;
+    s  = s0 + 0.5 * d2sum + 0.5 * N * mean**2 - mean * dsum;    
+    
+    ## compute var
+    var  = rn.invgamma(a, s);
+
+    ## return
+    return var, dsum, d2sum, N
+
+ 
+################################################################################
+
 def normal_mean_var(data, dsum = 0., d2sum = 0., N = 0., mu0 = -10., n0 = 1., a0 = 2., s0 = 1.):
     ## update dsum, dsum2 and N
     N     += data.size
