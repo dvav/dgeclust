@@ -9,5 +9,5 @@ from normalizeLogWeights                import normalizeLogWeights
 from computeClusterOccupancies          import computeClusterOccupancies
 from getClusterInfo                     import getClusterInfo
 from computeGenePosteriorProbabilities  import computeGenePosteriorProbabilities
-from computeAverageSimilarityMatrix     import computeAverageSimilarityMatrix
+from computeAverageDistanceMatrix       import computeAverageDistanceMatrix
 from computeFittedModel                 import computeFittedModel
