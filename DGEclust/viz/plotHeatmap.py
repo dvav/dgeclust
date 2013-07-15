@@ -15,35 +15,32 @@ import scipy.cluster.hierarchy  as hr
 ################################################################################
 
 def plotHeatmap(D, method = 'average', metric = 'euclidean', xticklabels = None, yticklabels = None, cmap = pl.cm.coolwarm): 
-    grid = gr.GridSpec(2,2, width_ratios=[1,3.5], height_ratios=[1,3.5], wspace=0, hspace=0)
-    
-    ## normalize D
-    D = ( D - D.min() ) / ( D.max() - D.min() )
-        
-    # Compute and plot first dendrogram
-    ax2 = pl.subplot(grid[1])
-    Y2  = hr.linkage(D, method = method, metric = metric);
-    Z2  = hr.dendrogram(Y2)
-    ax2.set_xticks([])
-    ax2.set_yticks([])
-    ax2.set_frame_on(False)
+    grid = gr.GridSpec(2, 2, width_ratios=[1,3.5], height_ratios=[1,3.5], wspace=0, hspace=0)
 
-    # Compute and plot second dendrogram
+    # Compute and plot y-axis dendrogram
     ax1 = pl.subplot(grid[2]); 
     Y1  = hr.linkage(D, method = method, metric = metric);
     Z1  = hr.dendrogram(Y1, orientation = 'right')
     ax1.set_xticks([])
     ax1.set_yticks([])
     ax1.set_frame_on(False)
-    
+                
+    # Compute and plot x-axis dendrogram
+    ax2 = pl.subplot(grid[1])
+    Y2  = Y1 
+    Z2  = hr.dendrogram(Y2)
+    ax2.set_xticks([])
+    ax2.set_yticks([])
+    ax2.set_frame_on(False)
+
     # Plot distance matrix
     axmatrix = pl.subplot(grid[3])
     idx1 = Z1['leaves']
     idx2 = Z2['leaves']
     yticklabels = np.asarray(yticklabels)[idx2].tolist()
     xticklabels = np.asarray(xticklabels)[idx1].tolist()
-    D    = D[idx1,:]
-    D    = D[:,idx2]
+    D = D[idx1,:]
+    D = D[:,idx2]
     
     im = axmatrix.matshow(D, aspect = 'auto', origin = 'lower', cmap = cmap)   
     axmatrix.set_xticks(range(len(xticklabels)))
