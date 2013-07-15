@@ -20,7 +20,7 @@ def parseArgs():
     parser.add_argument('-O',  metavar='OUTDIR',     type=str,   help='output directory',                       default='./DGEclust_output/')    
     parser.add_argument('-T',  metavar='NITERS',     type=int,   help='number of iterations',                   default=100000)    
     parser.add_argument('-DT', metavar='NLOG',       type=int,   help='save-to-disk interval',                  default=10)    
-    parser.add_argument('-P',  metavar='PARS',       type=float, help='initial model parameters',               default=[0., 10., 2., 1.], nargs='+')
+    parser.add_argument('-P',  metavar='PARS',       type=float, help='initial model parameters',               default=[100., 1., 10.], nargs='+')
     parser.add_argument('-K0', metavar='TRUNC0',     type=int,   help='truncation at level 0',                  default=100)
     parser.add_argument('-K',  metavar='TRUNC1',     type=int,   help='truncation at level 1',                  default=100)
     parser.add_argument('-M',  metavar='MODEL',      type=str,   help='model to use',                           default='NegBinom', choices=['NegBinom','Poisson','Gaussian'])
@@ -70,15 +70,16 @@ if __name__ == '__main__':
         pars = np.loadtxt(mtr.fpars)[-1,2:]        
     else:
         N, M = data.values.shape
+
+        pars = np.r_[np.log(data.counts.mean()), pars]
     
-        X0   = model.rPrior(K0, *pars)
+        X0   = model.rPrior(K0, *pars); 
         lw0  = np.tile(-np.log(K0), K0)
         LW   = np.tile(-np.log(K), (M,K))    
-        C    = np.random.randint(0, K0, (M,K))   #[ np.zeros(K, dtype = 'int') for i in range(M) ]
-        Z    = np.random.randint(0, K,  (M,N))   #[ np.zeros(N, dtype = 'int') for i in range(M) ]
+        C    = np.random.randint(0, K0, (M,K))   # [ np.zeros(K, dtype = 'int') for i in range(M) ] 
+        Z    = np.random.randint(0, K,  (M,N))   # [ np.zeros(N, dtype = 'int') for i in range(M) ]   
         eta0 = 1.
         eta  = np.ones(M)
-        # pars = pars
 
     hdp  = cl.HDP(X0, lw0, LW, C, Z, eta0, eta, pars)
 
