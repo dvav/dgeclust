@@ -5,6 +5,7 @@ results
 .project
 .pydevproject
 DGEclust_output
-Analysis2.ipynb
+Benchmarks.ipynb
+SimData.ipynb
 Figures.ipynb
 notebooks/*.pdf
