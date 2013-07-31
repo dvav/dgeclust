@@ -22,42 +22,36 @@ class GibbsSampler(object):
     ############################################################################
         
     ## main loop
-    def loop(self, T, U, data, model, hdp, mtr):        
-        ## prepare data
-        counts    = data.values.astype('double').T
-        exposures = data.exposures.values 
-
+    def loop(self, niters, updatePars, countData, model, hdp, mtr):        
+        
         ## save initial state ...
         Z, Ko, Ka = hdp.getClusterInfo()
         if mtr.t0 == 0:   ## ... only if this is not an extension of a previous simulation 
             mtr.update(0, hdp, Z, Ka)    
     
         ## loop
-        # print >> sys.stderr, 'Iteration {0}/{1} -- {2}/{3} active clusters'.format(0, T, Ka, Ko.size)         
-        for t in range(1, T+1):
+        for t in range(1, niters+1):
             ## sample
-            self._sample(t, counts, exposures, model, hdp)
+            self._sample(t, countData, model, hdp)
             Z, Ko, Ka = hdp.getClusterInfo()
     
             ## sample parameters     
-            if U: hdp.pars = model.rParams(hdp.X0[Ko > 0], *hdp.pars)
+            if updatePars: hdp.pars = model.rParams(hdp.X0[Ko > 0], *hdp.pars)
             
             ## save state and log progress 
             mtr.update(t, hdp, Z, Ka)        
-            # print >> sys.stderr, 'Iteration {0}/{1} -- {2}/{3} active clusters'.format(t, T, Ka, Ko.size)             
 
     ############################################################################
 
-    def _sample(self, t, counts, exposures, model, hdp):
+    def _sample(self, t, countData, model, hdp):
         '''
         sample
         '''
         
         ## sample LW, C and Z
-        M = counts.shape[0]
-        args = zip(hdp.LW, hdp.C, hdp.Z, hdp.eta, counts, exposures, (hdp.lw0,) * M, (hdp.X0,) * M, (model.dLogLik,) * M)
-
-        hdp.LW, hdp.C, hdp.Z, hdp.eta = zip(*self.pool.map(_sampleWCZ, args))
+        ngroups = countData.ngroups
+        args = zip(hdp.LW, hdp.C, hdp.Z, hdp.eta, countData.groups, (countData,) * ngroups, (hdp.lw0,) * ngroups, (hdp.X0,) * ngroups, (model.dLogLik,) * ngroups)
+        hdp.LW, hdp.C, hdp.Z, hdp.eta = zip(*map(_sampleWCZ, args))
     
         ## get cluster info
         K0         = hdp.lw0.size
@@ -69,8 +63,8 @@ class GibbsSampler(object):
         
         ## sample X0        
         hdp.X0[~Ki] = model.rPrior(K0 - Ka, *hdp.pars)                      ## sample inactive clusters from the prior
-        args = zip(hdp.X0[Ki], idxs, (hdp.C,) * Ka, (hdp.Z,) * Ka, (counts,) * Ka, (exposures,) * Ka, (hdp.pars,) * Ka, (model.rPost,) * Ka)
-        hdp.X0[Ki] = self.pool.map(_sampleX0, args)                          ## sample active clusters from the posterior
+        args = zip(hdp.X0[Ki], idxs, (hdp.C,) * Ka, (hdp.Z,) * Ka, (countData,) * Ka, (hdp.pars,) * Ka, (model.rPost,) * Ka)
+        hdp.X0[Ki] = map(_sampleX0, args)                          ## sample active clusters from the posterior
         
         ## sample eta0
         hdp.eta0 = rn.gamma(6.,0.2) # st.rEta(hdp.eta0, Ka, hdp.Z[0].size * M)
@@ -78,16 +72,19 @@ class GibbsSampler(object):
 ################################################################################
 
 def _sampleX0(args):
-    x0, idx, C, Z, counts, exposures, pars, rPost = args
-    return rPost(x0, idx, C, Z, counts, exposures, *pars)
+    x0, idx, C, Z, countData, pars, rPost = args
+    return rPost(x0, idx, C, Z, countData, *pars)
     
 ################################################################################
 
 def _sampleWCZ(args): 
-    lw, c, z, eta, counts, exposure, lw0, X0, dLogLik = args
+    lw, c, z, eta, group, countData, lw0, X0, dLogLik = args
+    
+    counts    = countData.counts[group]
+    exposures = countData.exposures[group]
     
     ## compute log-likelihood
-    loglik = dLogLik(X0, counts, exposure)
+    loglik = dLogLik(X0, counts, exposures)
 
     ## sample z
     logw = lw + loglik[:,c]

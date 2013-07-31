@@ -17,8 +17,8 @@ def computeFittedModel(X0, zd, exposure, model, xlimits = [-1., 12.], npoints = 
     Ko = Ko[Ki]    
     
     ## read active alpha and beta, compute mu and p
-    x = np.linspace(xlimits[0], xlimits[1], npoints).reshape(-1,1)   
-    y = np.exp(x) * np.exp(model.dLogLik(X0[Ki], np.exp(x), exposure))        
+    x = np.linspace(xlimits[0], xlimits[1], npoints)  
+    y = np.exp(x).reshape(-1,1) * np.exp(model.dLogLik(X0[Ki], np.exp(x), exposure))        
     y = y * Ko / zd.size      ## notice the normalisation of y
     
     ## return

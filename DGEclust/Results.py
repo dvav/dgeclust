@@ -11,21 +11,6 @@ import pandas as pd
 
 ################################################################################
 
-# def readSimulationOutput(fld, samples = None, genes = None, *args, **kargs):
-#     ## load results from disk
-#     pars = pd.read_table(os.path.join(fld,'pars.txt'), *args, **kargs)
-#     eta  = pd.read_table(os.path.join(fld,'eta.txt'), *args, **kargs)
-#     # lw0  = np.loadtxt(os.path.join(fld,'lw0.txt'))
-#     # LW   = np.loadtxt(os.path.join(fld,'LW.txt'))
-#     X0   = np.read_table(os.path.join(fld,'X0.txt'))
-#     C    = np.loadtxt(os.path.join(fld,'C.txt'), dtype='int')
-#     Z    = np.loadtxt(os.path.join(fld,'Z.txt'), dtype='int')
-#     path = os.path.join(fld,'clust')
-#     Zf   = os.listdir(path)
-#     
-#     ## read everything into pandas data structures 
-    
-    
 class Results(object):
     def __init__(self, fld, samples = None, genes = None, *args, **kargs):    
         ## load results from disk

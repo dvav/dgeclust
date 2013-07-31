@@ -39,13 +39,13 @@ def rPrior(N, mean, var, shape, scale):
     
 ################################################################################
    
-def rPost(x0, idx, C, Z, counts, exposures, *pars):     
+def rPost(x0, idx, C, Z, countData, *pars):     
     ## make proposal
     x0_ = x0 * np.exp(0.01 * rn.normal(N=2)) 
 
     ## compute posterior densities
-    lp  = _dLogPost(x0,  idx, C, Z, counts, exposures, *pars)
-    lp_ = _dLogPost(x0_, idx, C, Z, counts, exposures, *pars)        
+    lp  = _dLogPost(x0,  idx, C, Z, countData, *pars)
+    lp_ = _dLogPost(x0_, idx, C, Z, countData, *pars)        
     
     # # do Metropolis step
     if (lp_ > lp) or (rn.uniform() < np.exp(lp_ - lp)):
@@ -56,18 +56,24 @@ def rPost(x0, idx, C, Z, counts, exposures, *pars):
 
 ################################################################################
     
-def dLogLik(X0, counts, exposure):
-    X0 = np.atleast_2d(X0)
+def dLogLik(X0, counts, exposures):
+    X0        = np.atleast_2d(X0)
+    counts    = np.atleast_2d(counts)
+    exposures = np.atleast_2d(exposures)
     
-    phi  = X0[:,0] 
-    beta = X0[:,1]
-    
+    ## read X0
+    phi   = X0[:,0] 
+    beta  = X0[:,1]
     alpha = 1. / phi
-
-    mu = exposure * np.exp(beta)
-    p  = alpha / (alpha + mu)
     
-    return ds.dLogNegBinomial(counts.reshape(-1,1), alpha, p)
+    ## compute mu and p 
+    mu     = exposures.reshape(-1,1) * np.exp(beta)
+    p      = alpha / (alpha + mu)
+
+    ## compute loglik
+    loglik = [ ds.dLogNegBinomial(cnts.reshape(-1,1), alpha, pi) for cnts, pi in zip(counts, p) ]
+    
+    return np.sum(loglik, 0)
     
 ################################################################################
         
@@ -81,9 +87,13 @@ def _dLogPrior(x0, mean, var, shape, scale):
     
 ################################################################################
     
-def _dLogPost(x0, idx, C, Z, counts, exposures, *pars):
+def _dLogPost(x0, idx, C, Z, countData, *pars):
+    counts    = countData.counts
+    exposures = countData.exposures
+    groups    = countData.groups
+    
     logprior = _dLogPrior(x0, *pars)
-    loglik = [ dLogLik(x0, cnts[c[z] == idx], exposure).sum() for c, z, cnts, exposure in zip(C, Z, counts, exposures) ]
+    loglik = [ dLogLik(x0, counts[group][:, c[z] == idx], exposures[group]).sum() for c, z, group in zip(C, Z, groups)]
         
     return logprior + np.sum(loglik)
     

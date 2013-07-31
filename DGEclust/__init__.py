@@ -10,3 +10,4 @@ from HDP            import HDP
 from Monitor        import Monitor
 from Results        import Results
 from CountData      import CountData
+from clust          import clust
