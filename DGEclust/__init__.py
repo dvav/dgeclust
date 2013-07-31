@@ -9,4 +9,4 @@ from GibbsSampler   import GibbsSampler
 from HDP            import HDP
 from Monitor        import Monitor
 from Results        import Results
-from readCountData  import readCountData
+from CountData      import CountData
