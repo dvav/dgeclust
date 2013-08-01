@@ -11,21 +11,20 @@ import pandas as pd
 
 ################################################################################
 
-def computeGenePosteriorProbabilities(res, T0, T, dt = 1, idxs1 = [0], idxs2 = [1]):
+def computeGenePosteriorProbabilities(res, T0, T, dt = 1, group1 = 0, group2 = 1, verbose = False):
     ## loop
     nsamples, p  = 0, 0.
     for t, Z in res.clusts(T0, T, dt):         
         ## update number of co-occurences
-        s  = [ ( Z[idx] == Z[idxs2] ).sum(0) for idx in idxs1 ]
-        p += np.sum(s, 0)
+        p += Z[group1] == Z[group2]
 
         nsamples += 1
 
         ## log
-        print >> sys.stderr, t, 
+        if verbose: print >> sys.stderr, t, 
         
     ## normalise p and adjust
-    p       /= (len(idxs1) * len(idxs2) * nsamples)
+    p       /= nsamples
     ii       = p.argsort()
     tmp      = p[ii].cumsum() / np.arange(1, p.size+1)
     padj     = np.zeros(p.shape)
@@ -35,7 +34,7 @@ def computeGenePosteriorProbabilities(res, T0, T, dt = 1, idxs1 = [0], idxs2 = [
     print >> sys.stderr, '\n{0} samples processed'.format(nsamples)        
 
     ## return    
-    return pd.DataFrame({'p':p, 'padj':padj}, index = res.genes) 
+    return pd.DataFrame({'p':p, 'padj':padj}, index = res.genes).sort(columns = 'padj') 
 
 ################################################################################
 
