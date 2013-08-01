@@ -20,4 +20,7 @@ class CountData(object):
         self.ngroups   = len(self.groups)
         self.nreplicas = [ np.size(group) for group in self.groups ] 
         
+        self.genes     = counts.index.values
+        self.samples   = counts.columns.values
+        
 ################################################################################
