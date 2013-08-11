@@ -6,12 +6,17 @@
 ################################################################################
 
 import sys, os
-import numpy  as np
-import pandas as pd
+import multiprocessing as mp
+import numpy           as np
+import pandas          as pd
 
 ################################################################################
 
-def computeGenePosteriorProbabilities(res, T0, T, dt = 1, group1 = 0, group2 = 1, verbose = False):
+def computeGenePosteriorProbabilities(res, T0, T, dt = 1, group1 = 0, group2 = 1, nthreads = 0, verbose = False):
+    ## multiprocessing
+    nthreads  = nthreads if nthreads > 0 else mp.cpu_count() 
+    pool      = mp.Pool(processes = nthreads)
+    
     ## loop
     nsamples, p  = 0, 0.
     for t, Z in res.clusts(T0, T, dt):         
@@ -22,7 +27,7 @@ def computeGenePosteriorProbabilities(res, T0, T, dt = 1, group1 = 0, group2 = 1
 
         ## log
         if verbose: print >> sys.stderr, t, 
-        
+            
     ## normalise p and adjust
     p       /= nsamples
     ii       = p.argsort()
@@ -31,7 +36,8 @@ def computeGenePosteriorProbabilities(res, T0, T, dt = 1, group1 = 0, group2 = 1
     padj[ii] = tmp
      
     ## log
-    print >> sys.stderr, '\n{0} samples processed'.format(nsamples)        
+    if verbose: print >> sys.stderr, '\n'
+    print >> sys.stderr, '{0} samples processed'.format(nsamples)        
 
     ## return    
     return pd.DataFrame({'p':p, 'padj':padj}, index = res.genes).sort(columns = 'padj') 
