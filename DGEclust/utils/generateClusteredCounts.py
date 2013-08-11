@@ -9,22 +9,26 @@ import numpy as np
 
 ################################################################################
 
-def generateClusteredCounts(nclusters = 10, ngenes = 1e3, nreplicas = 10, nDE = 100, c0 = [7e6, 14e6], sh = 1., sc = 0.45, mu = 5.7, var = 10., scale = 1):
-    phi0 = np.random.gamma(sh, sc, size = nclusters) * scale
-    mu0  = np.exp(np.random.randn(nclusters) * np.sqrt(var) / scale + mu)
-        
+def generateClusteredCounts(x0, z, ngenes = 1e3, nreplicas = 10, nDE = 100, c0 = [7e6, 14e6]):        
+    ## condition 1
+    z1   = np.random.choice(z, size = ngenes)
+    phi1 = x0[z1,0]
+    mu1  = np.exp(x0[z1,1])
+    
+    ## condition 2
+    z2       = z1.copy()
+    z2[:nDE] = np.random.choice(z, size = nDE)
+    phi2     = x0[z2,0]
+    mu2      = np.exp(x0[z2,1])
+    
     ## library sizes
     c = c0[0] + (c0[1] - c0[0]) * np.random.rand(nreplicas * 2)
         
-    ## generate cluster occupany indicators
-    z1 = np.random.randint(0, nclusters, size = ngenes)
-    z2 = np.random.randint(0, nclusters, size = ngenes)
-    
-    z2[nDE:] = z1[nDE:]  ## ensure there are only nDE differentially expressed genes 
-    
     ## draw from the negative binomial
-    y1 = [ np.random.poisson(np.random.gamma(1 / phi0[z1], ci * mu0[z1] / mu0[z1].sum() * phi0[z1])) for i, ci in zip(range(nreplicas), c[:nreplicas]) ]          
-    y2 = [ np.random.poisson(np.random.gamma(1 / phi0[z2], ci * mu0[z2] / mu0[z2].sum() * phi0[z2])) for i, ci in zip(range(nreplicas), c[nreplicas:]) ]          
+    y1 = [ np.random.poisson(np.random.gamma(1. / phi1, ci * mu1 / mu1.sum() * phi1)) for ci in c[nreplicas:] ]          
+    y2 = [ np.random.poisson(np.random.gamma(1. / phi2, ci * mu2 / mu2.sum() * phi2)) for ci in c[:nreplicas] ]          
     
     ## return
     return np.vstack((y1,y2)).T, z1 != z2, np.vstack((z1,z2)).T
+
+
