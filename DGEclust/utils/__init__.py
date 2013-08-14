@@ -11,6 +11,5 @@ from getClusterInfo                     import getClusterInfo
 from computeGenePosteriorProbabilities  import computeGenePosteriorProbabilities
 from computeAverageDistanceMatrix       import computeAverageDistanceMatrix
 from computeFittedModel                 import computeFittedModel
-from generateUnclusteredCounts          import generateUnclusteredCounts
-from generateClusteredCounts            import generateClusteredCounts
+from generateCounts                     import generateUnclusteredCounts, generateClusteredCounts
 
