@@ -13,8 +13,9 @@ def generateUnclusteredCounts(x, ngenes = 1000, nclasses = 2, nreplicas = 2, nDE
     nclasses -= 1
     
     ## parameters for the control condition
-    phi1 = np.random.choice(x[:,0], size = ngenes, replace = False).reshape(-1,1)   
-    mu1  = np.random.choice(x[:,1], size = ngenes, replace = False).reshape(-1,1)
+    idxs = np.random.choice(range(len(x)), size = ngenes, replace = False) 
+    phi1 = x[idxs,0].reshape(-1,1)   
+    mu1  = x[idxs,1].reshape(-1,1)
     z1   = np.zeros((ngenes,1))
     c1   = c0[0] + (c0[1] - c0[0]) * np.random.rand(nreplicas)
 

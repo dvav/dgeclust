@@ -6,23 +6,19 @@
 ################################################################################
 
 import sys, os
-import multiprocessing as mp
-import numpy           as np
-import pandas          as pd
+import numpy  as np
+import pandas as pd
 
 ################################################################################
 
-def computeGenePosteriorProbabilities(res, T0, T, dt = 1, group1 = 0, group2 = 1, nthreads = 0, verbose = False):
-    ## multiprocessing
-    nthreads  = nthreads if nthreads > 0 else mp.cpu_count() 
-    pool      = mp.Pool(processes = nthreads)
-    
+def computeGenePosteriorProbabilities(res, T0, T, dt = 1, group1 = 0, group2 = 1, verbose = False):    
     ## loop
-    nsamples, p  = 0, 0.
+    nsamples, p = 0, 0.
     for t, Z in res.clusts(T0, T, dt):         
         ## update number of co-occurences
         p += Z[group1] == Z[group2]
 
+        ## update number of processed samples
         nsamples += 1
 
         ## log
