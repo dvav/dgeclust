@@ -13,14 +13,14 @@ import numpy  as np
 def estimateSizeFactors(counts, locfcn = np.median):
     ## compute geometric mean over genes
     lsum   = np.log(counts).sum(0)
-    gmeans = exp(lsum / counts.shape[0])          
+    gmeans = np.exp(lsum / counts.shape[0])          
     
     ## divide samples by geometric means
-    counts /= gmeans        
+    counts = counts / gmeans     ## counts /= gmeans gives wrong results!!!????        
 
     ## get median (or other central tendency metric) of samples excluding genes with 0 gmean 
-    sizes = locfcn(counts[:,gmeans > 0], 1)      
-
+    sizes = locfcn(counts[:,gmeans > 0.], 1)      
+    
     ## return
     return sizes
             
