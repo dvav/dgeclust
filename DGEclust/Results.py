@@ -27,9 +27,9 @@ class Results(object):
         ## read everything into object attributes        
         t = pars[:,0]
         
-        self.Ka = pd.Series(pars[:,1], index = t)
-        self.sh = pd.Series(pars[:,2], index = t)
-        self.sc = pd.Series(pars[:,3], index = t)
+        self.Ka      = pd.Series(pars[:,1], index = t)
+        self.phi_min = pd.Series(pars[:,2], index = t)
+        self.phi_max = pd.Series(pars[:,3], index = t)
         
         self.eta = eta
         self.C   = C

@@ -16,6 +16,7 @@ import DGEclust.utils      as ut
 
 def rParams(x0, phi_min, phi_max, a = 1., b = 1.):
     phi = x0[:,0]
+    
     phi_max = rn.pareto(a + phi.size, max(np.r_[phi, b]))
     
     ## return
@@ -29,27 +30,22 @@ def rPrior(N, phi_min, phi_max):
     p   = rn.uniform(0, 1,  (N, 1))
     
     ## compute mu
-    mu = (1 - p) / (p * phi)
+    mu  = (1 - p) / (p * phi)
     
     ## return    
     return np.hstack((phi, mu))
     
 ################################################################################
 
-def _dLogPostAlpha(alpha, counts, ncounts, cntsum, shape, scale):
-    # beta = 1. / scale ## the scale parameter of the inverse gamma
+def _logBinomCoeff(counts, phi):
+    alpha = 1. / phi
+    coeff = sp.gammaln(counts + alpha) - sp.gammaln(alpha) - sp.gammaln(counts + 1.)
     
-    lp  = sp.betaln(ncounts * alpha + 1., cntsum + 1.)
-    lp += ( sp.gammaln(counts + alpha) - sp.gammaln(alpha) - sp.gammaln(counts + 1.) ).sum()
-    # lp += shape * np.log(beta) - sp.gammaln(shape) - (shape + 1) * np.log(alpha) - beta / alpha
- 
     ##
-    return lp    
-## 
-        
+    return coeff
+    
 def rPost(x0, idx, C, Z, countData, *pars):     
-    phi   = x0[0]
-    alpha =  1 / phi
+    phi = x0[0]
     
     ## read data
     counts = countData.countsNorm
@@ -59,46 +55,43 @@ def rPost(x0, idx, C, Z, countData, *pars):
     cntsum  = counts.sum()
     ncounts = counts.size
     
-    ## sample alpha
-    alpha_ = alpha * np.exp(0.01 * rn.normal())    ## make proposal
+    ## sample phi using Metropolis
+    phi_ = phi * np.exp(0.01 * rn.normal())    ## make proposal
     
-    lp     = _dLogPostAlpha(alpha,  counts, ncounts, cntsum, *pars)  ## compute posterior density for alpha
-    lp_    = _dLogPostAlpha(alpha_, counts, ncounts, cntsum, *pars)  ## compute posterior density for alpha
-    
+    lp  = sp.betaln(ncounts / phi  + 1., cntsum + 1.) + _logBinomCoeff(counts, phi).sum()   ## posterior density for phi
+    lp_ = sp.betaln(ncounts / phi_ + 1., cntsum + 1.) + _logBinomCoeff(counts, phi_).sum()  ## posterior density for phi_
+
     if (lp_ > lp) or (rn.uniform() < np.exp(lp_ - lp)): ## do Metropolis step
-        alpha = alpha_
+        phi = phi_
          
     ## sample p
-    p = rn.beta(ncounts * alpha + 1., cntsum + 1.)     
+    p = rn.beta(ncounts / phi + 1., cntsum + 1.)     
 
     ## compute mu
-    phi = 1. / alpha
-    mu  = alpha * (1. - p) / p
+    mu  = (1. - p) / (p * phi)
     
     # return            
-    return (phi, mu)
+    return phi, mu
    
 ################################################################################
-    
+
 def dLogLik(X0, counts):
     X0       = np.atleast_2d(X0)
     counts   = np.atleast_2d(counts)
-    nsamples = counts.shape[0]
+    ngenes   = counts.shape[1]
     
     ## read X0
-    phi   = X0[:,0] 
-    mu    = X0[:,1]
-    alpha = 1. / phi
+    phi   = X0[:,[0]] 
+    mu    = X0[:,[1]]
     
-    ## compute mu and p 
-    mu = np.tile(mu,(nsamples,1))
-    p  = alpha / (alpha + mu)
+    ## compute p 
+    p  = 1. / (1. + mu * phi)
 
     ## compute loglik
-    loglik = [ ds.dLogNegBinomial(cnts.reshape(-1,1), alpha, pi) for cnts, pi in zip(counts, p) ]
+    loglik = ds.dLogNegBinomial(counts[:,np.newaxis,:], phi, p).sum(0).T
     
     ## return
-    return np.sum(loglik, 0)
-    
+    return loglik
+        
 ################################################################################
         

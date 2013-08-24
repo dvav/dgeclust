@@ -9,11 +9,17 @@ import pylab          as pl
 
 ################################################################################
 
-def _plotChain(x, color = 'grey', xlabel='iteration #', ylabel=''):
+def _plotChain(x, color = 'grey', xlabel='# of iterations', ylabel=''):
     x.plot(color=color);
     pl.plot(pl.gca().get_xlim(), [x.mean()]*2, 'k--'); 
-    pl.xlabel(xlabel); 
-    pl.ylabel(ylabel);  
+    pl.xlabel(xlabel) 
+    pl.ylabel(ylabel)  
+
+def _plotHistogram(x, bins = 100, color = 'grey', ylabel = 'density', xlabel = ''):
+    pl.hist(x, bins=bins, normed=True, color=color); 
+    pl.plot([x.mean()]*2, pl.gca().get_ylim(), 'k--'); 
+    pl.xlabel(xlabel); pl.ylabel(ylabel);  
+    pl.grid()
         
 ################################################################################
 
@@ -21,15 +27,11 @@ def plotChains(res, T0, T, dt = 1, bins = 100, color = 'grey'):
     ii = (res.Ka.index >= T0) & (res.Ka.index <= T) & (res.Ka.index % dt == 0) 
 
     ## plot histogram of clusters
-    pl.subplot(2,2,1); 
-    res.Ka[ii].hist(bins=bins, normed=True, color=color); 
-    pl.plot([res.Ka[ii].mean()]*2, pl.gca().get_ylim(), 'k--'); 
-    pl.xlabel('cluster #'); pl.ylabel('density');  
-    
-    ## plot chains
-    pl.subplot(2,2,2); _plotChain(res.Ka[ii], color=color, ylabel='clusters #')    
-    pl.subplot(2,2,3); _plotChain(res.sh[ii], color=color, ylabel='shape')
-    pl.subplot(2,2,4); _plotChain(res.sc[ii], color=color, ylabel='scale')                    
+    pl.subplot(2,2,2); _plotHistogram(res.Ka[ii], bins=bins, color=color, xlabel='# of clusters')
+    pl.subplot(2,2,1); _plotChain(res.Ka[ii], color=color, ylabel='# of clusters')    
+
+    pl.subplot(2,2,4); _plotHistogram(res.phi_max[ii], bins=bins, color=color, xlabel='maximum dispersion')    
+    pl.subplot(2,2,3); _plotChain(res.phi_max[ii], color=color, ylabel='maximum dispersion')                    
 
     ## plot concentration parameters
     # figure(figsize=(20,6)); 
