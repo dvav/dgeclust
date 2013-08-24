@@ -28,16 +28,17 @@ def estimateSizeFactors(counts, locfcn = np.median):
 
 class CountData(object):
     def __init__(self, counts, exposures = None, groups = None):
-        self.counts    = counts.values.T
-        self.libSizes  = self.counts.sum(1)
-        self.exposures = estimateSizeFactors(self.counts) if exposures is None else exposures
-        self.groups    = np.arange(self.counts.shape[0])  if groups    is None else groups  
+        self.counts     = counts.values.T
+        self.exposures  = estimateSizeFactors(self.counts) if exposures is None else exposures
+        self.countsNorm = self.counts / self.exposures.reshape(-1,1)
+        self.libSizes   = self.counts.sum(1)
+        self.groups     = np.arange(self.counts.shape[0])  if groups    is None else groups  
     
-        self.ngenes    = self.counts.shape[1]
-        self.ngroups   = len(self.groups)
-        self.nreplicas = [ np.size(group) for group in self.groups ] 
+        self.ngenes     = self.counts.shape[1]
+        self.ngroups    = len(self.groups)
+        self.nreplicas  = [ np.size(group) for group in self.groups ] 
         
-        self.genes     = counts.index.values
-        self.samples   = counts.columns.values
+        self.genes      = counts.index.values
+        self.samples    = counts.columns.values
         
 ################################################################################

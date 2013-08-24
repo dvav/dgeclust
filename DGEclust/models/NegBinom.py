@@ -56,10 +56,9 @@ def rPost(x0, idx, C, Z, countData, *pars):
 
 ################################################################################
     
-def dLogLik(X0, counts, exposures):
+def dLogLik(X0, counts):
     X0        = np.atleast_2d(X0)
     counts    = np.atleast_2d(counts)
-    exposures = np.atleast_2d(exposures)
     
     ## read X0
     phi   = X0[:,0] 
@@ -67,8 +66,8 @@ def dLogLik(X0, counts, exposures):
     alpha = 1. / phi
     
     ## compute mu and p 
-    mu     = exposures.reshape(-1,1) * np.exp(beta)
-    p      = alpha / (alpha + mu)
+    mu = np.tile(np.exp(beta),(counts.shape[0],1))
+    p  = alpha / (alpha + mu)
 
     ## compute loglik
     loglik = [ ds.dLogNegBinomial(cnts.reshape(-1,1), alpha, pi) for cnts, pi in zip(counts, p) ]
@@ -88,14 +87,15 @@ def _dLogPrior(x0, mean, var, shape, scale):
 ################################################################################
     
 def _dLogPost(x0, idx, C, Z, countData, *pars):
-    counts    = countData.counts
-    exposures = countData.exposures
+    counts    = countData.countsNorm
     groups    = countData.groups
     
+    counts = np.hstack([ counts[group][:, c[z] == idx].ravel() for c, z, group in zip(C, Z, groups) ])
+
     logprior = _dLogPrior(x0, *pars)
-    loglik = [ dLogLik(x0, counts[group][:, c[z] == idx], exposures[group]).sum() for c, z, group in zip(C, Z, groups)]
+    loglik   = dLogLik(x0, counts).sum()
         
-    return logprior + np.sum(loglik)
+    return logprior + loglik
     
 ################################################################################
     
