@@ -14,7 +14,7 @@ import DGEclust.utils      as ut
 
 ################################################################################
 
-def rParams(x0, phi_min, phi_max, a = 1., b = 1.):
+def rParams(x0, phi_min, phi_max, a = 1., b = 0.1):
     phi = x0[:,0]
     
     phi_max = rn.pareto(a + phi.size, max(np.r_[phi, b]))
@@ -68,9 +68,9 @@ def rPost(x0, idx, C, Z, countData, *pars):
     p = rn.beta(ncounts / phi + 1., cntsum + 1.)     
 
     ## compute mu
-    mu  = (1. - p) / (p * phi)
+    mu = (1. - p) / (p * phi)
     
-    # return            
+    ## return            
     return phi, mu
    
 ################################################################################

@@ -11,7 +11,7 @@ import numpy as np
 ################################################################################
 
 class Monitor(object):    
-    def __init__(self, outDir, dt, extend):                
+    def __init__(self, outDir, T0, dt, extend):                
         ## attributes
         self.fX0   = os.path.join(outDir,'X0.txt')
         self.flw0  = os.path.join(outDir,'lw0.txt')
@@ -24,6 +24,7 @@ class Monitor(object):
 
         self.t0    = 0
         self.dt    = dt
+        self.T0    = T0
 
         ## check for previous data on disk
         if os.path.exists(outDir): 
@@ -70,7 +71,7 @@ class Monitor(object):
             np.savetxt(f, np.atleast_2d(np.r_[t, Ka, hdp.pars]), fmt='%d\t%d' + '\t%f' * np.size(hdp.pars))
 
         ## write Z
-        if (self.dt > 0) and not (t % self.dt):
+        if (t > self.T0) and (self.dt > 0) and not (t % self.dt):
             with open (os.path.join(self.dZ, str(t)), 'w') as f: 
                 np.savetxt(f, Z, fmt='%d', delimiter = '\t')
 
