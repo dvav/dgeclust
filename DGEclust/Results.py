@@ -28,10 +28,8 @@ class Results(object):
         t = pars[:,0]
         
         self.Ka = pd.Series(pars[:,1], index = t)
-        self.mu = pd.Series(pars[:,2], index = t)
-        self.s2 = pd.Series(pars[:,3], index = t)
-        self.sh = pd.Series(pars[:,4], index = t)
-        self.sc = pd.Series(pars[:,5], index = t)
+        self.sh = pd.Series(pars[:,2], index = t)
+        self.sc = pd.Series(pars[:,3], index = t)
         
         self.eta = eta
         self.C   = C

@@ -16,6 +16,11 @@ def uniform(low = 0., high = 1., N = None):
     
 ################################################################################
 
+def pareto(shape = 1., loc = 1., N = None):
+    return rn.pareto(shape, N) + loc
+    
+################################################################################
+
 def normal(mean = 0., var = 1., N = None):
     return st.norm.rvs(mean, np.sqrt(var), N)
     

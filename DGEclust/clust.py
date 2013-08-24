@@ -12,7 +12,7 @@ import numpy            as np
 ################################################################################
 
 def clust(countData, outDir = 'DGEclust_output', 
-    niters = 100000, nlog = 10, pars = [100., 1., 10.], K0 = 100, K = 100, model = mdl.NegBinom, nthreads = 1, extendSim = False, updatePars = True):
+    niters = 100000, nlog = 10, pars = [0., 10.], K0 = 100, K = 100, model = mdl.NegBinom, nthreads = 1, extendSim = False, updatePars = True):
 
     ## load data and prepare output
     mtr = cl.Monitor(outDir, nlog, extendSim)   
@@ -32,8 +32,6 @@ def clust(countData, outDir = 'DGEclust_output',
     else:
         ngenes  = countData.ngenes
         ngroups = countData.ngroups
-
-        pars = np.r_[np.log(countData.counts.mean()), pars]
     
         X0   = model.rPrior(K0, *pars); 
         lw0  = np.tile(-np.log(K0), K0)

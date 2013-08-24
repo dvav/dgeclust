@@ -64,7 +64,7 @@ class GibbsSampler(object):
         ## sample X0        
         hdp.X0[~Ki] = model.rPrior(K0 - Ka, *hdp.pars)                      ## sample inactive clusters from the prior
         args = zip(hdp.X0[Ki], idxs, (hdp.C,) * Ka, (hdp.Z,) * Ka, (countData,) * Ka, (hdp.pars,) * Ka, (model.rPost,) * Ka)
-        hdp.X0[Ki] = map(_sampleX0, args)                          ## sample active clusters from the posterior
+        hdp.X0[Ki] = self.pool.map(_sampleX0, args)                          ## sample active clusters from the posterior
         
         ## sample eta0
         hdp.eta0 = rn.gamma(6.,0.2) # st.rEta(hdp.eta0, Ka, hdp.Z[0].size * M)
