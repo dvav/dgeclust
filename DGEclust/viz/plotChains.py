@@ -27,11 +27,14 @@ def plotChains(res, T0, T, dt = 1, bins = 100, color = 'grey'):
     ii = (res.Ka.index >= T0) & (res.Ka.index <= T) & (res.Ka.index % dt == 0) 
 
     ## plot histogram of clusters
-    pl.subplot(2,2,2); _plotHistogram(res.Ka[ii], bins=bins, color=color, xlabel='# of clusters')
-    pl.subplot(2,2,1); _plotChain(res.Ka[ii], color=color, ylabel='# of clusters')    
+    pl.subplot(3,2,1); _plotChain(res.Ka[ii], color=color, ylabel='# of clusters')    
+    pl.subplot(3,2,2); _plotHistogram(res.Ka[ii], bins=bins, color=color, xlabel='# of clusters')
 
-    pl.subplot(2,2,4); _plotHistogram(res.phi_max[ii], bins=bins, color=color, xlabel='maximum dispersion')    
-    pl.subplot(2,2,3); _plotChain(res.phi_max[ii], color=color, ylabel='maximum dispersion')                    
+    pl.subplot(3,2,3); _plotChain(res.shape[ii], color=color, ylabel='shape')                    
+    pl.subplot(3,2,4); _plotHistogram(res.shape[ii], bins=bins, color=color, xlabel='shape')    
+
+    pl.subplot(3,2,5); _plotChain(res.scale[ii], color=color, ylabel='scale')                    
+    pl.subplot(3,2,6); _plotHistogram(res.scale[ii], bins=bins, color=color, xlabel='scale')    
 
     ## plot concentration parameters
     # figure(figsize=(20,6)); 
