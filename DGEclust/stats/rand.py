@@ -69,7 +69,7 @@ def stick(Ko, eta):
     v[-1] = 1.   ## this ensures that sum(w) = 1. 
 
     lv    = np.log(v)
-    lcp   = np.log1p(-v[:-1]).cumsum()
+    lcp   = np.log(1.-v[:-1]).cumsum()
     
     ## compute weights
     lw = np.r_[lv[0], lv[1:] + lcp]

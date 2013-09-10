@@ -14,7 +14,7 @@ import scipy.special as sp
 def dLogNegBinomial(x, phi, p):
     alpha = 1. / phi
     
-    return sp.gammaln(x + alpha) - sp.gammaln(alpha) - sp.gammaln(x + 1.) + alpha * np.log(p) + x * np.log1p(-p)
+    return sp.gammaln(x + alpha) - sp.gammaln(alpha) - sp.gammaln(x + 1.) + alpha * np.log(p) + x * np.log(1.-p)
 
 ################################################################################
 

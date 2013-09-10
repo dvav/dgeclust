@@ -30,11 +30,13 @@ def plotChains(res, T0, T, dt = 1, bins = 100, color = 'grey'):
     pl.subplot(3,2,1); _plotChain(res.Ka[ii], color=color, ylabel='# of clusters')    
     pl.subplot(3,2,2); _plotHistogram(res.Ka[ii], bins=bins, color=color, xlabel='# of clusters')
 
-    pl.subplot(3,2,3); _plotChain(res.shape[ii], color=color, ylabel='shape')                    
-    pl.subplot(3,2,4); _plotHistogram(res.shape[ii], bins=bins, color=color, xlabel='shape')    
+    mean = res.shape[ii] * res.scale[ii]
+    pl.subplot(3,2,3); _plotChain(mean, color=color, ylabel='mean')                    
+    pl.subplot(3,2,4); _plotHistogram(mean, bins=bins, color=color, xlabel='mean')    
 
-    pl.subplot(3,2,5); _plotChain(res.scale[ii], color=color, ylabel='scale')                    
-    pl.subplot(3,2,6); _plotHistogram(res.scale[ii], bins=bins, color=color, xlabel='scale')    
+    var = mean * res.scale[ii]
+    pl.subplot(3,2,5); _plotChain(var, color=color, ylabel='variance')                    
+    pl.subplot(3,2,6); _plotHistogram(var, bins=bins, color=color, xlabel='variance')    
 
     ## plot concentration parameters
     # figure(figsize=(20,6)); 
