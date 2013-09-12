@@ -16,12 +16,26 @@ PHI_MIN = 1e-12
 
 ################################################################################
 
-def rParams(x0, shape, scale):
+def rParams2(x0, shape, scale):
     phi = x0[:,0]
 
     # scale, _, _ = cj.gamma_scale(phi, shape)
     shape, scale, _, _, _ = cj.gamma_shape_scale(phi, shape, scale)
+
+    ## return
+    return shape, scale
     
+################################################################################
+
+def rParams(x0, shape, scale):
+    phi = x0[:,0]
+
+    mean_phi = phi.sum() / phi.size     
+    s = np.log(mean_phi) - np.log(phi).sum() / phi.size
+
+    shape -= ( np.log(shape) - sp.psi(shape) - s ) / ( 1. / shape - sp.polygamma(1,shape) )
+    scale  = mean_phi / shape
+
     ## return
     return shape, scale
     
@@ -68,7 +82,7 @@ def rPost(x0, idx, C, Z, countData, *pars):
         phi = phi_
          
     ## sample p
-    p = rn.beta(ncounts / phi + 1., cntsum + 1.)     
+    p = rn.beta(ncounts / phi + 1., cntsum + 1.)      
 
     ## compute mu
     mu = (1. - p) / (p * phi)
