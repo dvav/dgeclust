@@ -11,9 +11,6 @@ import numpy as np
 ################################################################################
 
 def plotRA(samples1, samples2, ids = None, epsilon = 1., *args, **kargs):        
-    samples1 = samples1.astype('double')
-    samples2 = samples2.astype('double')
-    
     ## set zero elements to epsilon
     samples1[samples1 < 1.] = epsilon     
     samples2[samples2 < 1.] = epsilon     
