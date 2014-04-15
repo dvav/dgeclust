@@ -1,0 +1,39 @@
+{
+	"model": {
+		"choices": ["NegBinom", "Poisson", "Normal"],
+		"distribution": "NegBinom",
+		"pars": [0,1]
+	},
+    "fnames": {
+        "clust": "_clust",
+		"pvals": "_pvals.txt",
+		"simmat": "_simmat.txt",
+		"sampleNames": "sample_names.txt",
+		"featureNames": "feature_names.txt",
+        "theta": "theta.txt",
+        "lw": "lw.txt",
+        "lu": "lu.txt",
+        "c": "c.txt",
+        "z": "z.txt",
+        "pars": "pars.txt",
+		"eta": "eta.txt",
+		"zz": "zz"
+    },
+    "clust": {
+        "niters": 10000,
+        "burnin": 0,
+        "nlog": 1,
+		"nglobal": 100,
+		"nlocal": 100,
+		"extend": false
+    },
+    "post": {
+        "t0": 0,
+        "tend": 10000,
+        "dt": 1,
+		"group1": 0,
+		"group2": 1,
+		"compareFeatures": false
+    },
+	"nthreads": 0
+}
