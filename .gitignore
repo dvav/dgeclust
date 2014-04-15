@@ -1,11 +1,9 @@
 .DS_Store
 *.pyc
+.idea
 data
 results
-.project
-.pydevproject
-DGEclust_output
-Benchmarks.ipynb
-SimData.ipynb
-Figures.ipynb
-notebooks/*.pdf
+_clust
+_pvals.txt
+_simmat.txt
+
