@@ -13,7 +13,7 @@ import gibbs.alg as alg
 import models.nbinom as nbinom
 import config as cfg
 
-################################################################################
+########################################################################################################################
 
 ## parse command-line arguments (default values are from the config file)
 parser = ap.ArgumentParser(prog='clust',
@@ -41,7 +41,7 @@ groups = None if args.groups is None else eval(args.groups)
 pars = eval(args.pars)
 nthreads = args.nthreads if args.nthreads > 0 else mp.cpu_count()
 
-################################################################################
+########################################################################################################################
 
 ## prepare output file names
 fnames = {
@@ -55,7 +55,7 @@ fnames = {
     'zz': os.path.join(args.outdir, cfg.fnames['zz'])
 }
 
-################################################################################
+########################################################################################################################
 
 ## load data
 data = ut.read_count_data(args.data, norm, groups)
@@ -82,4 +82,4 @@ pool = mp.Pool(processes=nthreads)
 ## execute
 alg.do_gibbs_sampling(data, model, state, pool, fnames, args.niters, args.burnin, args.nlog)
 
-################################################################################
+########################################################################################################################

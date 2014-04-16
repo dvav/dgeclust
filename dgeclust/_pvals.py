@@ -8,7 +8,7 @@ import argparse as ap
 import gibbs.post as post
 import config as cfg
 
-################################################################################
+########################################################################################################################
 
 ## parse command-line arguments (default values are from the config file)
 parser = ap.ArgumentParser(prog='pvals', description='Compute posterior probabilities')
@@ -23,7 +23,7 @@ parser.add_argument('-r', type=int, dest='nthreads', help='number of threads', d
 
 args = parser.parse_args()
 
-################################################################################
+########################################################################################################################
 
 ## use multiple cores
 nthreads = args.nthreads if args.nthreads > 0 else mp.cpu_count()
@@ -38,4 +38,4 @@ print >> sys.stderr, '{0} samples processed from directory "{1}"'.format(nsample
 ## save pvals to output file
 pvals.to_csv(args.outfile, sep='\t')
 
-################################################################################
+########################################################################################################################

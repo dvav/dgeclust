@@ -5,7 +5,7 @@ import numpy as np
 import scipy.misc as ms
 import pandas as pd
 
-################################################################################
+########################################################################################################################
 
 
 def estimate_norm_factors(counts, locfcn=np.median):
@@ -24,7 +24,7 @@ def estimate_norm_factors(counts, locfcn=np.median):
     ## return
     return norm_factors
 
-################################################################################
+########################################################################################################################
 
 
 def read_count_data(file_name, norm_factors=None, groups=None, locfcn=np.median):
@@ -56,7 +56,7 @@ def read_count_data(file_name, norm_factors=None, groups=None, locfcn=np.median)
                                       'nfeatures, nsamples')(counts, sample_names, feature_names, norm_factors, groups,
                                                              ngroups, nreplicas, nfeatures, nsamples)
             
-################################################################################
+########################################################################################################################
 
 
 def compute_cluster_occupancies(nclusters, cluster_indicators):
@@ -68,7 +68,7 @@ def compute_cluster_occupancies(nclusters, cluster_indicators):
     ## return
     return np.sum(occupancy_matrix, 1), occupancy_matrix
 
-################################################################################
+########################################################################################################################
 
 
 def get_cluster_info(nclusters, cluster_indicators):
@@ -81,7 +81,7 @@ def get_cluster_info(nclusters, cluster_indicators):
     ## return
     return cluster_occupancies, iactive, nactive, occupancy_matrix
 
-################################################################################
+########################################################################################################################
 
 
 def normalize_log_weights(lw):
@@ -93,4 +93,4 @@ def normalize_log_weights(lw):
     ## return
     return lw - lsum
  
-################################################################################
+########################################################################################################################

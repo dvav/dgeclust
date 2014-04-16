@@ -9,7 +9,7 @@ import matplotlib.pyplot as pl
 import utils as ut
 import config as cfg
 
-################################################################################
+########################################################################################################################
 
 
 def read_simulation_results(indir):
@@ -29,41 +29,43 @@ def read_simulation_results(indir):
     ## return
     return cl.namedtuple('Results', 'pars, theta, c, z, zz')(pars, theta, c, z, zz)
 
-################################################################################
+########################################################################################################################
 
-# def plot_ratio_average_plot(samples1, samples2, ids=None, epsilon=1, xlab='log2 mean', ylab='log2 fold change'):
-#     """Plot the RA diagram of two groups of samples"""
-#
-#     ## set zero elements to epsilon
-#     samples1[samples1 < 1] = epsilon
-#     samples2[samples2 < 1] = epsilon
-#
-#     ## compute means
-#     lmeans1 = np.log2(samples1).mean(0)
-#     lmeans2 = np.log2(samples2).mean(0)
-#
-#     ## compute A and R
-#     ratio = (lmeans2 + lmeans1) * 0.5
-#     average = lmeans2 - lmeans1
-#
-#     ## generate RA plot
-#     if ids is not None:
-#         pl.plot(average[~ids], ratio[~ids], 'k.')
-#         pl.plot(average[ids],  ratio[ids],  'r.')
-#     else:
-#         pl.plot(average, ratio, 'k.')
-#
-#     pl.plot(pl.gca().get_xlim(), (0, 0), '--', color='k')
-#     pl.xlabel(xlab)
-#     pl.ylabel(ylab)
-#
-#     return average, ratio
 
-################################################################################
+def plot_ratio_average_plot(samples1, samples2, idxs=None, epsilon=1, xlab='log2 mean', ylab='log2 fold change'):
+    """Plots the RA diagram of two groups of samples, optionally flagging features indicated by idxs"""
+
+    ## set zero elements to epsilon
+    samples1[samples1 < 1] = epsilon
+    samples2[samples2 < 1] = epsilon
+
+    ## compute means
+    lmeans1 = np.mean(np.log2(samples1), 0)
+    lmeans2 = np.mean(np.log2(samples2), 0)
+
+    ## compute A and R
+    ratio = (lmeans2 + lmeans1) * 0.5
+    average = lmeans2 - lmeans1
+
+    ## generate RA plot
+    if idxs is not None:
+        pl.plot(average[~idxs], ratio[~idxs], 'k.')
+        pl.plot(average[idxs],  ratio[idxs],  'r.')
+    else:
+        pl.plot(average, ratio, 'k.')
+
+    pl.plot(pl.gca().get_xlim(), (0, 0), '--', color='k')
+    pl.xlabel(xlab)
+    pl.ylabel(ylab)
+
+    ## return
+    return average, ratio
+
+########################################################################################################################
 
 
 def compute_fitted_model(theta, cluster_indicators, compute_loglik, xmin=-1, xmax=12, npoints=1000):
-    """Compute the fitted model"""
+    """Computes the fitted model"""
 
     ## compute cluster occupancies
     cluster_occupancies, iactive, _, _ = ut.get_cluster_info(len(theta), cluster_indicators)
@@ -77,22 +79,25 @@ def compute_fitted_model(theta, cluster_indicators, compute_loglik, xmin=-1, xma
     ## return
     return x, y
 
-################################################################################
+########################################################################################################################
 
 
 def plot_fitted_model(isample, igroup, res, counts, model, nbins=100, histcolor='grey', linescolor='black',
                       linecolor='red', xlab='log (# counts)', ylab='density'):
-    """Plot the histogram of log-counts for a sample, along with the corresponding fitted model and components"""
+    """Plots the histogram of log-counts for a sample, along with the corresponding fitted model and components"""
 
+    ## compute fitted model
     sample = (counts.values / counts.norm_factors)[:, isample]
     x, y = compute_fitted_model(res.theta, res.Z[igroup], model.compute_loglik)
 
+    ## plot fitted model
     pl.hist(np.log(sample+0.1), nbins, normed=True, histtype='stepfilled', color=histcolor, linewidth=0)
     pl.plot(x, y, color=linescolor)
     pl.plot(x, y.sum(1), color=linecolor)
     pl.xlabel(xlab)
     pl.ylabel(ylab)
 
+    ## return
     return x, y
 
-################################################################################
+########################################################################################################################

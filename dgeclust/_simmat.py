@@ -9,7 +9,7 @@ import numpy as np
 import gibbs.post as post
 import config as cfg
 
-################################################################################
+########################################################################################################################
 
 
 ## parse command-line arguments
@@ -25,7 +25,7 @@ parser.add_argument('-r', type=int, dest='nthreads', help='number of threads', d
 
 args = parser.parse_args()
 
-################################################################################
+########################################################################################################################
 
 ## use multiple cores
 nthreads = args.nthreads if args.nthreads > 0 else mp.cpu_count()
@@ -39,4 +39,4 @@ print >> sys.stderr, '{0} samples processed from directory "{1}"'.format(nsample
 ## ... and save to output file
 np.savetxt(args.outfile, simmat, delimiter='\t')
 
-################################################################################
+########################################################################################################################
