@@ -8,6 +8,15 @@ import scipy.stats as st
 ########################################################################################################################
 
 
+def normalln(x, mean=0, var=1):
+    """Returns the log-density of the normal distribution at x"""
+
+    ## return
+    return - 0.5 * (x - mean)**2 / var - 0.5 * np.log(2 * np.pi * var)
+
+########################################################################################################################
+
+
 def lognormalln(x, mean=0, var=1):
     """Returns the log-density of the lognormal distribution at x"""
 
