@@ -11,6 +11,7 @@ import utils as ut
 import gibbs.state as gs
 import gibbs.alg as alg
 import models.nbinom as nbinom
+import models.poisson as poisson
 import config as cfg
 
 ########################################################################################################################
@@ -35,7 +36,7 @@ parser.add_argument('-p', type=str, dest='pars', help='initial model parameters'
 
 args = parser.parse_args()
 
-model = {'NegBinom': nbinom, 'Poisson': None, 'Normal': None}[args.model]  # Normal and Poisson not implemented yet
+model = {'NegBinom': nbinom, 'Poisson': poisson, 'Normal': None}[args.model]  # Normal and Poisson not implemented yet
 norm = None if args.norm is None else eval(args.norm)
 groups = None if args.groups is None else eval(args.groups)
 pars = eval(args.pars)

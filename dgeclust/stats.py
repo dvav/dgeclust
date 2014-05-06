@@ -17,6 +17,15 @@ def lognormalln(x, mean=0, var=1):
 ########################################################################################################################
 
 
+def poissonln(x, theta):
+    """Returns the log-density of the Poisson distribution at x"""
+
+    ## return
+    return x * np.log(theta) - sp.gammaln(x + 1) - theta
+
+########################################################################################################################
+
+
 def nbinomln(x, alpha, p):
     """Returns the log-density of the negative binomial distribution at x"""
 

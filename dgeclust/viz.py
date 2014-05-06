@@ -82,13 +82,13 @@ def compute_fitted_model(theta, cluster_indicators, compute_loglik, xmin=-1, xma
 ########################################################################################################################
 
 
-def plot_fitted_model(isample, igroup, res, counts, model, nbins=100, histcolor='grey', linescolor='black',
+def plot_fitted_model(isample, igroup, res, data, model, nbins=100, histcolor='grey', linescolor='black',
                       linecolor='red', xlab='log (# counts)', ylab='density'):
     """Plots the histogram of log-counts for a sample, along with the corresponding fitted model and components"""
 
     ## compute fitted model
-    sample = (counts.values / counts.norm_factors)[:, isample]
-    x, y = compute_fitted_model(res.theta, res.Z[igroup], model.compute_loglik)
+    sample = (data.counts / data.norm_factors)[:, isample]
+    x, y = compute_fitted_model(res.theta, res.zz[igroup], model.compute_loglik)
 
     ## plot fitted model
     pl.hist(np.log(sample+0.1), nbins, normed=True, histtype='stepfilled', color=histcolor, linewidth=0)
