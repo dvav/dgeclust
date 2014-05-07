@@ -31,7 +31,7 @@ def read_count_data(file_name, norm_factors=None, groups=None, locfcn=np.median)
     """Reads a data file containing a matrix of count data"""
 
     ## read data file
-    data = pd.read_table(file_name).astype(np.uint32)
+    data = pd.read_table(file_name) #.astype(np.uint32)
 
     ## fetch counts
     counts = data.values
