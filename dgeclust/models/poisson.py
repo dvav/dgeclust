@@ -15,7 +15,7 @@ def compute_loglik(counts, theta):
 
     ## compute loglik
     counts = counts[:, :, np.newaxis]
-    loglik = st.poissonln(counts, theta.ravel())
+    loglik = st.poissonln(counts, theta)
         
     ## return
     return loglik
