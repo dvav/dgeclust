@@ -64,7 +64,7 @@ def plot_ratio_average_plot(samples1, samples2, idxs=None, epsilon=1, xlab='log2
 ########################################################################################################################
 
 
-def compute_fitted_model(theta, cluster_indicators, compute_loglik, xmin=-1, xmax=12, npoints=1000):
+def compute_fitted_model(theta, cluster_indicators, compute_loglik, xmin=-1, xmax=12, npoints=1000, log_scale=True):
     """Computes the fitted model"""
 
     ## compute cluster occupancies
@@ -73,7 +73,10 @@ def compute_fitted_model(theta, cluster_indicators, compute_loglik, xmin=-1, xma
 
     ## read active alpha and beta, compute mu and p
     x = np.linspace(xmin, xmax, npoints)
-    y = np.exp(x).reshape(-1, 1) * np.exp(compute_loglik(np.exp(x), theta[iactive]).sum(0))
+    if log_scale is True:
+        y = np.exp(x).reshape(-1, 1) * np.exp(compute_loglik(np.exp(x), theta[iactive]).sum(0))
+    else:
+        y = np.exp(compute_loglik(x, theta[iactive]).sum(0))
     y = y * cluster_occupancies / cluster_indicators.size          # notice the normalisation of y
 
     ## return
@@ -83,15 +86,19 @@ def compute_fitted_model(theta, cluster_indicators, compute_loglik, xmin=-1, xma
 
 
 def plot_fitted_model(isample, igroup, res, data, model, nbins=100, histcolor='grey', linescolor='black',
-                      linecolor='red', xlab='log (# counts)', ylab='density'):
+                      linecolor='red', xlab='log (# counts)', ylab='density', log_scale=True):
     """Plots the histogram of log-counts for a sample, along with the corresponding fitted model and components"""
 
     ## compute fitted model
     sample = (data.counts / data.norm_factors)[:, isample]
-    x, y = compute_fitted_model(res.theta, res.zz[igroup], model.compute_loglik)
+    x, y = compute_fitted_model(res.theta, res.zz[igroup], model.compute_loglik, log_scale=log_scale)
 
     ## plot fitted model
-    pl.hist(np.log(sample+0.1), nbins, normed=True, histtype='stepfilled', color=histcolor, linewidth=0)
+    if log_scale is True:
+        pl.hist(np.log(sample+0.1), nbins, normed=True, histtype='stepfilled', color=histcolor, linewidth=0)
+    else:
+        pl.hist(sample, nbins, normed=True, histtype='stepfilled', color=histcolor, linewidth=0)
+
     pl.plot(x, y, color=linescolor)
     pl.plot(x, y.sum(1), color=linecolor)
     pl.xlabel(xlab)
