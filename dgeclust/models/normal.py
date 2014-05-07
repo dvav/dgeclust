@@ -33,7 +33,7 @@ def sample_prior(size, mu0, k0, a0, s0):
     """Samples mean and var from their priors, normal and inverse gamma, respectively"""
 
     ## sample mean and var
-    var = sp.invgamma.rvs(a0, 0, s0, size=(size, 1))
+    var = sp.invgamma.rvs(a0 * 0.5, 0, s0 * 0.5, size=(size, 1))
     mean = rn.randn(size, 1) * np.sqrt(var / k0) + mu0
 
     ## return    
