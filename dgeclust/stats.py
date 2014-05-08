@@ -109,6 +109,6 @@ def sample_eta(lw, a=2, b=1):
     """Samples the concentration parameter eta given a vector of mixture log-weights"""
 
     ## return
-    return rn.gamma((lw.size - 1) + a, 1 / (b - np.min(lw)))     # 1 / (b - w[-1])
+    return rn.gamma((lw.size - 1) + a, 1 / (b - lw[-1]))
       
 ########################################################################################################################
