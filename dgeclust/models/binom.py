@@ -20,7 +20,7 @@ def _compute_loglik(theta, counts, lib_sizes):
     lib_sizes = lib_sizes[:, :, np.newaxis]
 
     ## return
-    return st.poissonln(counts, lib_sizes * theta)
+    return st.binomln(counts, theta, lib_sizes)
 
 
 ########################################################################################################################
@@ -39,26 +39,20 @@ def compute_loglik(j, data, state):
 ########################################################################################################################
 
 
-def sample_prior(size, shape, scale):
+def sample_prior(size, a, b):
     """Samples theta from its prior"""
 
     ## return    
-    return rn.gamma(shape, scale, size)
+    return rn.beta(a, b, size)
     
 ########################################################################################################################
 
 
-def sample_params(theta, shape, _, a0=1, b0=1):
-    """Samples the shape and scale of the gamma distribution from its posterior, given theta"""
-
-    ## sample scale
-    s = theta.sum()
-    n = theta.size
-
-    rate = rn.gamma(a0 + n * shape, 1 / (b0 + s))
+def sample_params(theta, a, b):
+    """Samples the parameters of the beta distribution from its posterior, given theta"""
 
     ## return
-    return shape, 1 / rate
+    return a, b
     
 ########################################################################################################################
 
@@ -71,14 +65,12 @@ def sample_posterior(idx, data, state):
     lib_sizes = [data.library_sizes[group] for group in data.groups]
 
     s = np.sum([cnts.sum() for cnts in counts])
-    n = np.asarray([cnts.size for cnts in counts])
-
-    m = np.sum(lib_sizes * n)
+    n = np.sum([cnts.size * libsz for cnts, libsz in zip(counts, lib_sizes)])
 
     ## parameters
-    shape, scale = state.pars
+    a, b = state.pars
 
     ## return
-    return rn.gamma(shape + s, scale / (m * scale + 1))
+    return rn.beta(a + s, b + n - s)
     
 ########################################################################################################################

@@ -8,6 +8,15 @@ import scipy.stats as st
 ########################################################################################################################
 
 
+def betaln(x, a=1, b=1):
+    """Returns the log-density of the beta distribution at x"""
+
+    ## return
+    return sp.gammaln(a+b) - sp.gammaln(a) - sp.gammaln(b) + (a-1) * np.log(x) + (b-1) * np.log(1-x)
+
+########################################################################################################################
+
+
 def normalln(x, mean=0, var=1):
     """Returns the log-density of the normal distribution at x"""
 
@@ -31,6 +40,15 @@ def poissonln(x, theta):
 
     ## return
     return x * np.log(theta) - sp.gammaln(x + 1) - theta
+
+########################################################################################################################
+
+
+def binomln(x, p, n):
+    """Returns the log-density of the binomial distribution at x"""
+
+    ## return
+    return sp.gammaln(n + 1) - sp.gammaln(x + 1) - sp.gammaln(n - x + 1) + x * np.log(p) + (n - x) * np.log(1 - p)
 
 ########################################################################################################################
 
@@ -109,6 +127,10 @@ def sample_eta(lw, a=2, b=1):
     """Samples the concentration parameter eta given a vector of mixture log-weights"""
 
     ## return
+<<<<<<< HEAD
     return rn.gamma((lw.size - 1) + a, 1 / (b - lw[-1]))
+=======
+    return rn.gamma((lw.size - 1) + a, 1 / (b - np.min(lw)))     ## correct: 1 / (b - lw[-1])
+>>>>>>> testing
       
 ########################################################################################################################

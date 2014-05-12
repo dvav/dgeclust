@@ -7,13 +7,12 @@ import argparse as ap
 
 import numpy as np
 
-import utils as ut
-import gibbs.state as gs
-import gibbs.alg as alg
-import models.nbinom as nbinom
-import models.poisson as poisson
-import models.normal as normal
 import config as cfg
+
+from data import CountData
+from gibbs.state import GibbsState
+from gibbs.alg import GibbsSampler
+from models import nbinom, nbinom2, poisson, normal, binom, bbinom
 
 ########################################################################################################################
 
@@ -37,7 +36,8 @@ parser.add_argument('-p', type=str, dest='pars', help='initial model parameters'
 
 args = parser.parse_args()
 
-model = {'NegBinom': nbinom, 'Poisson': poisson, 'Normal': normal}[args.model]  # Normal and Poisson not implemented yet
+model = {'NegBinom': nbinom, 'NegBinom2': nbinom2, 'Poisson': poisson,
+         'Normal': normal, 'Binomial': binom, 'BetaBinomial': bbinom}[args.model]
 norm = None if args.norm is None else eval(args.norm)
 groups = None if args.groups is None else eval(args.groups)
 pars = eval(args.pars)
@@ -60,8 +60,7 @@ fnames = {
 ########################################################################################################################
 
 ## load data
-data = ut.read_count_data(args.data, norm, groups)
-
+data = CountData.from_file(args.data, norm, groups)
 
 ## generate initial state
 if os.path.exists(args.outdir):
@@ -69,10 +68,10 @@ if os.path.exists(args.outdir):
         raise Exception("Directory '{0}' already exists!".format(args.outdir))
     else:
         print >> sys.stderr, "Extending previous simulation...".format(args.outdir)
-        state = gs.GibbsState.from_disk(fnames)
+        state = GibbsState.from_disk(fnames)
 else:
     os.makedirs(fnames['zz'])
-    state = gs.GibbsState.random(data.ngroups, data.nfeatures, model.sample_prior, pars, args.nglobal, args.nlocal)
+    state = GibbsState.random(data.ngroups, data.nfeatures, model.sample_prior, pars, args.nglobal, args.nlocal)
 
     ## write feature and sample names on disk
     np.savetxt(os.path.join(args.outdir, cfg.fnames['featureNames']), data.feature_names, fmt='%s')
@@ -82,6 +81,6 @@ else:
 pool = mp.Pool(processes=nthreads)
 
 ## execute
-alg.do_gibbs_sampling(data, model, state, pool, fnames, args.niters, args.burnin, args.nlog)
+GibbsSampler(data, model, state, args.niters, args.burnin, args.nlog, fnames, pool).run()
 
 ########################################################################################################################
