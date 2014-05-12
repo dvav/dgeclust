@@ -51,8 +51,8 @@ class GibbsState:
     ####################################################################################################################
 
     @classmethod
-    def from_disk(cls, fnames):
-        """Initializes state from disk"""
+    def from_file(cls, fnames):
+        """Initializes state from file"""
 
         theta = np.loadtxt(fnames.theta)
         lw = np.loadtxt(fnames.lw)

@@ -1,6 +1,6 @@
 {
 	"model": {
-		"choices": ["NegBinom", "Poisson", "Normal"],
+		"choices": ["NegBinom", "Poisson", "Normal", "Binomial", "BetaBinomial"],
 		"distribution": "NegBinom",
 		"pars": [0,1]
 	},

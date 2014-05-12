@@ -19,7 +19,7 @@ parser.add_argument('-t0', type=int, dest='t0', help='first sample to process', 
 parser.add_argument('-tend', type=int, dest='tend', help='last sample to process', default=cfg.post['tend'])
 parser.add_argument('-dt', type=int, dest='dt', help='process every dt samples', default=cfg.post['dt'])
 parser.add_argument('-c', dest='comp', help='compare features, not groups', action='store_true',
-                    default=cfg.clust['compareFeatures'])
+                    default=cfg.post['compareFeatures'])
 parser.add_argument('-o', type=str, dest='outfile', help='output file', default=cfg.fnames['simmat'])
 parser.add_argument('-r', type=int, dest='nthreads', help='number of threads', default=cfg.nthreads)
 
@@ -33,7 +33,7 @@ pool = mp.Pool(processes=nthreads)
 
 ## compute similarity matrix ...
 indir = os.path.join(args.indir, cfg.fnames['zz'])   # input directory
-simmat, nsamples = post.compute_similarity_matrix(indir, args.t0, args.tend, args.dt, args.comp, cfg.nthreads)
+simmat, nsamples = post.compute_similarity_matrix(indir, args.t0, args.tend, args.dt, args.comp, pool)
 print >> sys.stderr, '{0} samples processed from directory "{1}"'.format(nsamples, indir)
 
 ## ... and save to output file

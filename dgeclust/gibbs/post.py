@@ -49,20 +49,19 @@ def compute_pvals(indir, fname, t0, tend, dt, group1, group2, pool):
     feature_names = np.loadtxt(fname, dtype='str')
 
     ## return
-    return pd.DataFrame(np.vstack((p, padj)).T, columns=('pval', 'padj'), index=feature_names).sort(
-        columns = 'padj'), nsamples
+    return pd.DataFrame(np.vstack((p, padj)).T, columns=('Posteriors', 'FDR'), index=feature_names).sort(
+        columns = 'FDR'), nsamples
 
 ########################################################################################################################
 
 
 def _compute_similarity_matrix(args):
     """Given a sample, calculate feature- or group-wise similarity matrix"""
-    sample_name, (path, compare_features) = args
+    sample_name, (indir, compare_features) = args
 
     ## read sample
-    z = np.loadtxt(os.path.join(path, str(sample_name)), dtype='uint32')
+    z = np.loadtxt(os.path.join(indir, str(sample_name)), dtype='uint32')
     z = z.T if compare_features is True else z
-    # z = z if idxs is None else z[idxs]
 
     ## calculate un-normalised similarity matrix
     nrows, ncols = z.shape
@@ -83,10 +82,10 @@ def compute_similarity_matrix(indir, t0, tend, dt, compare_features, pool):
     sample_names = np.sort(np.asarray(sample_names, dtype='uint32'))      # ordered list of sample file names
 
     ## keep every dt-th sample between t0 and tend
-    ii = (sample_names >= t0) & (sample_names <= tend) & (np.arange(sample_names.size) % dt == 0)
-    sample_names = sample_names[ii]
+    idxs = (sample_names >= t0) & (sample_names <= tend) & (np.arange(sample_names.size) % dt == 0)
+    sample_names = sample_names[idxs]
 
-    ## compute intermediate values of p for each sample
+    ## compute similarity matrices for each sample
     args = zip(sample_names, it.repeat((indir, compare_features)))
     mat = pool.map(_compute_similarity_matrix, args)
     nsamples = len(mat)

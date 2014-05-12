@@ -47,8 +47,8 @@ class CountData:
         nfeatures, nsamples = counts.shape
 
         ## group information
-        groups = np.arange(nsamples) if groups is None else groups
-        ngroups = np.size(groups)
+        groups = range(nsamples) if groups is None else groups
+        ngroups = len(groups)
         nreplicas = np.asarray([np.size(group) for group in groups])
 
         ## compute normalisation factors and library sizes

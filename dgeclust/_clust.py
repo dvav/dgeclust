@@ -12,7 +12,7 @@ import config as cfg
 from data import CountData
 from gibbs.state import GibbsState
 from gibbs.alg import GibbsSampler
-from models import nbinom, poisson, normal
+from models import nbinom, nbinom2, poisson, normal, binom, bbinom
 
 ########################################################################################################################
 
@@ -36,7 +36,8 @@ parser.add_argument('-p', type=str, dest='pars', help='initial model parameters'
 
 args = parser.parse_args()
 
-model = {'NegBinom': nbinom, 'Poisson': poisson, 'Normal': normal}[args.model]
+model = {'NegBinom': nbinom, 'NegBinom2': nbinom2, 'Poisson': poisson,
+         'Normal': normal, 'Binomial': binom, 'BetaBinomial': bbinom}[args.model]
 norm = None if args.norm is None else eval(args.norm)
 groups = None if args.groups is None else eval(args.groups)
 pars = eval(args.pars)
