@@ -1,8 +1,20 @@
 {
-	"model": {
-		"choices": ["NegBinom", "Poisson", "Normal", "Binomial", "BetaBinomial"],
-		"distribution": "NegBinom",
-		"pars": [0,1]
+	"models": {
+		"default": "NegBinom",
+		"options" : {
+			"NegBinom": {
+			"pars": [0,1,0,1]
+			}, 
+			"NegBinom2": {
+				"pars": [0,1]
+			}, 
+			"Poisson": {
+				"pars": [1,1]
+			}, 
+			"Normal": {
+				"pars": [0,1,0,1]
+			}
+		}
 	},
     "fnames": {
         "clust": "_clust",

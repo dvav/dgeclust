@@ -30,17 +30,16 @@ parser.add_argument('-k', type=int, dest='nglobal', help='truncation at level 0'
 parser.add_argument('-l', type=int, dest='nlocal', help='truncation at level 1', default=cfg.clust['nlocal'])
 parser.add_argument('-r', type=int, dest='nthreads', help='number of threads', default=cfg.nthreads)
 parser.add_argument('-e', dest='extend', help='extend simulation', action='store_true', default=cfg.clust['extend'])
-parser.add_argument('-m', type=str, dest='model', help='model to use', default=cfg.model['distribution'],
-                    choices=cfg.model['choices'])
-parser.add_argument('-p', type=str, dest='pars', help='initial model parameters', default=str(cfg.model['pars']))
+parser.add_argument('-m', type=str, dest='model', help='model to use', default=cfg.models['default'],
+                    choices=cfg.models['options'].keys())
+parser.add_argument('-p', type=str, dest='pars', help='initial model parameters', default=None)
 
 args = parser.parse_args()
 
-model = {'NegBinom': nbinom, 'NegBinom2': nbinom2, 'Poisson': poisson,
-         'Normal': normal, 'Binomial': binom, 'BetaBinomial': bbinom}[args.model]
+model = {'NegBinom': nbinom, 'NegBinom2': nbinom2, 'Poisson': poisson, 'Normal': normal}[args.model]
+pars = cfg.models['options'][args.model]['pars'] if args.pars is None else eval(args.pars)
 norm = None if args.norm is None else eval(args.norm)
 groups = None if args.groups is None else eval(args.groups)
-pars = eval(args.pars)
 nthreads = args.nthreads if args.nthreads > 0 else mp.cpu_count()
 
 ########################################################################################################################
