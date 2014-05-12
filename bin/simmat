@@ -1,5 +1,5 @@
 #!/bin/bash
 
 BINPATH=`dirname $0`
-python "$BINPATH/../dgeclust/_simmat.py" $@
+PYTHONPATH=$BINPATH/../ python "$BINPATH/_simmat.py" $@
 

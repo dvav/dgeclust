@@ -3,7 +3,7 @@ from __future__ import division
 import numpy as np
 import pandas as pd
 
-import utils as ut
+import dgeclust.utils as ut
 
 ########################################################################################################################
 

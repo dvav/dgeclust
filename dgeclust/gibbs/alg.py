@@ -4,8 +4,8 @@ import os
 import itertools as it
 import numpy as np
 
-import utils as ut
-import stats as st
+import dgeclust.utils as ut
+import dgeclust.stats as st
 
 ########################################################################################################################
 

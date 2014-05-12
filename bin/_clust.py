@@ -7,12 +7,12 @@ import argparse as ap
 
 import numpy as np
 
-import config as cfg
+import dgeclust.config as cfg
 
-from data import CountData
-from gibbs.state import GibbsState
-from gibbs.alg import GibbsSampler
-from models import nbinom, nbinom2, poisson, normal, binom, bbinom
+from dgeclust.data import CountData
+from dgeclust.gibbs.state import GibbsState
+from dgeclust.gibbs.alg import GibbsSampler
+from dgeclust.models import nbinom, nbinom2, poisson, normal, binom, bbinom
 
 ########################################################################################################################
 

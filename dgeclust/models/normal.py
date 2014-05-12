@@ -4,7 +4,7 @@ import numpy as np
 import numpy.random as rn
 import scipy.stats as sp
 
-import stats as st
+import dgeclust.stats as st
 
 ########################################################################################################################
 
