@@ -75,11 +75,11 @@ def compute_fitted_model(isample, igroup, res, data, model, xmin=-1, xmax=12, np
     state = cl.namedtuple('FakeGibbsState', 'theta')(res.theta[iactive])        # wrapper object
     if log_scale is True:
         xx = np.exp(x)
-        data = cl.namedtuple('FakeCountData', 'counts, groups, library_sizes')(xx, [0], data.library_sizes[[isample]])
-        y = xx * np.exp(model.compute_loglik(0, data, state).sum(0))
+        fakedata = cl.namedtuple('FakeCountData', 'counts, groups, library_sizes')(xx, [0], data.library_sizes[[isample]])
+        y = xx * np.exp(model.compute_loglik(0, fakedata, state).sum(0))
     else:
-        data = cl.namedtuple('FakeCountData', 'counts, groups, library_sizes')(x, [0], data.library_sizes[[isample]])
-        y = np.exp(model.compute_loglik(0, data, state).sum(0))
+        fakedata = cl.namedtuple('FakeCountData', 'counts, groups, library_sizes')(x, [0], data.library_sizes[[isample]])
+        y = np.exp(model.compute_loglik(0, fakedata, state).sum(0))
     y = y * cluster_occupancies / res.zz[igroup].size                                   # notice the normalisation of y
 
     ## return
