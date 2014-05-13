@@ -34,7 +34,7 @@ class CountData:
         """Reads a data file containing a matrix of count data"""
 
         ## read data file
-        data = pd.read_table(file_name)  # .astype(np.uint32)
+        data = pd.read_table(file_name, index_col=0)  # .astype(np.uint32)
 
         ## fetch counts
         counts = data.values
@@ -55,9 +55,8 @@ class CountData:
         norm_factors = ut.estimate_norm_factors(counts, locfcn) if norm_factors is None else norm_factors
         library_sizes = counts.sum(0)
 
-        ## hack
-        counts_norm = (counts / norm_factors).T
-        counts_norm = [counts_norm[group] for group in groups]
+        ## normalise data
+        counts_norm = counts / norm_factors
 
         ## return
         return cls(counts, sample_names, feature_names, groups, ngroups, nreplicas, nfeatures, nsamples,
