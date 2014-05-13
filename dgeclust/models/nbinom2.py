@@ -13,16 +13,16 @@ def compute_loglik(j, data, state):
     """Computes the log-likelihood of each element of counts for each element of theta"""
 
     ## read data
-    counts_norm = data.counts_norm[j]
-    counts_norm = np.atleast_2d(counts_norm)
-    counts_norm = counts_norm[:, :, np.newaxis]
+    counts = data.counts_norm[:, data.groups[j]].T
+    counts = np.atleast_2d(counts)
+    counts = counts[:, :, np.newaxis]
 
     ## read theta
     phi = state.theta[:, 0]
     p = state.theta[:, 1]
 
     ## compute loglik
-    loglik = st.nbinomln(counts_norm, 1 / phi, p)
+    loglik = st.nbinomln(counts, 1 / phi, p)
 
     ## return
     return loglik
@@ -65,7 +65,7 @@ def sample_posterior(idx, data, state):
     """Sample phi and p from their posterior, given counts"""
 
     ## fetch all data points that belong to cluster idx
-    counts = [np.atleast_2d(counts)[:, c[z] == idx].ravel() for counts, c, z in zip(data.counts_norm, state.c, state.z)]
+    counts = [data.counts_norm[:, group][zz == idx].ravel() for group, zz in zip(data.groups, state.zz)]
     counts = np.hstack(counts)
 
     s = counts.sum()
