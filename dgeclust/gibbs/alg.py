@@ -72,7 +72,7 @@ class GibbsSampler:
         state.theta[~state.iactive] = model.sample_prior(nglobal - state.nactive, *state.pars)  # inactive clusters
 
         ## update hyper-parameters
-        state.eta0 = st.sample_eta(state.lw)
+        state.eta0 = np.random.gamma(2, 1)   # st.sample_eta(state.lw)
         state.pars = model.sample_params(state.theta[state.cluster_occupancies > 0], *state.pars)
 
     ####################################################################################################################
@@ -159,7 +159,7 @@ def do_local_sampling(args):
 
     ## sample lu and eta
     lu, _ = st.sample_stick(local_occupancies, eta)
-    eta = st.sample_eta(lu)
+    eta = np.random.gamma(2, 1)  # st.sample_eta(lu)
     
     ## sample c
     logw = [(state.lw + loglik[zi].sum(0) if ia > 0 else state.lw) for zi, ia in zip(occupancy_matrix, iactive)]
