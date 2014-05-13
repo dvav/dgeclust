@@ -1,64 +1,121 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset='utf-8'>
-    <meta http-equiv="X-UA-Compatible" content="chrome=1">
-    <link href='https://fonts.googleapis.com/css?family=Chivo:900' rel='stylesheet' type='text/css'>
-    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen" />
-    <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen" />
-    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print" />
-    <!--[if lt IE 9]>
-    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
-    <![endif]-->
-    <title>DGEclust by dvav</title>
-  </head>
+<head>
+	<meta charset='utf-8'>
+	<meta http-equiv="X-UA-Compatible" content="chrome=1">
+	<link href='https://fonts.googleapis.com/css?family=Chivo:900' rel='stylesheet' type='text/css'>
+	<link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen" />
+	<link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen" />
+	<link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print" />
+	<style> 
+		li {font-size: 12px} 
+		#nav {text-align: center}
+		#license {font-size: 12px} 
+	</style>
+	<!--[if lt IE 9]>
+	<script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+	<title>DGEclust - Home</title>
+</head>
 
-  <body>
-    <div id="container">
-      <div class="inner">
+<body>
+	<div id="container">
+	<div class="inner">
 
-        <header>
-          <h1>DGEclust</h1>
-          <h2>Hierarchical Non-Parametric Bayesian Clustering of Digital Expression Data</h2>
-        </header>
+	<header>
+		<h1>DGEclust</h1>
+		<h2>Hierarchical Non-Parametric Bayesian Clustering of Digital Expression Data</h2>
+	</header>
 
-        <section id="downloads" class="clearfix">
-          <a href="https://github.com/dvav/dgeclust/zipball/master" id="download-zip" class="button"><span>Download .zip</span></a>
-          <a href="https://github.com/dvav/dgeclust/tarball/master" id="download-tar-gz" class="button"><span>Download .tar.gz</span></a>
-          <a href="https://github.com/dvav/dgeclust" id="view-on-github" class="button"><span>View on GitHub</span></a>
-        </section>
+	<section id="downloads" class="clearfix">
+		<a href="https://github.com/dvav/dgeclust/zipball/master" id="download-zip" class="button"><span>Download .zip</span></a>
+		<a href="https://github.com/dvav/dgeclust/tarball/master" id="download-tar-gz" class="button"><span>Download .tar.gz</span></a>
+		<a href="https://github.com/dvav/dgeclust" id="view-on-github" class="button"><span>View on GitHub</span></a>
+	</section>
 
-        <hr>
+	<hr>
 
-        <section id="main_content">
-          <p>DGEclust is a program for clustering digital expression data, such as RNA-seq, CAGE and others.
-			  It takes as input a table of count data and it estimates the number and characteristics of the 
-			  clusters supported by the data. This is achieved using a Hierarchical Dirichlet Process Mixture 
-			  Model built around the Negative Binomial Distribution for modelling over-dispersed count data,
-			  combined with a blocked Gibbs sampler for efficient Bayesian learning in said model. 
-		  </p>
+	<section id="nav">
+		<a href="index.html"><strong>Home</strong></a> |
+		<a href="tutorial.html">Tutorial</a>
+	</section>
 
-		  <p>This program is part of the software collection of the Computational Genomics Group at the University
-			  of Bristol (<a href="http://bioinformatics.bris.ac.uk/">http://bioinformatics.bris.ac.uk/</a>) and it is 
-			  still under heavy development. You can find technical details on the statistical methodologies used internally 
-			  by DGEclust in the following papers: <a href="http://arxiv.org/abs/1301.4144">
-				  Vavoulis DV, Gough J (2013) Non-Parametric Bayesian Modelling of Digital Gene Expression Data. 
-				  J Comput Sci Syst Biol 7:001-009. doi: 10.4172/jcsb.1000131</a> 
-			  and <a href="http://arxiv.org/abs/1405.0723">http://arxiv.org/abs/1405.0723</a>.   
-		  </p>
+	<hr>
 
-		  <p>For more information, send an email to <a href="mailto:Dimitris.Vavoulis@bristol.ac.uk">Dimitris.Vavoulis@bristol.ac.uk</a> 
-			  or <a href="mailto:Julian.Gough@bristol.ac.uk">Julian.Gough@bristol.ac.uk</a>
-		  </p>
+	<section id="main_content">
+		<h1>Welcome!</h1>
+
+		<p>
+			DGEclust is a program for clustering digital expression data, such as RNA-seq, CAGE and others.
+			It takes as input a table of count data and it estimates the number and characteristics of the 
+			clusters supported by the data. This is achieved using a Hierarchical Dirichlet Process Mixture 
+			Model built around the Negative Binomial Distribution for modelling over-dispersed count data,
+			combined with a blocked Gibbs sampler for efficient Bayesian learning in said model. 
+		</p>
+
+		<p>
+			This program is part of the software collection of the Computational Genomics Group at the University
+			of Bristol (<a href="http://bioinformatics.bris.ac.uk/" target=”_blank”>http://bioinformatics.bris.ac.uk/</a>) and it is 
+			still under heavy development. You can find technical details on the statistical methodologies used internally 
+			by DGEclust in the following papers:
+		</p>
+
+		<ol>
+			<li>
+				<strong>Vavoulis DV</strong>, Gough J (2013). Non-Parametric Bayesian Modelling of Digital Gene Expression Data.
+				<em>J Comput Sci Syst Biol</em> 7:001-009. doi: 10.4172/jcsb.1000131
+				[<a href="http://arxiv.org/pdf/1301.4144v1.pdf">PDF</a>]
+			</li>
+			<li>
+				<strong>Vavoulis DV</strong>, Francescatto M, Heutink P, Gough J (2014). DGEclust: differential
+				expression analysis of clustered count data. (<em>submitted</em>)
+				[<a href="http://arxiv.org/pdf/1405.0723v1.pdf">PDF</a>]
+			</li>
+		</ol>
+
+		<p>
+			For more information, send an email to <a href="mailto:Dimitris.Vavoulis@bristol.ac.uk">Dimitris.Vavoulis@bristol.ac.uk</a>
+			or <a href="mailto:Julian.Gough@bristol.ac.uk">Julian.Gough@bristol.ac.uk</a>
+		</p>
 
 		<p>Enjoy!</p>
-        </section>
 
-        <footer>
-          DGEclust is maintained by <a href="https://github.com/dvav">dvav</a><br>
-          This page was generated by <a href="http://pages.github.com">GitHub Pages</a>. Tactile theme by <a href="https://twitter.com/jasonlong">Jason Long</a>.
-        </footer>        
-      </div>
-    </div>
-  </body>
+		<!-- <h1>Citation</h1>
+			<p>If you find this software useful in your reserach, please cite the following paper:</p> -->
+
+		<h1>License</h1>
+		<p>DGEclust is covered by the MIT License:</p>
+		<quote id="license">
+			The MIT License (MIT) <br/><br/>
+
+			Copyright (c) 2012-2014 Dimitrios V. Vavoulis and the Computational Genomics Group at Bristol University<br/><br/>
+
+			Permission is hereby granted, free of charge, to any person obtaining a copy
+			of this software and associated documentation files (the "Software"), to deal
+			in the Software without restriction, including without limitation the rights
+			to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+			copies of the Software, and to permit persons to whom the Software is
+			furnished to do so, subject to the following conditions: <br/><br/>
+
+			The above copyright notice and this permission notice shall be included in all
+			copies or substantial portions of the Software. <br/><br/>
+
+			THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+			IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+			FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+			AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+			LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+			OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+			SOFTWARE.
+		</quote>
+	</section>
+
+	<footer>
+		DGEclust is maintained by <a href="https://github.com/dvav" target=”_blank”>dvav</a><br>
+		This page was generated by <a href="http://pages.github.com" target=”_blank”>GitHub Pages</a>. Tactile theme by 
+		<a href="https://twitter.com/jasonlong" target=”_blank”>Jason Long</a>.
+	</footer>        
+	</div>
+	</div>
+</body>
 </html>
