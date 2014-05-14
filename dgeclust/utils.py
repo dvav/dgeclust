@@ -88,22 +88,22 @@ def compute_fitted_model(igroup, res, model, xmin=-1, xmax=12, npoints=1000, log
 ########################################################################################################################
 
 
-def compute_ratio_average(samples1, samples2, epsilon=1):
-    """Computes the RA diagram of two groups of samples. Use the returned arrays to actually plot the diagram"""
+def compute_ra_plot(samples1, samples2, epsilon=0.5):
+    """Computes the RA plot of two groups of samples. Use the returned arrays to actually plot the diagram"""
 
     ## set zero elements to epsilon
     samples1[samples1 < 1] = epsilon
     samples2[samples2 < 1] = epsilon
 
-    ## compute means
-    lmeans1 = np.mean(np.log2(samples1), 0)
-    lmeans2 = np.mean(np.log2(samples2), 0)
+    ## compute log2 values
+    l1 = np.log2(samples1)
+    l2 = np.log2(samples2)
 
     ## compute A and R
-    ratio = (lmeans2 + lmeans1) * 0.5
-    average = lmeans2 - lmeans1
+    r = l2 - l1
+    a = (l2 + l1) * 0.5
 
     ## return
-    return average, ratio
+    return r, a
 
 ########################################################################################################################
