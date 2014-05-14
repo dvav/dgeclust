@@ -9,9 +9,9 @@ of Bristol (http://bioinformatics.bris.ac.uk/) and it is still under heavy devel
 more technical details on the statistical methodologies used in this software in the following
 papers:
 
-1. http://arxiv.org/abs/1301.4144 (Vavoulis & Gough, -J Comput Sci Syst Biol- 7:001-009, 2013)
-2. http://arxiv.org/abs/1405.0723 (Vavoulis et al., submitted, 2014)
+1. http://arxiv.org/abs/1301.4144 (Vavoulis & Gough, *J Comput Sci Syst Biol* 7:001-009, 2013)
+2. http://arxiv.org/abs/1405.0723 (Vavoulis et al., *submitted*, 2014)
 
-For more information, send an email to [Dimitris.Vavoulis@bristol.ac.uk] or [Julian.Gough@bristol.ac.uk]
+For more information, send an email to Dimitris.Vavoulis@bristol.ac.uk or Julian.Gough@bristol.ac.uk
 
 Enjoy!
