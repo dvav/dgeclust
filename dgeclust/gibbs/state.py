@@ -54,15 +54,15 @@ class GibbsState:
     def from_file(cls, fnames):
         """Initializes state from file"""
 
-        theta = np.loadtxt(fnames.theta)
-        lw = np.loadtxt(fnames.lw)
-        lu = np.loadtxt(fnames.lu)
-        c = np.loadtxt(fnames.c, dtype='uint32')
-        z = np.loadtxt(fnames.z, dtype='uint32')
-        tmp = np.loadtxt(fnames.eta)
+        theta = np.loadtxt(fnames['theta'])
+        lw = np.loadtxt(fnames['lw'])
+        lu = np.loadtxt(fnames['lu'])
+        c = np.loadtxt(fnames['c'], dtype='uint32')
+        z = np.loadtxt(fnames['z'], dtype='uint32')
+        tmp = np.loadtxt(fnames['eta'])
         eta0 = tmp[-1, 1]
         eta = tmp[-1, 2:]
-        tmp = np.loadtxt(fnames.pars)
+        tmp = np.loadtxt(fnames['pars'])
         pars = tmp[-1, 2:]
         t0 = int(tmp[-1, 0])             # the last iteration of the previous simulation
 
