@@ -62,7 +62,7 @@ def nbinomln(x, alpha, p):
 ########################################################################################################################
 
 
-def sample_normal_meanvar(s1, s2, n, mu0=0, k0=1, a0=2, s0=1):
+def sample_normal_meanvar(s1, s2, n, mu0=0, k0=1e-3, a0=1, s0=1e-3):
     """Samples the mean and variance of a normal distribution given data with sufficient statistics s1, s2 and n"""
 
     ## compute mu, k, a, s
@@ -123,10 +123,10 @@ def sample_stick(cluster_occupancies, eta):
 ########################################################################################################################
 
 
-def sample_eta(lw, a=2, b=1):
+def sample_eta(lw, a=1, b=1e-3):
     """Samples the concentration parameter eta given a vector of mixture log-weights"""
 
     ## return
-    return rn.gamma((lw.size - 1) + a, 1 / (b - np.min(lw)))     # correct: 1 / (b - lw[-1])
+    return rn.gamma(lw.size - 1 + a, 1 / (b - np.min(lw)))     # 1 / (b - lw[-1])
 
 ########################################################################################################################
