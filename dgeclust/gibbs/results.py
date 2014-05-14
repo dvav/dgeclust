@@ -8,7 +8,7 @@ import dgeclust.config as cfg
 ########################################################################################################################
 
 
-class GibbsOutput:
+class GibbsOutput(object):
     """Represents the output of the Gibbs sampler"""
 
     def __init__(self, pars, eta, theta, c, z, zz):

@@ -8,7 +8,7 @@ import dgeclust.utils as ut
 ########################################################################################################################
 
 
-class GibbsState:
+class GibbsState(object):
     """Represents the state of the Gibbs sampler"""
 
     def __init__(self, theta, lw, lu, c, z, eta0, eta, pars, t0):

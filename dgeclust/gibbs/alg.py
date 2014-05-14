@@ -10,7 +10,7 @@ import dgeclust.stats as st
 ########################################################################################################################
 
 
-class GibbsSampler:
+class GibbsSampler(object):
     """Represents a blocked Gibbs sampler for HDPMMs"""
 
     def __init__(self, data, model, state, niters, burnin, nlog, fnames, pool):

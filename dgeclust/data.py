@@ -8,7 +8,7 @@ import dgeclust.utils as ut
 ########################################################################################################################
 
 
-class CountData:
+class CountData(object):
     """Represents a counts data set"""
 
     def __init__(self, counts, sample_names, feature_names, groups, ngroups, nreplicas, nfeatures, nsamples,
