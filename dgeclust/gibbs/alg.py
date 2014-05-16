@@ -32,12 +32,12 @@ class GibbsSampler(object):
 
         ## save initial conditions, if necessary
         if self.state.t == 0:
-            self.to_disk()
+            self.save()
 
         ## loop
         for t in range(self.state.t, self.niters):
-            self.step()       # update state
-            self.to_disk()    # save state
+            self.step()    # update state
+            self.save()    # save state
 
     ####################################################################################################################
 
@@ -54,30 +54,29 @@ class GibbsSampler(object):
 
         ## do local (i.e. sample-specific) updates
         args = zip(range(data.ngroups), it.repeat((data, state, model.compute_loglik)))
-        state.lu, state.c, state.z, state.eta = zip(*pool.map(do_local_sampling, args))
+        state.lu, state.c, state.z, state.eta, state.nactive = zip(*pool.map(do_local_sampling, args))
 
         ## get top-level cluster info
         nglobal = state.lw.size
         state.zz = [c[z] for c, z in zip(state.c, state.z)]
-        state.cluster_occupancies, state.iactive, state.nactive, _ = ut.get_cluster_info(
-            nglobal, np.asarray(state.zz).ravel())
-        idxs = state.iactive.nonzero()[0]
+        cluster_occupancies, iactive, state.nactive0, _ = ut.get_cluster_info(nglobal, np.asarray(state.zz).ravel())
+        idxs = iactive.nonzero()[0]
 
         ## sample lw and eta0
-        state.lw, _ = st.sample_stick(state.cluster_occupancies, state.eta0)
+        state.lw, _ = st.sample_stick(cluster_occupancies, state.eta0)
 
         ## sample theta
         args = zip(idxs, it.repeat((data, state, model.sample_posterior)))
-        state.theta[state.iactive] = pool.map(do_global_sampling, args)                         # active clusters
-        state.theta[~state.iactive] = model.sample_prior(nglobal - state.nactive, *state.pars)  # inactive clusters
+        state.theta[iactive] = pool.map(do_global_sampling, args)                          # active clusters
+        state.theta[~iactive] = model.sample_prior(nglobal - state.nactive0, *state.pars)  # inactive clusters
 
         ## update hyper-parameters
-        state.eta0 = np.random.gamma(2, 1)   # st.sample_eta(state.lw)
-        state.pars = model.sample_params(state.theta[state.cluster_occupancies > 0], *state.pars)
+        state.eta0 = st.sample_eta(state.lw)
+        state.pars = model.sample_params(state.theta[cluster_occupancies > 0], *state.pars)
 
     ####################################################################################################################
 
-    def to_disk(self):
+    def save(self):
         """Saves the state of the Gibbs sampler to disk"""
 
         state = self.state
@@ -106,12 +105,17 @@ class GibbsSampler(object):
         ## write eta's
         with open(fnames['eta'], 'a') as f:
             np.savetxt(f, np.atleast_2d(np.r_[state.t, state.eta0, state.eta]),
-                       fmt='%d\t%f' + '\t%f ' * np.size(state.eta))
+                       fmt='%d\t%f' + '\t%f' * np.size(state.eta))
+
+        ## write nactive's
+        with open(fnames['nactive'], 'a') as f:
+            np.savetxt(f, np.atleast_2d(np.r_[state.t, state.nactive0, state.nactive]),
+                       fmt='%d\t%d' + '\t%d' * np.size(state.nactive))
 
         ## write pars
         with open(fnames['pars'], 'a') as f:
-            np.savetxt(f, np.atleast_2d(np.r_[state.t, state.nactive, state.pars]),
-                       fmt='%d\t%d' + '\t%f' * np.size(state.pars))
+            np.savetxt(f, np.atleast_2d(np.r_[state.t, state.pars]),
+                       fmt='%d' + '\t%f' * np.size(state.pars))
 
         ## write zz
         if (state.t > self.burnin) and (self.nlog > 0) and not (state.t % self.nlog):
@@ -154,20 +158,28 @@ def do_local_sampling(args):
     logw = ut.normalize_log_weights(logw.T)
     z = st.sample_categorical(np.exp(logw))
 
+    ## apply correction
+    groups = [np.nonzero(c == idx)[0] for idx in range(state.lw.size)]
+    mats = [z == np.reshape(group, (-1, 1)) for group in groups]
+    vecs = [np.any(mat, 0) for mat in mats]
+    for vec, group in zip(vecs, groups):
+        if np.any(group):
+            z[vec] = group[0]
+
     ## get local cluster info
-    local_occupancies, iactive, nactive, occupancy_matrix = ut.get_cluster_info(lu.size, z)
+    local_occupancies, _, nactive, occupancy_matrix = ut.get_cluster_info(lu.size, z)
 
     ## sample lu and eta
     lu, _ = st.sample_stick(local_occupancies, eta)
-    eta = np.random.gamma(2, 1)  # st.sample_eta(lu)
-    
+    eta = st.sample_eta(lu)
+
     ## sample c
-    logw = [(state.lw + loglik[zi].sum(0) if ia > 0 else state.lw) for zi, ia in zip(occupancy_matrix, iactive)]
+    logw = [state.lw + loglik[occ].sum(0) for occ in occupancy_matrix]
     logw = np.asarray(logw)
     logw = ut.normalize_log_weights(logw.T)
     c = st.sample_categorical(np.exp(logw))
-                                    
+
     ## return
-    return lu, c, z, eta
+    return lu, c, z, eta, nactive
 
 ########################################################################################################################
