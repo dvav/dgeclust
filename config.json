@@ -29,6 +29,7 @@
         "z": "z.txt",
         "pars": "pars.txt",
 		"eta": "eta.txt",
+		"nactive": "nactive.txt",
 		"zz": "zz"
     },
     "clust": {
