@@ -25,10 +25,13 @@ class GibbsState(object):
         self.pars = pars        # vector of hyper-parameters
         self.t = t0             # the current iteration
 
-        ## direct cluster indicators and cluster occupancies
+        ## direct cluster indicators and number of active clusters
         self.zz = [c[z] for c, z in zip(self.c, self.z)]
-        self.cluster_occupancies, self.iactive, self.nactive, _ = ut.get_cluster_info(
-            self.lw.size, np.asarray(self.zz).ravel())
+        _, _, self.nactive0, _ = ut.get_cluster_info(self.lw.size, np.asarray(self.zz).ravel())
+
+        ## local number of active clusters
+        _, _, self.nactive, _ = zip(*[ut.get_cluster_info(lu.size, z) for z, lu in zip(self.z, self.lu)])
+
 
     ####################################################################################################################
 
@@ -51,7 +54,7 @@ class GibbsState(object):
     ####################################################################################################################
 
     @classmethod
-    def from_file(cls, fnames):
+    def load(cls, fnames):
         """Initializes state from file"""
 
         theta = np.loadtxt(fnames['theta'])
@@ -63,7 +66,7 @@ class GibbsState(object):
         eta0 = tmp[-1, 1]
         eta = tmp[-1, 2:]
         tmp = np.loadtxt(fnames['pars'])
-        pars = tmp[-1, 2:]
+        pars = tmp[-1, 1:]
         t0 = int(tmp[-1, 0])             # the last iteration of the previous simulation
 
         ## return

@@ -28,7 +28,7 @@ class CountData(object):
     ####################################################################################################################
 
     @classmethod
-    def from_file(cls, file_name, norm_factors=None, groups=None, locfcn=np.median):
+    def load(cls, file_name, norm_factors=None, groups=None, locfcn=np.median):
         """Reads a data file containing a matrix of count data"""
 
         ## read data file

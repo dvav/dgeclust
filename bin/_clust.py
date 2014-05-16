@@ -53,13 +53,14 @@ fnames = {
     'z': os.path.join(args.outdir, cfg.fnames['z']),
     'pars': os.path.join(args.outdir, cfg.fnames['pars']),
     'eta': os.path.join(args.outdir, cfg.fnames['eta']),
+    'nactive': os.path.join(args.outdir, cfg.fnames['nactive']),
     'zz': os.path.join(args.outdir, cfg.fnames['zz'])
 }
 
 ########################################################################################################################
 
 ## load data
-data = CountData.from_file(args.data, norm, groups)
+data = CountData.load(args.data, norm, groups)
 
 ## generate initial state
 if os.path.exists(args.outdir):
@@ -67,7 +68,7 @@ if os.path.exists(args.outdir):
         raise Exception("Directory '{0}' already exists!".format(args.outdir))
     else:
         print >> sys.stderr, "Extending previous simulation...".format(args.outdir)
-        state = GibbsState.from_file(fnames)
+        state = GibbsState.load(fnames)
 else:
     os.makedirs(fnames['zz'])
     state = GibbsState.random(data.ngroups, data.nfeatures, model.sample_prior, pars, args.nglobal, args.nlocal)
