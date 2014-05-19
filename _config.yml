@@ -1,4 +1,4 @@
 markdown: rdiscount
 highlighter: pygments
-baseurl: /dgeclust
+baseurl: http://dvav.github.io/dgeclust
 
