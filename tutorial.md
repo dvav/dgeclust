@@ -38,15 +38,15 @@ Let's use **IPython** to filter the data. Execute `ipython --pylab` at the termi
 **IPython** command prompt, type the following:
 
 {% highlight python %}
-In [1]: import pandas as pd
-In [2]: data = pd.read_table('/path/to/data.txt', index_col=0)
-In [3]: idxs = all(data, 1)    # identify the rows where all entries are non-zero 
-In [4]: data_filt = data[idxs]
-In [5]: data_filt.head()    # inspect the data
-In [6]: data_filt.to_csv('data_filt.txt', sep='\t')
+import pandas as pd
+data = pd.read_table('/path/to/data.txt', index_col=0)
+idxs = all(data, 1)    # identify the rows where all entries are non-zero 
+data_filt = data[idxs]
+data_filt.head()    # inspect the data
+data_filt.to_csv('data_filt.txt', sep='\t')
 {% endhighlight %}
 
-This dataset contains 12221 features.
+The filtered dataset contains 12221 features.
 
 
 Clustering the data
@@ -84,16 +84,52 @@ There are more arguments that you can pass to `clust`. Type `bin/clust -h` for m
 After the end of the simulation, you can visualize your results using **IPython**:
 
 {% highlight python %}
-In [7]: cd path/to/dgeclust
-In [8]: from dgeclust.gibbs.results import GibbsOutput
-In [9]: res = GibbsOutput.read('_clust')
-In [10]: figure()
-In [11]: subplot(3,1,1); plot(res.pars[:,0], res.nactive0, 'k'); xlabel('# iterations'); ylabel('# clusters')
-In [12]: subplot(3,1,2); plot(res.pars[:,0], res.pars[:,[2,3]], 'k'); xlabel('# iterations'); ylabel('p1, p2')
-In [7]: subplot(3,1,3); plot(res.pars[:,0], res.pars[:,[4,5]], 'k'); xlabel('# iterations'); ylabel('p3, p4')
+cd path/to/dgeclust
+from dgeclust.gibbs.results import GibbsOutput
+res = GibbsOutput.read('_clust')
+figure()
+subplot(2,2,1); plot(res.t, res.nactive0); xlabel('# of iterations'); ylabel('# of clusters')
+subplot(2,2,2); hist(res.nactive0, 100, range=(0,100), normed=True); xlabel('# of clusters'); ylabel('frequency')
+subplot(2,2,3); plot(res.t, res.pars[:,[0,1]]); xlabel('# iterations'); ylabel('p1, p2')
+subplot(2,2,4); plot(res.t, res.pars[:,[3,2]]); xlabel('# iterations'); ylabel('p3, p4')
 {% endhighlight %}
 
-It seems that the algorithm converges nicely after ~1000 iterations.
+![Simulation progress](img/progress.png "Simulation progress")
+
+It seems that the algorithm converges rapidly after ~1000 iterations. From the histogram on the top right, we can see that the data
+support between 20 and 23 clusters with a peak at 21. If you need the extend the simulation for another 10K iterations (i.e. a total
+of 20K iterations), you
+can type:
+
+{% highlight bash %}
+bin/clust /path/to/data_filt.txt -g [[0,1,2,3],[4,5]] -t 20000 -e & 
+{% endhighlight %}
+ 
+The argument `-e` indicates that a previously terminated simulation should
+be extended and the argument `-t` indicates the total duration of the simulation. 
+
+If you wish, we can see how the fitted model at the end of the simulation compares
+to the actual data:
+
+{% highlight python %}
+from dgeclust import utils
+from dgeclust.data import CountData
+from dgeclust.models import nbinom
+data = CountData.load('path/to/data_filt.txt', groups=[[0,1,2,3],[4,5]])    
+counts_norm = data.counts / data.norm_factors
+isample = 0  # the index of the sample you want to visualise (between 0 and 5)
+igroup = 0   # the group the above sample belongs to (0: cancerous, 1: non-cancerous)
+x, y = utils.compute_fitted_model(igroup, res, nbinom); 
+figure()
+hist(log(counts_norm[:,isample]), 100, histtype='stepfilled', linewidth=0, normed=True, color='gray')
+plot(x, y, 'k', x, y.sum(1), 'r');
+xlabel('log counts'); ylabel('frequency')
+{% endhighlight %}
+
+![Fitted model](img/fitted.png "Fitted model")
+
+Of course, you can repeat the above for all possible values of `isample` and corresponding values of `igroup`.
+
 
 Testing for differential expression
 -----------------------------------
@@ -105,35 +141,57 @@ our dataset are differentially expressed. In a terminal, we type:
 
 {% highlight bash %}
 $ bin/pvals -t0 1000
-???????
+9001 samples processed from directory "clust/zz"
 {% endhighlight %}
 
-The above command post-processes the contents of the directory `_clust and returns 
+The above command post-processes the contents of the directory `_clust` and returns 
 a file, `_pvals.txt`, which includes a list of features with decreasing posterior 
-probabilities of being differentially expressed between the two groups of samples 
-in the yeast dataset:
+probabilities of being differentially expressed between the cancerous and non-cancerous 
+samples in the data:
 
 {% highlight bash %}
 $ head _pvals.txt
-???????
+        	Posteriors      FDR
+SLC4A4  	0.0     		0.0
+MYL9    	0.0     		0.0
+IGF2    	0.0     		0.0
+CD74    	0.0     		0.0
+MT2A    	0.0     		0.0
+TYRO3   	0.0     		0.0
+HMGA2   	0.0     		0.0
+RGAG4   	0.0     		0.0
+C22orf16	0.0     		0.0
 {% endhighlight %}
 
-Back in **IPython**, we can visualise our dataset using an **RA diagram**:
+Notice that for the top-most features in this particular example, the probability is so low, that it is reported 
+as being 0. 
+
+Back in **IPython**, we can visualise our results using an **RA diagram**:
 
 {% highlight python %}
-    ??????
+pvals = pd.read_table('_pvals.txt',index_col=0)
+idxs = (pvals.FDR < 0.01).values    # Use a False Discovery Rate of 1%
+in1 = mean(counts_norm[:,[0,1,2,3]],1)
+in2 = mean(counts_norm[:,[4,5]],1)
+R, A = utils.compute_ra_plot(in1, in2)
+figure()
+plot(A[~idxs], R[~idxs], 'k.', markersize=1.8)
+plot(A[idxs], R[idxs], 'r.', markersize=1.8)
+xlabel('( log2(in2) + log2(in1) ) * 0.5')
+ylabel('log2(in2) - log2(in1)')
 {% endhighlight %}
 
+![RA plot](img/RA_plot.png "RA plot")
 
-Hierarchical clustering of samples
+<!-- Hierarchical clustering of samples
 ----------------------------------
 (*under construction*)
 
 
-		
+
 Hierarchical clustering of genes
 --------------------------------
 (*under construction*)
-
+ -->
 
 
