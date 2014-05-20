@@ -2,43 +2,44 @@
 <html>
 <head>
     <meta charset='utf-8'>
-    <meta http-equiv="X-UA-Compatible" content="chrome=1">
-    <link href='https://fonts.googleapis.com/css?family=Chivo:900' rel='stylesheet' type='text/css'>
-    <link rel="stylesheet" type="text/css" href="{{ site.baseurl }}/css/stylesheet.css" media="screen" />
-    <link rel="stylesheet" type="text/css" href="{{ site.baseurl }}/css/pygment_trac.css" media="screen" />
-    <link rel="stylesheet" type="text/css" href="{{ site.baseurl }}css/print.css" media="print" />
-	<style>
-		li {font-size: 12px} 
-		#nav {text-align: center}
-		#license {font-size: 12px} 
-	</style>
-
-    <!--[if lt IE 9]>
-    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
-    <![endif]-->
-    <title>DGEclust - {{page.title}}</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">	
+	<link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
+	<link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap-theme.min.css">
+	
+	<!--[if lt IE 9]>
+		<script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+		<script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+	<![endif]-->
+	<title>DGEclust - {{page.title}}</title>
 </head>
 
 <body>
-    <div id="container">
-    <div class="inner">
-
-    <header>
-        <h1>DGEclust</h1>
-        <h2>Hierarchical Non-Parametric Bayesian Clustering of Digital Expression Data</h2>
-    </header>
-
-    <section id="downloads" class="clearfix">
-        <a href="https://github.com/dvav/dgeclust/zipball/master" id="download-zip" class="button"><span>Download .zip</span></a>
-        <a href="https://github.com/dvav/dgeclust/tarball/master" id="download-tar-gz" class="button"><span>Download .tar.gz</span></a>
-        <a href="https://github.com/dvav/dgeclust" id="view-on-github" class="button"><span>View on GitHub</span></a>
-    </section>
-
-    <hr>
-
-	<nav align="center">
-		<a href="{{ site.baseurl }}/">Home</a> |
-		<a href="{{ site.baseurl }}/tutorial">Tutorial</a>
-	</nav>
-	
-    <hr>
+	<div class="container">
+		<div class="header">
+			<ul class="nav nav-pills pull-right">
+				<li><a href="{{ site.baseurl }}/"><span class="glyphicon glyphicon-home"></span> Home</a></li>
+				<li><a href="{{ site.baseurl }}/site/license"><span class="glyphicon glyphicon-copyright-mark"></span> License</a></li>
+				<li class="dropdown">
+					<a class="dropdown-toggle" data-toggle="dropdown" href="#"><span class="glyphicon glyphicon-book"></span> Documentation <span class="caret"></span></a>
+						<ul class="dropdown-menu">
+							<li><a href="{{ site.baseurl }}/site/docs/installation">Installation</a></li>
+							<li class="divider"></li>
+							<li class="dropdown-header">Getting started</li>
+							<li><a href="{{ site.baseurl }}/site/docs/tutorial/dataprep">Data</a></li>
+							<li><a href="{{ site.baseurl }}/site/docs/tutorial/clustering">Clustering</a></li>
+							<li><a href="{{ site.baseurl }}/site/docs/tutorial/detest">Testing for differential expression</a></li>
+						</ul>
+				</li>
+				<li>
+					<ul class="btn-group">
+						<a href="https://github.com/dvav/dgeclust/tarball/master" class="btn btn-primary"><span class="glyphicon glyphicon-download"></span> Download</a>
+						<a href="https://github.com/dvav/dgeclust" class="btn btn-primary" target="_blank"><span class="glyphicon glyphicon-eye-open"></span> View</a>
+					</ul>
+				</li>
+			</ul>						
+			<h1>DGEclust</h1>
+			<h4 class="text-muted">Hierarchical non-parametric Bayesian clustering of digital expression data</h4>
+		</div>
+		
+		<hr>
