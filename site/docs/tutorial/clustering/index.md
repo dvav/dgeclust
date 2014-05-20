@@ -48,7 +48,7 @@ subplot(2,2,3); plot(res.t, res.pars[:,[0,1]]); xlabel('# iterations'); ylabel('
 subplot(2,2,4); plot(res.t, res.pars[:,[3,2]]); xlabel('# iterations'); ylabel('p3, p4')
 {% endhighlight %}
 
-![Simulation progress]({{ site.baseurl }}/img/progress.png "Simulation progress")
+<img class="img-responsive" alt="Simulation progress" title="Simulation progress" src="{{ site.baseurl }}/img/progress.png"></img>
 
 It seems that the algorithm converges rapidly after ~1000 iterations. From the histogram on the top right, we can see that the data
 support between 20 and 23 clusters with a peak at 21. If you need the extend the simulation for another 10K iterations (i.e. a total
@@ -80,7 +80,7 @@ plot(x, y, 'k', x, y.sum(1), 'r');
 xlabel('log counts'); ylabel('frequency')
 {% endhighlight %}
 
-![Fitted model]({{ site.baseurl }}/img/fitted.png "Fitted model")
+<img class="img-responsive" alt="Fitted model" title="Fitted model" src="{{ site.baseurl }}/img/fitted.png"></img>
 
 Of course, you can repeat the above for all possible values of `isample` and corresponding values of `igroup`.
 

@@ -54,7 +54,7 @@ xlabel('( log2(in2) + log2(in1) ) * 0.5')
 ylabel('log2(in2) - log2(in1)')
 {% endhighlight %}
 
-![RA plot]({{ site.baseurl }}/img/RA_plot.png "RA plot")
+<img class="img-responsive" alt="RA plot" title="RA plot" src="{{ site.baseurl }}/img/RA_plot.png"></img>
 
 <!-- Hierarchical clustering of samples
 ----------------------------------
