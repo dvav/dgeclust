@@ -83,5 +83,6 @@ xlabel('log counts'); ylabel('frequency')
 <img class="img-responsive" alt="Fitted model" title="Fitted model" src="{{ site.baseurl }}/img/fitted.png"></img>
 
 Of course, you can repeat the above for all possible values of `isample` and corresponding values of `igroup`.
-The next step is to post-process your data in order to test for differential expression. <a href="{{ site.data.nav.docs.tut.detest.url }}">Learn how!</a>
+The next step is to post-process your data in order to test for differential expression. 
+<a href="{{ site.baseurl }}{{ site.data.nav.docs.tut.detest.url }}">Learn how!</a>
 
