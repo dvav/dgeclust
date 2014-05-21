@@ -43,4 +43,5 @@ data_filt.head()    # inspect the data
 data_filt.to_csv('data_filt.txt', sep='\t')
 {% endhighlight %}
 
-The filtered dataset contains 12221 features. The next step is to cluster your data. <a href="{{ site.data.nav.docs.tut.clust.url }}">Learn how!</a>
+The filtered dataset contains 12221 features. The next step is to cluster your data. 
+<a href="{{ site.baseurl }}{{ site.data.nav.docs.tut.clust.url }}">Learn how!</a>
