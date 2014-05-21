@@ -3,12 +3,11 @@
 <head>
     <meta charset='utf-8'>
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<meta name="viewport" content="width=device-width, initial-scale=1">	
-
 	<link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
 	<link rel="stylesheet" href="//netdna.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css">
 	<link rel="stylesheet" href="{{ site.baseurl }}/css/syntax.css">
-	
+	<link rel="stylesheet" href="{{ site.baseurl }}/css/custom.css">
+    	
 	<!--[if lt IE 9]>
 		<script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
 		<script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
@@ -19,6 +18,7 @@
 <div class="container">
 
 <nav class="navbar navbar-inverse" role="navigation">
+<div class="container-fluid">
 	{% assign nav = site.data.nav %}
 	{% assign docs = nav.docs %}
 	{% assign tut = docs.tut %}
@@ -39,7 +39,7 @@
 		<li {% if page.title contains nav.home.title %}class="active"{% endif %}><a href="{{ site.baseurl }}{{ nav.home.url }}"><span class="glyphicon glyphicon-home"></span> {{ nav.home.title }}</a></li>
 		<li {% if page.url contains nav.lic.url %}class="active"{% endif %}><a href="{{ site.baseurl }}{{ nav.lic.url }}"><span class="glyphicon glyphicon-copyright-mark"></span> {{ nav.lic.title }}</a></li>
 		<li class="dropdown {% if page.url contains docs.url %}active{% endif %} ">
-			<a class="dropdown-toggle" data-toggle="dropdown" href="#"><span class="glyphicon glyphicon-book"></span> {{ docs.title }} <span class="caret"></span></a>
+			<a class="dropdown-toggle" data-toggle="dropdown" href=""><span class="glyphicon glyphicon-book"></span> {{ docs.title }} <span class="caret"></span></a>
 			<ul class="dropdown-menu">
 				<li><a href="{{ site.baseurl }}{{ docs.inst.url }}">{{ docs.inst.title }}</a></li>
 				<li class="divider"></li>
@@ -50,4 +50,5 @@
 			</ul>
 		</li>
 	</ul>
+</div>
 </nav>
