@@ -6,7 +6,8 @@ layout: default
 License
 =======
 
-**DGEclust** is covered by the MIT License:
+**DGEclust** is part of the software collection of the <a href="{{ site.data.people.group.url }}" target=”_blank”>Computational Genomics Group</a>
+at the University of Bristol and it is covered by the MIT License:
 
 > The MIT License (MIT)
 

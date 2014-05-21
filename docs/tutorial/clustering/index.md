@@ -62,7 +62,7 @@ bin/clust /path/to/data_filt.txt -g [[0,1,2,3],[4,5]] -t 20000 -e &
 The argument `-e` indicates that a previously terminated simulation should
 be extended and the argument `-t` indicates the total duration of the simulation. 
 
-If you wish, we can see how the fitted model at the end of the simulation compares
+If you wish, you can see how the fitted model at the end of the simulation compares
 to the actual data:
 
 {% highlight python %}

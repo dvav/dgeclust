@@ -1,0 +1,40 @@
+home:
+    title: Home
+    url: /
+
+lic:
+    title: License
+    url: /license
+
+download:
+    title: Download
+    url: https://github.com/dvav/dgeclust/tarball/master
+
+view:
+    title: View
+    url: https://github.com/dvav/dgeclust
+
+docs:
+    title: Documentation    
+    url: /docs
+        
+    inst:
+        title: Installation
+        url: /docs/installation
+
+    tut:
+        title: Quick start
+        url: /docs/tutorial
+
+        data:
+            title: Data preparation
+            url: /docs/tutorial/data
+
+        clust:
+            title: Clustering
+            url: /docs/tutorial/clustering
+
+        detest:
+            title: Testing for differential expression
+            url: /docs/tutorial/detest
+

@@ -6,7 +6,7 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1">	
 
 	<link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
-	<!-- <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap-theme.min.css"> -->
+	<link rel="stylesheet" href="	//netdna.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css">
 	<link rel="stylesheet" href="{{ site.baseurl }}/css/syntax.css">
 	
 	<!--[if lt IE 9]>
@@ -15,33 +15,39 @@
 	<![endif]-->
 	<title>DGEclust - {{page.title}}</title>
 </head>
+<body>	
+<div class="container">
 
-<body>
-	<div class="container">
-		<div class="header">
-			<ul class="nav nav-pills pull-right">
-				<li><a href="{{ site.baseurl }}/"><span class="glyphicon glyphicon-home"></span> Home</a></li>
-				<li><a href="{{ site.baseurl }}/site/license"><span class="glyphicon glyphicon-copyright-mark"></span> License</a></li>
-				<li class="dropdown">
-					<a class="dropdown-toggle" data-toggle="dropdown" href="#"><span class="glyphicon glyphicon-book"></span> Documentation <span class="caret"></span></a>
-						<ul class="dropdown-menu">
-							<li><a href="{{ site.baseurl }}/site/docs/installation">Installation</a></li>
-							<li class="divider"></li>
-							<li class="dropdown-header">Getting started</li>
-							<li><a href="{{ site.baseurl }}/site/docs/tutorial/dataprep">Data preparation</a></li>
-							<li><a href="{{ site.baseurl }}/site/docs/tutorial/clustering">Clustering</a></li>
-							<li><a href="{{ site.baseurl }}/site/docs/tutorial/detest">Testing for differential expression</a></li>
-						</ul>
-				</li>
-				<li>
-					<ul class="btn-group">
-						<a href="https://github.com/dvav/dgeclust/tarball/master" class="btn btn-default"><span class="glyphicon glyphicon-download"></span> Download</a>
-						<a href="https://github.com/dvav/dgeclust" class="btn btn-default" target="_blank"><span class="glyphicon glyphicon-eye-open"></span> View</a>
-					</ul>
-				</li>
-			</ul>						
-			<h1>DGEclust</h1>
-			<h4 class="text-muted">Hierarchical non-parametric Bayesian clustering of digital expression data</h4>
-		</div>
-		
-		<hr>
+<nav class="navbar navbar-inverse" role="navigation">
+	{% assign nav = site.data.nav %}
+	{% assign docs = nav.docs %}
+	{% assign tut = docs.tut %}
+
+	<!-- Navbar header -->
+	<div class="navbar-header">
+		<a class="navbar-brand" href="{{ site.baseurl }}{{ nav.home.url }}">DGEclust</a>
+	</div>	
+
+	<!-- Navbar links on the right side (they come first for proper alignment) -->
+	<ul class="nav navbar-nav navbar-right">
+		<li><a href="{{ nav.download.url }}"><span class="fa fa-download"></span> {{ nav.download.title }}</a></li>
+		<li><a href="{{ nav.view.url }}" target="_blank"><span class="fa fa-github"></span> {{ nav.view.title }}</a></li>
+	</ul>
+
+	<!-- Navbar links on the left side -->
+	<ul class="nav navbar-nav">
+		<li {% if page.title contains nav.home.title %}class="active"{% endif %}><a href="{{ site.baseurl }}{{ nav.home.url }}"><span class="glyphicon glyphicon-home"></span> {{ nav.home.title }}</a></li>
+		<li {% if page.url contains nav.lic.url %}class="active"{% endif %}><a href="{{ site.baseurl }}{{ nav.lic.url }}"><span class="glyphicon glyphicon-copyright-mark"></span> {{ nav.lic.title }}</a></li>
+		<li class="dropdown {% if page.url contains docs.url %}active{% endif %} ">
+			<a class="dropdown-toggle" data-toggle="dropdown" href="#"><span class="glyphicon glyphicon-book"></span> {{ docs.title }} <span class="caret"></span></a>
+			<ul class="dropdown-menu">
+				<li><a href="{{ site.baseurl }}{{ docs.inst.url }}">{{ docs.inst.title }}</a></li>
+				<li class="divider"></li>
+				<li class="dropdown-header">{{ tut.title }}</li>
+				<li><a href="{{ site.baseurl }}{{ tut.data.url }}">{{ tut.data.title }}</a></li>
+				<li><a href="{{ site.baseurl }}{{ tut.clust.url }}">{{ tut.clust.title }}</a></li>
+				<li><a href="{{ site.baseurl }}{{ tut.detest.url }}">{{ tut.detest.title }}</a></li>
+			</ul>
+		</li>
+	</ul>
+</nav>
