@@ -62,7 +62,7 @@ def nbinomln(x, alpha, p):
 ########################################################################################################################
 
 
-def sample_normal_meanvar(s1, s2, n, mu0=0, k0=1e-3, a0=1, s0=1e-3):
+def sample_normal_mean_var(s1, s2, n, mu0=0, k0=1e-3, a0=1, s0=1e-3):
     """Samples the mean and variance of a normal distribution given data with sufficient statistics s1, s2 and n"""
 
     ## compute mu, k, a, s
@@ -84,14 +84,14 @@ def sample_normal_meanvar(s1, s2, n, mu0=0, k0=1e-3, a0=1, s0=1e-3):
 ########################################################################################################################
 
 
-def sample_gamma_shape_scale(theta, shape, scale, lp0=0, q0=1, r0=1, s0=1):
-    """Samples the shape and scale of the gamma distribution from its posterior, given theta"""
+def sample_gamma_shape_scale(suma, logsuma, ndata, shape, scale, lp0=0, q0=1, r0=1, s0=1):
+    """Samples the shape and scale of the gamma distribution from their posterior"""
 
     ## compute updated params
-    lp = lp0 + np.log(theta).sum()
-    q = q0 + theta.sum()
-    r = r0 + theta.size
-    s = s0 + theta.size
+    lp = lp0 + logsuma
+    q = q0 + suma
+    r = r0 + ndata
+    s = s0 + ndata
 
     ## make proposals
     shape_, scale_ = (shape, scale) * np.exp(0.01 * rn.randn(2))
@@ -107,6 +107,15 @@ def sample_gamma_shape_scale(theta, shape, scale, lp0=0, q0=1, r0=1, s0=1):
 
     ## return
     return shape, scale
+
+########################################################################################################################
+
+
+def sample_gamma_scale(suma, ndata, shape, a0=1, b0=1):
+    """Samples the scale the gamma distribution from its posterior, when shape is known"""
+
+    ## return
+    return 1 / rn.gamma(a0 + ndata * shape, 1 / (b0 + suma))
 
 ########################################################################################################################
 
