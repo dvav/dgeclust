@@ -84,7 +84,7 @@ def sample_normal_mean_var(s1, s2, n, mu0=0, k0=1e-3, a0=1, s0=1e-3):
 ########################################################################################################################
 
 
-def sample_gamma_shape_scale(suma, logsuma, ndata, shape, scale, lp0=0, q0=1, r0=1, s0=1):
+def sample_gamma_shape_scale(suma, logsuma, ndata, shape, scale, lp0=0, q0=0, r0=0, s0=0):
     """Samples the shape and scale of the gamma distribution from their posterior"""
 
     ## compute updated params
@@ -96,7 +96,7 @@ def sample_gamma_shape_scale(suma, logsuma, ndata, shape, scale, lp0=0, q0=1, r0
     ## make proposals
     shape_, scale_ = (shape, scale) * np.exp(0.01 * rn.randn(2))
 
-    ## compute lp and lp_
+    ## compute logpost and logpost_
     logpost = (shape - 1) * lp - q / scale - r * sp.gammaln(shape) - shape * s * np.log(scale)
     logpost_ = (shape_ - 1) * lp - q / scale_ - r * sp.gammaln(shape_) - shape_ * s * np.log(scale_)
 
@@ -111,11 +111,36 @@ def sample_gamma_shape_scale(suma, logsuma, ndata, shape, scale, lp0=0, q0=1, r0
 ########################################################################################################################
 
 
-def sample_gamma_scale(suma, ndata, shape, a0=1, b0=1):
-    """Samples the scale the gamma distribution from its posterior, when shape is known"""
+def sample_gamma_scale(suma, ndata, shape, a0=1, b0=1e-3):
+    """Samples the scale of the gamma distribution from its posterior, when shape is known"""
 
     ## return
     return 1 / rn.gamma(a0 + ndata * shape, 1 / (b0 + suma))
+
+########################################################################################################################
+
+
+def sample_gamma_shape(logsuma, ndata, shape, scale, lp0=0, r0=0, s0=0):
+    """Samples the shape of the gamma distribution from its posterior, when scale is known"""
+
+    ## compute updated params
+    lp = lp0 + logsuma
+    r = r0 + ndata
+    s = s0 + ndata
+
+    ## make proposal
+    shape_ = shape * np.exp(0.01 * rn.randn())
+
+    ## compute logpost and logpost_
+    logpost = (shape - 1) * lp - r * sp.gammaln(shape) - shape * s * np.log(scale)
+    logpost_ = (shape_ - 1) * lp - r * sp.gammaln(shape_) - shape_ * s * np.log(scale)
+
+    ## do Metropolis step
+    if logpost_ > logpost or rn.rand() < np.exp(logpost_ - logpost):
+        shape = shape_
+
+    ## return
+    return shape
 
 ########################################################################################################################
 
