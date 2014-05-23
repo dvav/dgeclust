@@ -84,6 +84,33 @@ def sample_normal_meanvar(s1, s2, n, mu0=0, k0=1e-3, a0=1, s0=1e-3):
 ########################################################################################################################
 
 
+def sample_gamma_shape_scale(theta, shape, scale, lp0=0, q0=1, r0=1, s0=1):
+    """Samples the shape and scale of the gamma distribution from its posterior, given theta"""
+
+    ## compute updated params
+    lp = lp0 + np.log(theta).sum()
+    q = q0 + theta.sum()
+    r = r0 + theta.size
+    s = s0 + theta.size
+
+    ## make proposals
+    shape_, scale_ = (shape, scale) * np.exp(0.01 * rn.randn(2))
+
+    ## compute lp and lp_
+    logpost = (shape - 1) * lp - q / scale - r * sp.gammaln(shape) - shape * s * np.log(scale)
+    logpost_ = (shape_ - 1) * lp - q / scale_ - r * sp.gammaln(shape_) - shape_ * s * np.log(scale_)
+
+    ## do Metropolis step
+    if logpost_ > logpost or rn.rand() < np.exp(logpost_ - logpost):
+        shape = shape_
+        scale = scale_
+
+    ## return
+    return shape, scale
+
+########################################################################################################################
+
+
 def sample_categorical(w, n=1):
     """Samples from the categorical distribution with matrix of weights w"""
 
