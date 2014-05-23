@@ -3,7 +3,7 @@
 		"default": "NegBinom",
 		"options" : {
 			"NegBinom": {
-			"pars": [0,1,0,1]
+			    "pars": [0,1,0,1]
 			}, 
 			"Poisson": {
 				"pars": [1,1]
