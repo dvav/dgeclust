@@ -12,7 +12,7 @@ import dgeclust.config as cfg
 from dgeclust.data import CountData
 from dgeclust.gibbs.state import GibbsState
 from dgeclust.gibbs.alg import GibbsSampler
-from dgeclust.models import nbinom, nbinom2, poisson, normal, binom, bbinom
+from dgeclust.models import nbinom, poisson, normal, binom, bbinom
 
 ########################################################################################################################
 
@@ -36,7 +36,7 @@ parser.add_argument('-p', type=str, dest='pars', help='initial model parameters'
 
 args = parser.parse_args()
 
-model = {'NegBinom': nbinom, 'NegBinom2': nbinom2, 'Poisson': poisson, 'Normal': normal}[args.model]
+model = {'NegBinom': nbinom, 'Poisson': poisson, 'Normal': normal}[args.model]
 pars = cfg.models['options'][args.model]['pars'] if args.pars is None else eval(args.pars)
 norm = None if args.norm is None else eval(args.norm)
 groups = None if args.groups is None else eval(args.groups)

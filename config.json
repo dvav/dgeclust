@@ -5,9 +5,6 @@
 			"NegBinom": {
 			"pars": [0,1,0,1]
 			}, 
-			"NegBinom2": {
-				"pars": [0,1]
-			}, 
 			"Poisson": {
 				"pars": [1,1]
 			}, 
