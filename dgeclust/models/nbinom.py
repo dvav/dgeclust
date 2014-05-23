@@ -89,8 +89,8 @@ def sample_params(theta, *args, **kargs):
     s2_phi = np.sum(phi**2)
     s2_mu = np.sum(mu**2)
 
-    mu_phi, s2_phi = st.sample_normal_meanvar(s1_phi, s2_phi, n)
-    mu_mu, s2_mu = st.sample_normal_meanvar(s1_mu, s2_mu, n)
+    mu_phi, s2_phi = st.sample_normal_mean_var(s1_phi, s2_phi, n)
+    mu_mu, s2_mu = st.sample_normal_mean_var(s1_mu, s2_mu, n)
 
     ## return
     return mu_phi, s2_phi, mu_mu, s2_mu
