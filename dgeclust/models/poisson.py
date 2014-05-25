@@ -68,11 +68,11 @@ def sample_params(theta, shape, scale):
 
 
 def sample_posterior(idx, data, state):
-    """Sample theta from its posterior, given counts. It does not work when replicas are present!!!!!"""
+    """Sample theta from its posterior, given counts"""
 
     ## fetch all data points that belong to cluster idx
     counts = [data.counts[:, group][zz == idx] for group, zz in zip(data.groups, state.zz)]
-    norm_factors = [data.norm_factors[group] for group in data.groups]
+    norm_factors = [np.sum(data.norm_factors[group]) for group in data.groups]
 
     s = np.sum([cnts.sum() for cnts in counts])
     n = np.asarray([cnts.size for cnts in counts])
