@@ -11,6 +11,9 @@
 			"BetaBinom": {
 			    "pars": [0,1,0,1]
 			},
+			"Binom": {
+			    "pars": [1,1]
+			},
 			"Normal": {
 				"pars": [0,1,0,1]
 			}

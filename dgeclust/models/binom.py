@@ -20,7 +20,7 @@ def _compute_loglik(theta, counts, lib_sizes):
     lib_sizes = lib_sizes[:, :, np.newaxis]
 
     ## return
-    return st.binomln(counts, theta, lib_sizes)
+    return st.binomln(counts, lib_sizes, theta)
 
 
 ########################################################################################################################
@@ -31,7 +31,7 @@ def compute_loglik(j, data, state):
 
     ## read data
     counts = data.counts[:, data.groups[j]]
-    lib_sizes = data.library_sizes[data.groups[j]]
+    lib_sizes = data.lib_sizes[data.groups[j]]
 
     ## return
     return _compute_loglik(state.theta, counts, lib_sizes)
@@ -39,38 +39,41 @@ def compute_loglik(j, data, state):
 ########################################################################################################################
 
 
-def sample_prior(size, a, b):
+def sample_prior(size, alpha, beta):
     """Samples theta from its prior"""
 
     ## return    
-    return rn.beta(a, b, size)
+    return rn.beta(alpha, beta, size)
     
 ########################################################################################################################
 
 
-def sample_params(theta, a, b):
-    """Samples the parameters of the beta distribution from its posterior, given theta"""
+def sample_params(theta, alpha, beta):
+    """Samples the alpha and beta of the gamma distribution from its posterior, given theta"""
 
     ## return
-    return a, b
-    
+    return alpha, beta
+
+
 ########################################################################################################################
 
 
 def sample_posterior(idx, data, state):
-    """Sample theta from its posterior, given counts. It does not work when replicas are present!!!!!"""
+    """Sample theta from its posterior, given counts"""
 
     ## fetch all data points that belong to cluster idx
     counts = [data.counts[:, group][zz == idx] for group, zz in zip(data.groups, state.zz)]
-    lib_sizes = [data.library_sizes[group] for group in data.groups]
+    lib_sizes = [np.sum(data.lib_sizes[group]) for group in data.groups]
 
     s = np.sum([cnts.sum() for cnts in counts])
-    n = np.sum([cnts.size * libsz for cnts, libsz in zip(counts, lib_sizes)])
+    n = np.asarray([cnts.size for cnts in counts])
+
+    m = np.sum(lib_sizes * n)
 
     ## parameters
-    a, b = state.pars
+    alpha, beta = state.pars
 
     ## return
-    return rn.beta(a + s, b + n - s)
+    return rn.beta(alpha + s, m - s + beta)
     
 ########################################################################################################################

@@ -36,7 +36,7 @@ parser.add_argument('-p', type=str, dest='pars', help='initial model parameters'
 
 args = parser.parse_args()
 
-model = {'NegBinom': nbinom, 'Poisson': poisson, 'BetaBinom': bbinom, 'Normal': normal}[args.model]
+model = {'NegBinom': nbinom, 'Poisson': poisson, 'BetaBinom': bbinom, 'Binom': binom, 'Normal': normal}[args.model]
 pars = cfg.models['options'][args.model]['pars'] if args.pars is None else eval(args.pars)
 norm = None if args.norm is None else eval(args.norm)
 groups = None if args.groups is None else eval(args.groups)
