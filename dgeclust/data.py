@@ -12,7 +12,7 @@ class CountData(object):
     """Represents a counts data set"""
 
     def __init__(self, counts, sample_names, feature_names, groups, ngroups, nreplicas, nfeatures, nsamples,
-                 norm_factors):
+                 norm_factors, lib_sizes):
         """Initialise state from raw data"""
 
         self.counts = counts
@@ -24,6 +24,7 @@ class CountData(object):
         self.nfeatures = nfeatures
         self.nsamples = nsamples
         self.norm_factors = norm_factors
+        self.lib_sizes = lib_sizes
 
     ####################################################################################################################
 
@@ -51,9 +52,10 @@ class CountData(object):
 
         ## compute normalisation factors and library sizes
         norm_factors = ut.estimate_norm_factors(counts, locfcn) if norm_factors is None else norm_factors
+        lib_sizes = counts.sum(0)
 
         ## return
         return cls(counts, sample_names, feature_names, groups, ngroups, nreplicas, nfeatures, nsamples,
-                   norm_factors)
+                   norm_factors, lib_sizes)
 
     ####################################################################################################################
