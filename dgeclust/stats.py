@@ -62,6 +62,20 @@ def nbinomln(x, alpha, p):
 ########################################################################################################################
 
 
+def bbinomln(x, n, alpha, beta):
+    """Returns the log-density of the beta binomial distribution at x"""
+
+    ## compute intermediate quantities
+    c1 = sp.gammaln(n + 1) - sp.gammaln(x + 1) - sp.gammaln(n - x + 1)
+    c2 = sp.gammaln(x + alpha) + sp.gammaln(n - x + beta) - sp.gammaln(n + alpha + beta)
+    c3 = sp.gammaln(alpha + beta) - sp.gammaln(alpha) - sp.gammaln(beta)
+
+    ## return
+    return c1 + c2 + c3
+
+########################################################################################################################
+
+
 def sample_normal_mean_var(s1, s2, n, mu0=0, k0=1e-3, a0=1, s0=1e-3):
     """Samples the mean and variance of a normal distribution given data with sufficient statistics s1, s2 and n"""
 
