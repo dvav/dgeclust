@@ -32,7 +32,6 @@ class GibbsState(object):
         ## local number of active clusters
         _, _, self.nactive, _ = zip(*[ut.get_cluster_info(lu.size, z) for z, lu in zip(self.z, self.lu)])
 
-
     ####################################################################################################################
 
     @classmethod
