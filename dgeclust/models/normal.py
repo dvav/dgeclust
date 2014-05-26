@@ -9,22 +9,21 @@ import dgeclust.stats as st
 ########################################################################################################################
 
 
-def compute_loglik(counts, theta):
+def compute_loglik(j, data, state):
     """Computes the log-likelihood of each element of counts for each element of theta"""
 
+    ## read data
+    counts = data.counts[:, data.groups[j]]
+    counts = counts.T
     counts = np.atleast_2d(counts)
-    theta = np.atleast_2d(theta)
-    
-    ## read theta
-    mean = theta[:, 0]
-    var = theta[:, 1]
-    
-    ## compute loglik
     counts = counts[:, :, np.newaxis]
-    loglik = st.normalln(counts, mean, var)
-        
+
+    ## read theta
+    mean = state.theta[:, 0]
+    var = state.theta[:, 1]
+
     ## return
-    return loglik
+    return st.normalln(counts, mean, var)
 
 ########################################################################################################################
 
@@ -51,19 +50,23 @@ def sample_params(theta, mu0, k0, a0, s0):
 ########################################################################################################################
 
 
-def sample_posterior(theta, idx, c, z, counts, mu0, k0, a0, s0):
+def sample_posterior(idx, data, state):
     """Sample mean and var from their posterior, given counts"""
 
     ## fetch all data points that belong to cluster idx
-    counts = [np.atleast_2d(cnts)[:, ci[zi] == idx].ravel() for cnts, ci, zi in zip(counts, c, z)]
+    counts = [data.counts[:, group][zz == idx].ravel() for group, zz in zip(data.groups, state.zz)]
     counts = np.hstack(counts)
 
+    ## compute sufficient statistics
     n = counts.size
     s1 = counts.sum()
     s2 = np.sum(counts**2)
 
+    ## read parameters
+    mu0, k0, a0, s0 = state.pars
+
     ## read theta
-    mean, var = st.sample_normal_meanvar(s1, s2, n, mu0, k0, a0, s0)
+    mean, var = st.sample_normal_mean_var(s1, s2, n, mu0, k0, a0, s0)
 
     ## return
     return mean, var
