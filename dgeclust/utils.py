@@ -3,6 +3,7 @@ from __future__ import division
 import collections as cl
 import numpy as np
 import scipy.misc as ms
+import matplotlib.pylab as pl
 
 ########################################################################################################################
 
@@ -63,7 +64,7 @@ def estimate_norm_factors(counts, locfcn=np.median):
 ########################################################################################################################
 
 
-def compute_fitted_model(isample, igroup, res, data, model, xmin=-1, xmax=12, npoints=1000, log_scale=True):
+def plot_fitted_model(isample, igroup, res, data, model, xmin=-1, xmax=12, npoints=1000, nbins=100, log_scale=True):
     """Computes the fitted model"""
 
     ## compute cluster occupancies
@@ -82,7 +83,11 @@ def compute_fitted_model(isample, igroup, res, data, model, xmin=-1, xmax=12, np
         fakedata = cl.namedtuple('FakeCountData', 'counts, groups, norm_factors, lib_sizes')(
             x, [0], [data.norm_factors[isample]], [data.lib_sizes[isample]])
         y = np.exp(model.compute_loglik(0, fakedata, state).sum(0))
-    y = y * cluster_occupancies / res.zz[igroup].size                                   # notice the normalisation of y
+    y = y * cluster_occupancies / res.zz[igroup].size                             # notice the normalisation of y
+
+    ## plot
+    pl.hist(np.log(data.counts[:, isample]), nbins, histtype='stepfilled', linewidth=0, normed=True, color='gray')
+    pl.plot(x, y, 'k', x, y.sum(1), 'r')
 
     ## return
     return x, y
