@@ -71,7 +71,7 @@ def compute_fitted_model(igroup, res, model, xmin=-1, xmax=12, npoints=1000, log
     cluster_occupancies = cluster_occupancies[iactive]                     # keep occupancies of active clusters, only
 
     ## compute fitted model
-    x = np.linspace(xmin, xmax, npoints).reshape(-1, 1)
+    x = np.reshape(np.linspace(xmin, xmax, npoints), (-1, 1))
     state = cl.namedtuple('FakeGibbsState', 'theta')(res.theta[iactive])        # wrapper object
     if log_scale is True:
         xx = np.exp(x)
