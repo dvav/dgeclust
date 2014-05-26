@@ -8,7 +8,7 @@ import dgeclust.stats as st
 ########################################################################################################################
 
 
-def _compute_loglik(phi, mu, counts, lib_sizes):
+def _compute_loglik(alpha, beta, counts, lib_sizes):
     """Computes the log-likelihood of each element of counts for each element of phi and mu"""
 
     ## prepare data
@@ -19,12 +19,8 @@ def _compute_loglik(phi, mu, counts, lib_sizes):
     lib_sizes = np.atleast_2d(lib_sizes).T
     lib_sizes = lib_sizes[:, :, np.newaxis]
 
-    ## compute p
-    alpha = 1 / phi
-    p = alpha / (alpha + lib_sizes * mu)
-
     ## return
-    return st.nbinomln(counts, alpha, p)
+    return st.bbinomln(counts, lib_sizes, alpha, beta)
 
 
 ########################################################################################################################
@@ -34,41 +30,42 @@ def compute_loglik(j, data, state):
     """Computes the log-likelihood of each element of counts for each element of theta"""
 
     ## read data
-    counts = data.counts[:, data.groups[j]]
-    lib_sizes = data.library_sizes[data.groups[j]]
+    group = data.groups[j]
+    counts = data.counts[:, group]
+    lib_sizes = data.lib_sizes[group]
 
     ## read theta
-    phi = state.theta[:, 0]
-    mu = state.theta[:, 1]
+    alpha = state.theta[:, 0]
+    beta = state.theta[:, 1]
 
     ## return
-    return _compute_loglik(phi, mu, counts, lib_sizes)
+    return _compute_loglik(alpha, beta, counts, lib_sizes)
 
 ########################################################################################################################
 
 
-def compute_logprior(phi, mu, mu_phi, s2_phi, mu_mu, s2_mu):
+def compute_logprior(alpha, beta, mu_alpha, s2_alpha, mu_beta, s2_beta):
     """Computes the log-density of the prior of theta"""
 
     ## compute log-priors for phi and mu
-    logprior_phi = st.lognormalln(phi, mu_phi, s2_phi)
-    logprior_mu = st.lognormalln(mu, mu_mu, s2_mu)
+    logprior_alpha = st.lognormalln(alpha, mu_alpha, s2_alpha)
+    logprior_beta = st.lognormalln(beta, mu_beta, s2_beta)
 
     ## return
-    return logprior_phi + logprior_mu
+    return logprior_alpha + logprior_beta
 
 ########################################################################################################################
 
 
-def sample_prior(size, mu_phi, s2_phi, mu_mu, s2_mu):
-    """Samples phi and mu from their priors, log-normal in both cases"""
+def sample_prior(size, mu_alpha, s2_alpha, mu_beta, s2_beta):
+    """Samples alpha and beta from their priors, log-normal in both cases"""
 
-    ## sample phi and mu
-    phi = np.exp(rn.randn(size, 1) * np.sqrt(s2_phi) + mu_phi)
-    mu = np.exp(rn.randn(size, 1) * np.sqrt(s2_mu) + mu_mu)
+    ## sample alpha and beta
+    alpha = np.exp(rn.randn(size, 1) * np.sqrt(s2_alpha) + mu_alpha)
+    beta = np.exp(rn.randn(size, 1) * np.sqrt(s2_beta) + mu_beta)
 
     ## return
-    return np.hstack((phi, mu))
+    return np.hstack((alpha, beta))
     
 ########################################################################################################################
 
@@ -76,47 +73,47 @@ def sample_prior(size, mu_phi, s2_phi, mu_mu, s2_mu):
 def sample_params(theta, *args, **kargs):
     """Samples the mean and var of the log-normal from the posterior, given phi"""
 
-    phi = np.log(theta[:, 0])
-    mu = np.log(theta[:, 1])
+    alpha = np.log(theta[:, 0])
+    beta = np.log(theta[:, 1])
 
     ## compute S1_phi, S2_phi, S1_mu, S2_mu and n
-    n = phi.size
+    n = alpha.size
 
-    s1_phi = phi.sum()
-    s1_mu = mu.sum()
+    s1_alpha = alpha.sum()
+    s1_beta = beta.sum()
 
-    s2_phi = np.sum(phi**2)
-    s2_mu = np.sum(mu**2)
+    s2_alpha = np.sum(alpha**2)
+    s2_beta = np.sum(beta**2)
 
-    mu_phi, s2_phi = st.sample_normal_meanvar(s1_phi, s2_phi, n)
-    mu_mu, s2_mu = st.sample_normal_meanvar(s1_mu, s2_mu, n)
+    mu_alpha, s2_alpha = st.sample_normal_mean_var(s1_alpha, s2_alpha, n)
+    mu_beta, s2_beta = st.sample_normal_mean_var(s1_beta, s2_beta, n)
 
     ## return
-    return mu_phi, s2_phi, mu_mu, s2_mu
+    return mu_alpha, s2_alpha, mu_beta, s2_beta
 
 ########################################################################################################################
 
 
 def sample_posterior(idx, data, state):
-    """Sample phi and mu from their posterior, using Metropolis"""
+    """Sample alpha and beta from their posterior, using Metropolis"""
 
     ## fetch all data points that belong to cluster idx
     counts = [data.counts[:, group][zz == idx] for group, zz in zip(data.groups, state.zz)]
-    lib_sizes = [data.library_sizes[group] for group in data.groups]
+    lib_sizes = [data.lib_sizes[group] for group in data.groups]
 
     ## read theta
-    phi, mu = state.theta[idx]
+    alpha, beta = state.theta[idx]
 
     ## propose theta
-    phi_, mu_ = (phi, mu) * np.exp(0.01 * rn.randn(2))
+    alpha_, beta_ = (alpha, beta) * np.exp(0.01 * rn.randn(2))
 
     ## compute log-likelihoods
-    loglik = np.sum([_compute_loglik(phi, mu, cnts, lbszs).sum() for cnts, lbszs in zip(counts, lib_sizes)])
-    loglik_ = np.sum([_compute_loglik(phi_, mu_, cnts, lbszs).sum() for cnts, lbszs in zip(counts, lib_sizes)])
+    loglik = np.sum([_compute_loglik(alpha, beta, cnts, libszs).sum() for cnts, libszs in zip(counts, lib_sizes)])
+    loglik_ = np.sum([_compute_loglik(alpha_, beta_, cnts, libszs).sum() for cnts, libszs in zip(counts, lib_sizes)])
 
     ## compute log-priors
-    logprior = compute_logprior(phi, mu, *state.pars)
-    logprior_ = compute_logprior(phi_, mu_, *state.pars)
+    logprior = compute_logprior(alpha, beta, *state.pars)
+    logprior_ = compute_logprior(alpha_, beta_, *state.pars)
 
     ## compute log-posteriors
     logpost = loglik + logprior
@@ -124,10 +121,10 @@ def sample_posterior(idx, data, state):
 
     ## do Metropolis step
     if (logpost_ > logpost) or (rn.rand() < np.exp(logpost_ - logpost)):    # do Metropolis step
-        phi = phi_
-        mu = mu_
+        alpha = alpha_
+        beta = beta_
 
     ## return
-    return phi, mu
+    return alpha, beta
 
 ########################################################################################################################

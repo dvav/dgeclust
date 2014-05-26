@@ -63,7 +63,7 @@ def estimate_norm_factors(counts, locfcn=np.median):
 ########################################################################################################################
 
 
-def compute_fitted_model(igroup, res, model, xmin=-1, xmax=12, npoints=1000, log_scale=True):
+def compute_fitted_model(isample, igroup, res, data, model, xmin=-1, xmax=12, npoints=1000, log_scale=True):
     """Computes the fitted model"""
 
     ## compute cluster occupancies
@@ -75,10 +75,12 @@ def compute_fitted_model(igroup, res, model, xmin=-1, xmax=12, npoints=1000, log
     state = cl.namedtuple('FakeGibbsState', 'theta')(res.theta[iactive])        # wrapper object
     if log_scale is True:
         xx = np.exp(x)
-        fakedata = cl.namedtuple('FakeCountData', 'counts, groups, norm_factors')(xx, [0], [1])
+        fakedata = cl.namedtuple('FakeCountData', 'counts, groups, norm_factors, lib_sizes')(
+            xx, [0], [data.norm_factors[isample]], [data.lib_sizes[isample]])
         y = xx * np.exp(model.compute_loglik(0, fakedata, state).sum(0))
     else:
-        fakedata = cl.namedtuple('FakeCountData', 'counts, groups, norm_factors')(x, [0], [1])
+        fakedata = cl.namedtuple('FakeCountData', 'counts, groups, norm_factors, lib_sizes')(
+            x, [0], [data.norm_factors[isample]], [data.lib_sizes[isample]])
         y = np.exp(model.compute_loglik(0, fakedata, state).sum(0))
     y = y * cluster_occupancies / res.zz[igroup].size                                   # notice the normalisation of y
 
