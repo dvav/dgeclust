@@ -44,7 +44,7 @@ def poissonln(x, theta):
 ########################################################################################################################
 
 
-def binomln(x, p, n):
+def binomln(x, n, p):
     """Returns the log-density of the binomial distribution at x"""
 
     ## return
