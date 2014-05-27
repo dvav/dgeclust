@@ -19,6 +19,14 @@
 			}
 		}
 	},
+	"norm": {
+	    "default": "Quantile",
+	    "options": {
+            "Total": "",
+            "Quantile": "",
+            "DESeq": ""
+        }
+	},
     "fnames": {
         "clust": "_clust",
 		"pvals": "_pvals.txt",

@@ -3,16 +3,13 @@ from __future__ import division
 import numpy as np
 import pandas as pd
 
-import dgeclust.utils as ut
-
 ########################################################################################################################
 
 
 class CountData(object):
     """Represents a counts data set"""
 
-    def __init__(self, counts, sample_names, feature_names, groups, ngroups, nreplicas, nfeatures, nsamples,
-                 norm_factors, lib_sizes):
+    def __init__(self, counts, sample_names, feature_names, groups, ngroups, nreplicas, nfeatures, nsamples, lib_sizes):
         """Initialise state from raw data"""
 
         self.counts = counts
@@ -23,13 +20,12 @@ class CountData(object):
         self.nreplicas = nreplicas
         self.nfeatures = nfeatures
         self.nsamples = nsamples
-        self.norm_factors = norm_factors
         self.lib_sizes = lib_sizes
 
     ####################################################################################################################
 
     @classmethod
-    def load(cls, file_name, norm_factors=None, groups=None, locfcn=np.median):
+    def load(cls, file_name, norm_method='Quantile', groups=None):
         """Reads a data file containing a matrix of count data"""
 
         ## read data file
@@ -51,11 +47,48 @@ class CountData(object):
         nreplicas = np.asarray([np.size(group) for group in groups])
 
         ## compute normalisation factors and library sizes
-        norm_factors = ut.estimate_norm_factors(counts, locfcn) if norm_factors is None else norm_factors
-        lib_sizes = counts.sum(0)
+        # norm_factors = estimate_norm_factors(counts, locfcn) if norm_factors is None else norm_factors
+        lib_sizes = {
+            'Total': lambda x: np.sum(x, 0),
+            'Quantile': lambda x: estimate_lib_sizes_quantile(x),
+            'DESeq': lambda x: estimate_lib_sizes_deseq(x)  # notice that we divide by norm factors
+        }[norm_method](counts)
 
         ## return
-        return cls(counts, sample_names, feature_names, groups, ngroups, nreplicas, nfeatures, nsamples,
-                   norm_factors, lib_sizes)
+        return cls(counts, sample_names, feature_names, groups, ngroups, nreplicas, nfeatures, nsamples, lib_sizes)
 
     ####################################################################################################################
+
+
+def estimate_lib_sizes_quantile(counts, quant=75):
+    """Estimate library sizes using the quantile method"""
+
+    ## Consider only features smaller that the 75% quantile of non-zero counts
+    counts = [sample[sample > 0] for sample in counts.T]
+    counts = [sample[sample <= np.percentile(sample, quant)] for sample in counts]
+    lib_sizes = [sample.sum() for sample in counts]
+
+    ## return
+    return np.asarray(lib_sizes)
+
+########################################################################################################################
+
+
+def estimate_lib_sizes_deseq(counts, locfcn=np.median):
+    """Estimates normalization factors, using the same method as DESeq"""
+
+    ## compute geometric mean of each row in log-scale
+    logcounts = np.log(counts.T)
+    logmeans = np.mean(logcounts, 0)
+
+    ## take the ratios
+    logcounts -= logmeans
+
+    ## get median (or other central tendency metric) of ratios excluding rows with 0 mean
+    logcounts = logcounts[:, np.isfinite(logmeans)]
+    lib_sizes = np.exp(locfcn(logcounts, 1))
+
+    ## return
+    return lib_sizes
+
+########################################################################################################################

@@ -45,25 +45,6 @@ def normalize_log_weights(lw):
 ########################################################################################################################
 
 
-def estimate_norm_factors(counts, locfcn=np.median):
-    """Estimates normalization factors, using the same method as DESeq"""
-
-    ## compute geometric mean over genes
-    lsum = np.log(counts).sum(1)
-    means = np.exp(lsum / counts.shape[1])
-
-    ## divide samples by geometric means
-    counts = counts.T / means
-
-    ## get median (or other central tendency metric) of samples excluding features with 0 mean
-    norm_factors = locfcn(counts[:, means > 0], 1)
-
-    ## return
-    return norm_factors
-
-########################################################################################################################
-
-
 def plot_fitted_model(isample, igroup, res, data, model, xmin=-1, xmax=12, npoints=1000, nbins=100, log_scale=True):
     """Computes the fitted model"""
 
@@ -76,12 +57,12 @@ def plot_fitted_model(isample, igroup, res, data, model, xmin=-1, xmax=12, npoin
     state = cl.namedtuple('FakeGibbsState', 'theta')(res.theta[iactive])        # wrapper object
     if log_scale is True:
         xx = np.exp(x)
-        fakedata = cl.namedtuple('FakeCountData', 'counts, groups, norm_factors, lib_sizes')(
-            xx, [0], [data.norm_factors[isample]], [data.lib_sizes[isample]])
+        fakedata = cl.namedtuple('FakeCountData', 'counts, groups, lib_sizes')(
+            xx, [0], [data.lib_sizes[isample]])
         y = xx * np.exp(model.compute_loglik(0, fakedata, state).sum(0))
     else:
-        fakedata = cl.namedtuple('FakeCountData', 'counts, groups, norm_factors, lib_sizes')(
-            x, [0], [data.norm_factors[isample]], [data.lib_sizes[isample]])
+        fakedata = cl.namedtuple('FakeCountData', 'counts, groups, lib_sizes')(
+            x, [0], [data.lib_sizes[isample]])
         y = np.exp(model.compute_loglik(0, fakedata, state).sum(0))
     y = y * cluster_occupancies / res.zz[igroup].size                             # notice the normalisation of y
 

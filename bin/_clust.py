@@ -20,7 +20,8 @@ from dgeclust.models import nbinom, poisson, bbinom, binom, normal
 parser = ap.ArgumentParser(prog='clust',
                            description='Hierarchical Non-Parametric Bayesian Clustering of Digital Expression Data')
 parser.add_argument('data', type=str, help='data file to process')
-parser.add_argument('-n', type=str, dest='norm', help='normalisation factors', default=None)
+parser.add_argument('-n', type=str, dest='norm', help='normalisation method', default=cfg.norm['default'],
+                    choices=cfg.norm['options'].keys())
 parser.add_argument('-g', type=str, dest='groups', help='grouping of samples', default=None)
 parser.add_argument('-o', type=str, dest='outdir', help='output directory', default=cfg.fnames['clust'])
 parser.add_argument('-t', type=int, dest='niters', help='number of iterations', default=cfg.clust['niters'])
@@ -36,9 +37,14 @@ parser.add_argument('-p', type=str, dest='pars', help='initial model parameters'
 
 args = parser.parse_args()
 
-model = {'NegBinom': nbinom, 'Poisson': poisson, 'BetaBinom': bbinom, 'Binom': binom, 'Normal': normal}[args.model]
+model = {
+    'NegBinom': nbinom,
+    'Poisson': poisson,
+    'BetaBinom': bbinom,
+    'Binom': binom,
+    'Normal': normal
+}[args.model]
 pars = cfg.models['options'][args.model]['pars'] if args.pars is None else eval(args.pars)
-norm = None if args.norm is None else eval(args.norm)
 groups = None if args.groups is None else eval(args.groups)
 nthreads = args.nthreads if args.nthreads > 0 else mp.cpu_count()
 
@@ -60,7 +66,7 @@ fnames = {
 ########################################################################################################################
 
 ## load data
-data = CountData.load(args.data, norm, groups)
+data = CountData.load(args.data, args.norm, groups)
 
 ## generate initial state
 if os.path.exists(args.outdir):

@@ -11,6 +11,7 @@ with open(config_file_name) as f:
     config = json.load(f)
 
 models = config['models']
+norm = config['norm']
 fnames = config['fnames']
 nthreads = config['nthreads']
 clust = config['clust']
