@@ -8,7 +8,7 @@ import dgeclust.stats as st
 ########################################################################################################################
 
 
-def _compute_loglik(theta, counts, norm_factors):
+def _compute_loglik(theta, counts, lib_sizes):
     """Computes the log-likelihood of each element of counts for each element of phi and mu"""
 
     ## prepare data
@@ -16,11 +16,11 @@ def _compute_loglik(theta, counts, norm_factors):
     counts = np.atleast_2d(counts)
     counts = counts[:, :, np.newaxis]
 
-    norm_factors = np.atleast_2d(norm_factors).T
-    norm_factors = norm_factors[:, :, np.newaxis]
+    lib_sizes = np.atleast_2d(lib_sizes).T
+    lib_sizes = lib_sizes[:, :, np.newaxis]
 
     ## return
-    return st.poissonln(counts, norm_factors * theta)
+    return st.poissonln(counts, lib_sizes * theta)
 
 
 ########################################################################################################################
@@ -31,10 +31,10 @@ def compute_loglik(j, data, state):
 
     ## read data
     counts = data.counts[:, data.groups[j]]
-    norm_factors = data.norm_factors[data.groups[j]]
+    lib_sizes = data.lib_sizes[data.groups[j]]
 
     ## return
-    return _compute_loglik(state.theta, counts, norm_factors)
+    return _compute_loglik(state.theta, counts, lib_sizes)
 
 ########################################################################################################################
 
@@ -72,12 +72,12 @@ def sample_posterior(idx, data, state):
 
     ## fetch all data points that belong to cluster idx
     counts = [data.counts[:, group][zz == idx] for group, zz in zip(data.groups, state.zz)]
-    norm_factors = [np.sum(data.norm_factors[group]) for group in data.groups]
+    lib_sizes = [np.sum(data.lib_sizes[group]) for group in data.groups]
 
     s = np.sum([cnts.sum() for cnts in counts])
     n = np.asarray([cnts.size for cnts in counts])
 
-    m = np.sum(norm_factors * n)
+    m = np.sum(lib_sizes * n)
 
     ## parameters
     shape, scale = state.pars
