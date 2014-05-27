@@ -8,7 +8,7 @@ import dgeclust.stats as st
 ########################################################################################################################
 
 
-def _compute_loglik(phi, mu, counts, norm_factors):
+def _compute_loglik(phi, mu, counts, lib_sizes):
     """Computes the log-likelihood of each element of counts for each element of phi and mu"""
 
     ## prepare data
@@ -16,12 +16,12 @@ def _compute_loglik(phi, mu, counts, norm_factors):
     counts = np.atleast_2d(counts)
     counts = counts[:, :, np.newaxis]
 
-    norm_factors = np.atleast_2d(norm_factors).T
-    norm_factors = norm_factors[:, :, np.newaxis]
+    lib_sizes = np.atleast_2d(lib_sizes).T
+    lib_sizes = lib_sizes[:, :, np.newaxis]
 
     ## compute p
     alpha = 1 / phi
-    p = alpha / (alpha + norm_factors * mu)
+    p = alpha / (alpha + lib_sizes * mu)
 
     ## return
     return st.nbinomln(counts, alpha, p)
@@ -36,14 +36,14 @@ def compute_loglik(j, data, state):
     ## read data
     group = data.groups[j]
     counts = data.counts[:, group]
-    norm_factors = data.norm_factors[group]
+    lib_sizes = data.lib_sizes[group]
 
     ## read theta
     phi = state.theta[:, 0]
     mu = state.theta[:, 1]
 
     ## return
-    return _compute_loglik(phi, mu, counts, norm_factors)
+    return _compute_loglik(phi, mu, counts, lib_sizes)
 
 ########################################################################################################################
 
@@ -103,7 +103,7 @@ def sample_posterior(idx, data, state):
 
     ## fetch all data points that belong to cluster idx
     counts = [data.counts[:, group][zz == idx] for group, zz in zip(data.groups, state.zz)]
-    norm_factors = [data.norm_factors[group] for group in data.groups]
+    lib_sizes = [data.lib_sizes[group] for group in data.groups]
 
     ## read theta
     phi, mu = state.theta[idx]
@@ -112,8 +112,8 @@ def sample_posterior(idx, data, state):
     phi_, mu_ = (phi, mu) * np.exp(0.01 * rn.randn(2))
 
     ## compute log-likelihoods
-    loglik = np.sum([_compute_loglik(phi, mu, cnts, fac).sum() for cnts, fac in zip(counts, norm_factors)])
-    loglik_ = np.sum([_compute_loglik(phi_, mu_, cnts, fac).sum() for cnts, fac in zip(counts, norm_factors)])
+    loglik = np.sum([_compute_loglik(phi, mu, cnts, lbsz).sum() for cnts, lbsz in zip(counts, lib_sizes)])
+    loglik_ = np.sum([_compute_loglik(phi_, mu_, cnts, lbsz).sum() for cnts, lbsz in zip(counts, lib_sizes)])
 
     ## compute log-priors
     logprior = compute_logprior(phi, mu, *state.pars)
