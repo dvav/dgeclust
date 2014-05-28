@@ -27,7 +27,7 @@ class CountData(object):
         counts = pd.read_table(file_name, index_col=0)  # .astype(np.uint32)
 
         ## group information
-        groups = range(counts.columns.size) if groups is None else groups
+        groups = map(str, range(counts.columns.size)) if groups is None else groups
         labels = set(groups)
         igroups = [[col for col, group in zip(counts.columns, groups) if label == group] for label in labels]
         groups = cl.OrderedDict(zip(labels, igroups))

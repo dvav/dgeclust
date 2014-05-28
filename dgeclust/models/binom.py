@@ -8,7 +8,7 @@ import dgeclust.stats as st
 ########################################################################################################################
 
 
-def _compute_loglik(theta, counts, lib_sizes):
+def _compute_loglik(pars, counts, lib_sizes):
     """Computes the log-likelihood of each element of counts for each element of phi and mu"""
 
     ## prepare data
@@ -19,7 +19,7 @@ def _compute_loglik(theta, counts, lib_sizes):
     lib_sizes = lib_sizes[:, :, np.newaxis]
 
     ## return
-    return st.binomln(counts, lib_sizes, theta)
+    return st.binomln(counts, lib_sizes, pars.ravel())
 
 
 ########################################################################################################################
@@ -34,7 +34,7 @@ def compute_loglik(j, data, state):
     lib_sizes = data.lib_sizes[group].values
 
     ## return
-    return _compute_loglik(state.theta, counts, lib_sizes)
+    return _compute_loglik(state.pars, counts, lib_sizes)
 
 ########################################################################################################################
 
@@ -48,7 +48,7 @@ def sample_prior(size, alpha, beta):
 ########################################################################################################################
 
 
-def sample_params(theta, alpha, beta):
+def sample_hpars(pars, alpha, beta):
     """Samples the alpha and beta of the gamma distribution from its posterior, given theta"""
 
     ## return
@@ -72,7 +72,7 @@ def sample_posterior(idx, data, state):
     m = np.sum(lib_sizes * n)
 
     ## parameters
-    alpha, beta = state.pars
+    alpha, beta = state.hpars
 
     ## return
     return rn.beta(alpha + s, m - s + beta)

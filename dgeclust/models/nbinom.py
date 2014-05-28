@@ -38,8 +38,8 @@ def compute_loglik(j, data, state):
     lib_sizes = data.lib_sizes[group].values
 
     ## read theta
-    phi = state.theta[:, 0]
-    mu = state.theta[:, 1]
+    phi = state.pars[:, 0]
+    mu = state.pars[:, 1]
 
     ## return
     return _compute_loglik(phi, mu, counts, lib_sizes)
@@ -73,11 +73,11 @@ def sample_prior(size, mu_phi, s2_phi, mu_mu, s2_mu):
 ########################################################################################################################
 
 
-def sample_params(theta, *args, **kargs):
+def sample_hpars(pars, *args, **kargs):
     """Samples the mean and var of the log-normal from the posterior, given phi"""
 
-    phi = np.log(theta[:, 0])
-    mu = np.log(theta[:, 1])
+    phi = np.log(pars[:, 0])
+    mu = np.log(pars[:, 1])
 
     ## compute S1_phi, S2_phi, S1_mu, S2_mu and n
     n = phi.size
@@ -106,7 +106,7 @@ def sample_posterior(idx, data, state):
     lib_sizes = [data.lib_sizes[group].values for group in groups]
 
     ## read theta
-    phi, mu = state.theta[idx]
+    phi, mu = state.pars[idx]
 
     ## propose theta
     phi_, mu_ = (phi, mu) * np.exp(0.01 * rn.randn(2))
@@ -116,8 +116,8 @@ def sample_posterior(idx, data, state):
     loglik_ = np.sum([_compute_loglik(phi_, mu_, cnts, lbsz).sum() for cnts, lbsz in zip(counts, lib_sizes)])
 
     ## compute log-priors
-    logprior = compute_logprior(phi, mu, *state.pars)
-    logprior_ = compute_logprior(phi_, mu_, *state.pars)
+    logprior = compute_logprior(phi, mu, *state.hpars)
+    logprior_ = compute_logprior(phi_, mu_, *state.hpars)
 
     ## compute log-posteriors
     logpost = loglik + logprior

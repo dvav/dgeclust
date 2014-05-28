@@ -3,19 +3,46 @@
 		"default": "NegativeBinomial",
 		"options" : {
 			"NegativeBinomial": {
-			    "pars": [0,1,0,1]
+			    "pars": ["phi", "mu"],
+                "hpars": {
+                    "m1": 0,
+                    "v1": 1,
+                    "m2": 0,
+                    "v2": 1
+                }
+                
 			}, 
 			"Poisson": {
-				"pars": [1,1]
+				"pars": ["lambda"],
+                "hpars": {
+                    "shape": 1,
+                    "scale": 1
+                }
 			}, 
 			"BetaBinomial": {
-			    "pars": [0,1,0,1]
+			    "pars": ["alpha", "beta"],
+                "hpars": {
+                    "m1": 0,
+                    "v1": 1,
+                    "m2": 0,
+                    "v2": 1			        
+			    }
 			},
 			"Binomial": {
-			    "pars": [1,1]
+                "pars": ["p"],
+			    "hpars": {
+                    "alpha": 1,
+                    "beta": 1
+                }
 			},
 			"Normal": {
-				"pars": [0,1,1,1]
+                "pars": ["mu", "var"],
+				"hpars": {
+                    "mu": 0,
+                    "k": 1,
+                    "shape": 1,
+                    "scale": 1
+                }
 			}
 		}
 	},
@@ -32,14 +59,14 @@
 		"pvals": "_pvals.txt",
 		"simmat": "_simmat.txt",
         "config": "config.json",
-        "theta": "theta.txt",
+        "pars": "pars.txt",
         "lw": "lw.txt",
         "lu": "lu.txt",
         "c": "c.txt",
         "z": "z.txt",
-        "pars": "pars.txt",
+        "hpars": "hpars.txt",
 		"eta": "eta.txt",
-		"nactive": "nactive.txt",
+		"nact": "nact.txt",
 		"zz": "zz"
     },
     "clust": {

@@ -18,8 +18,8 @@ def compute_loglik(j, data, state):
     counts = counts[:, :, np.newaxis]
 
     ## read theta
-    mean = state.theta[:, 0]
-    var = state.theta[:, 1]
+    mean = state.pars[:, 0]
+    var = state.pars[:, 1]
 
     ## return
     return st.normalln(counts, mean, var)
@@ -40,12 +40,12 @@ def sample_prior(size, mu0, k0, a0, s0):
 ########################################################################################################################
 
 
-def sample_params(theta, mu0, k0, a0, s0):
+def sample_hpars(pars, mu0, k0, a0, s0):
     """Samples the mean and var of the log-normal from the posterior, given theta"""
 
     ## read parameters
-    mean = theta[:, 0]
-    prec = 1 / theta[:, 1]
+    mean = pars[:, 0]
+    prec = 1 / pars[:, 1]
 
     ## compute sufficient statistics
     n = prec.size
@@ -61,10 +61,10 @@ def sample_params(theta, mu0, k0, a0, s0):
     b0 = st.sample_gamma_scale(s, n, a0)
 
     ## sample mu0 and k0
-    mu0, var = st.sample_normal_mean_var(s1, s2, n)
+    # mu0, var = st.sample_normal_mean_var(s1, s2, n)
 
     ## return
-    return mu0, var * b0, a0, 1 / b0
+    return mu0, k0, a0, 1 / b0
     
 ########################################################################################################################
 
@@ -82,11 +82,8 @@ def sample_posterior(idx, data, state):
     s1 = counts.sum()
     s2 = np.sum(counts**2)
 
-    ## read parameters
-    mu0, k0, a0, s0 = state.pars
-
     ## read theta
-    mean, var = st.sample_normal_mean_var(s1, s2, n, mu0, k0, a0, s0)
+    mean, var = st.sample_normal_mean_var(s1, s2, n, *state.hpars)
 
     ## return
     return mean, var

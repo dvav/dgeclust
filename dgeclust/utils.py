@@ -50,28 +50,28 @@ def plot_fitted_model(sample, res, data, model, xmin=-1, xmax=12, npoints=1000, 
     """Computes the fitted model"""
 
     ## fetch index of group
-    igroup = [data.groups.keys().index(k) for k, v in data.groups.items() if sample in v][0]
+    group = [k for k, v in data.groups.items() if sample in v][0]
 
     ## compute cluster occupancies
-    cluster_occupancies, iactive, _, _ = get_cluster_info(len(res.theta), res.zz[igroup])
-    cluster_occupancies = cluster_occupancies[iactive]                     # keep occupancies of active clusters, only
+    occ, iact, _, _ = get_cluster_info(len(res.pars), res.zz[group].values)
+    occ = occ[iact]                     # keep occupancies of active clusters, only
 
     ## compute fitted model
     x = np.reshape(np.linspace(xmin, xmax, npoints), (-1, 1))
-    state = cl.namedtuple('FakeGibbsState', 'theta')(res.theta[iactive])        # wrapper object
+    state = cl.namedtuple('FakeGibbsState', 'pars')(res.pars[iact].values)        # wrapper object
     counts = data.counts[sample]
     if log_scale is True:
         xx = np.exp(x)
         fakedata = cl.namedtuple('FakeCountData', 'counts, groups, lib_sizes')(
-            pd.DataFrame(xx), cl.OrderedDict({0: [0]}), pd.DataFrame([data.lib_sizes[sample]]))
+            pd.DataFrame(xx), {0: [0]}, pd.DataFrame([data.lib_sizes[sample]]))
         y = xx * np.exp(model.compute_loglik(0, fakedata, state).sum(0))
         counts[counts < 1] = epsilon
         counts = np.log(counts)
     else:
         fakedata = cl.namedtuple('FakeCountData', 'counts, groups, lib_sizes')(
-            pd.DataFrame(x), cl.OrderedDict({0: [0]}), pd.DataFrame([data.lib_sizes[sample]]))
+            pd.DataFrame(x), {0: [0]}, pd.DataFrame([data.lib_sizes[sample]]))
         y = np.exp(model.compute_loglik(0, fakedata, state).sum(0))
-    y = y * cluster_occupancies / res.zz[igroup].size                             # notice the normalisation of y
+    y = y * occ / res.zz[group].size                             # notice the normalisation of y
 
     ## plot
     pl.hist(counts, nbins, histtype='stepfilled', linewidth=0, normed=True, color='gray')

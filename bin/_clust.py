@@ -33,25 +33,25 @@ parser.add_argument('-r', type=int, dest='nthreads', help='number of threads', d
 parser.add_argument('-e', dest='extend', help='extend simulation', action='store_true', default=cfg.clust['extend'])
 parser.add_argument('-m', type=str, dest='model', help='model to use', default=cfg.models['default'],
                     choices=cfg.models['options'].keys())
-parser.add_argument('-p', type=float, nargs='+', dest='pars', help='initial model parameters', default=None)
+parser.add_argument('-p', type=float, nargs='+', dest='hpars', help='initial hyper-parameter values', default=None)
 
 args = parser.parse_args()
 
-args.pars = cfg.models['options'][args.model]['pars'] if args.pars is None else args.pars
+args.hpars = cfg.models['options'][args.model]['hpars'].values() if args.hpars is None else args.hpars
 args.nthreads = args.nthreads if args.nthreads > 0 else mp.cpu_count()
 
 ########################################################################################################################
 
 ## prepare output file names
 args.fnames = {
-    'theta': os.path.join(args.outdir, cfg.fnames['theta']),
+    'pars': os.path.join(args.outdir, cfg.fnames['pars']),
     'lw': os.path.join(args.outdir, cfg.fnames['lw']),
     'lu': os.path.join(args.outdir, cfg.fnames['lu']),
     'c': os.path.join(args.outdir, cfg.fnames['c']),
     'z': os.path.join(args.outdir, cfg.fnames['z']),
-    'pars': os.path.join(args.outdir, cfg.fnames['pars']),
+    'hpars': os.path.join(args.outdir, cfg.fnames['hpars']),
     'eta': os.path.join(args.outdir, cfg.fnames['eta']),
-    'nactive': os.path.join(args.outdir, cfg.fnames['nactive']),
+    'nact': os.path.join(args.outdir, cfg.fnames['nact']),
     'zz': os.path.join(args.outdir, cfg.fnames['zz'])
 }
 
@@ -78,22 +78,23 @@ if os.path.exists(args.outdir):
         state = GibbsState.load(args.fnames)
 else:
     os.makedirs(args.fnames['zz'])
-    state = GibbsState.random(len(data.groups), len(data.counts), model.sample_prior, args.pars,
+    state = GibbsState.random(len(data.groups), len(data.counts), model.sample_prior, args.hpars,
                               args.nglobal, args.nlocal)
 
     ## write groups, feature and sample names on disk
     with open(os.path.join(args.outdir, cfg.fnames['config']), 'w') as f:
-        json.dump(cl.OrderedDict({
-            "data": args.data,
-            "norm": args.norm,
-            "groups": data.groups,
-            "nglobal": args.nglobal,
-            "nlocal": args.nlocal,
-            "model": args.model,
-            "pars": args.pars,
-            "sampleNames": data.counts.columns.tolist(),
-            "featureNames": data.counts.index.tolist()
-        }), f, indent=4, separators=(',', ':'))
+        json.dump(cl.OrderedDict([
+            ("data", args.data),
+            ("norm", args.norm),
+            ("groups", data.groups),
+            ("nglobal", args.nglobal),
+            ("nlocal", args.nlocal),
+            ("model", args.model),
+            ("pars", cfg.models['options'][args.model]['pars']),
+            ("hpars", cl.OrderedDict(zip(cfg.models['options'][args.model]['hpars'].keys(), args.hpars))),
+            ("sampleNames", data.counts.columns.tolist()),
+            ("featureNames", data.counts.index.tolist())
+        ]), f, indent=4, separators=(',', ':'))
 
 ## use multiple cores
 pool = mp.Pool(processes=args.nthreads)

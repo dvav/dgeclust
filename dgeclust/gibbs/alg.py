@@ -54,25 +54,25 @@ class GibbsSampler(object):
 
         ## do local (i.e. sample-specific) updates
         args = zip(range(len(state.z)), it.repeat((data, state, model.compute_loglik)))
-        state.lu, state.c, state.z, state.eta, state.nactive = zip(*pool.map(do_local_sampling, args))
+        state.lu, state.c, state.z, state.eta, state.nact = zip(*pool.map(do_local_sampling, args))
 
         ## get top-level cluster info
         nglobal = state.lw.size
         state.zz = [c[z] for c, z in zip(state.c, state.z)]
-        cluster_occupancies, iactive, state.nactive0, _ = ut.get_cluster_info(nglobal, np.asarray(state.zz).ravel())
-        idxs = iactive.nonzero()[0]
+        cluster_occupancies, iact, state.nact0, _ = ut.get_cluster_info(nglobal, np.asarray(state.zz).ravel())
+        idxs = iact.nonzero()[0]
 
         ## sample lw and eta0
         state.lw, _ = st.sample_stick(cluster_occupancies, state.eta0)
 
         ## sample theta
         args = zip(idxs, it.repeat((data, state, model.sample_posterior)))
-        state.theta[iactive] = pool.map(do_global_sampling, args)                          # active clusters
-        state.theta[~iactive] = model.sample_prior(nglobal - state.nactive0, *state.pars)  # inactive clusters
+        state.pars[iact] = pool.map(do_global_sampling, args)                       # active clusters
+        state.pars[~iact] = model.sample_prior(nglobal - state.nact0, *state.hpars)  # inactive clusters
 
         ## update hyper-parameters
         state.eta0 = st.sample_eta(state.lw)
-        state.pars = model.sample_params(state.theta[cluster_occupancies > 0], *state.pars)
+        state.hpars = model.sample_hpars(state.pars[cluster_occupancies > 0], *state.hpars)
 
     ####################################################################################################################
 
@@ -83,8 +83,8 @@ class GibbsSampler(object):
         fnames = self.fnames
 
         ## write theta
-        with open(fnames['theta'], 'w') as f:
-            np.savetxt(f, state.theta, fmt='%f', delimiter='\t')
+        with open(fnames['pars'], 'w') as f:
+            np.savetxt(f, state.pars, fmt='%f', delimiter='\t')
 
         ## write lw
         with open(fnames['lw'], 'w') as f:
@@ -108,14 +108,14 @@ class GibbsSampler(object):
                        fmt='%d\t%f' + '\t%f' * np.size(state.eta))
 
         ## write nactive's
-        with open(fnames['nactive'], 'a') as f:
-            np.savetxt(f, np.atleast_2d(np.r_[state.t, state.nactive0, state.nactive]),
-                       fmt='%d\t%d' + '\t%d' * np.size(state.nactive))
+        with open(fnames['nact'], 'a') as f:
+            np.savetxt(f, np.atleast_2d(np.r_[state.t, state.nact0, state.nact]),
+                       fmt='%d\t%d' + '\t%d' * np.size(state.nact))
 
         ## write pars
-        with open(fnames['pars'], 'a') as f:
-            np.savetxt(f, np.atleast_2d(np.r_[state.t, state.pars]),
-                       fmt='%d' + '\t%f' * np.size(state.pars))
+        with open(fnames['hpars'], 'a') as f:
+            np.savetxt(f, np.atleast_2d(np.r_[state.t, state.hpars]),
+                       fmt='%d' + '\t%f' * np.size(state.hpars))
 
         ## write zz
         if (state.t > self.burnin) and (self.nlog > 0) and not (state.t % self.nlog):
@@ -132,10 +132,10 @@ def do_global_sampling(args):
     idx, (data, state, sample_posterior) = args
 
     ## sample from the posterior
-    theta = sample_posterior(idx, data, state)
+    pars = sample_posterior(idx, data, state)
 
     ## return
-    return theta
+    return pars
 
 ########################################################################################################################
 
@@ -167,7 +167,7 @@ def do_local_sampling(args):
             z[vec] = group[0]
 
     ## get local cluster info
-    local_occupancies, _, nactive, occupancy_matrix = ut.get_cluster_info(lu.size, z)
+    local_occupancies, _, nact, occupancy_matrix = ut.get_cluster_info(lu.size, z)
 
     ## sample lu and eta
     lu, _ = st.sample_stick(local_occupancies, eta)
@@ -180,6 +180,6 @@ def do_local_sampling(args):
     c = st.sample_categorical(np.exp(logw))
 
     ## return
-    return lu, c, z, eta, nactive
+    return lu, c, z, eta, nact
 
 ########################################################################################################################

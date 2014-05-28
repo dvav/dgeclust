@@ -8,7 +8,7 @@ import dgeclust.stats as st
 ########################################################################################################################
 
 
-def _compute_loglik(theta, counts, lib_sizes):
+def _compute_loglik(pars, counts, lib_sizes):
     """Computes the log-likelihood of each element of counts for each element of phi and mu"""
 
     ## prepare data
@@ -19,7 +19,7 @@ def _compute_loglik(theta, counts, lib_sizes):
     lib_sizes = lib_sizes[:, :, np.newaxis]
 
     ## return
-    return st.poissonln(counts, lib_sizes * theta)
+    return st.poissonln(counts, lib_sizes * pars.ravel())
 
 
 ########################################################################################################################
@@ -34,7 +34,7 @@ def compute_loglik(j, data, state):
     lib_sizes = data.lib_sizes[group].values
 
     ## return
-    return _compute_loglik(state.theta, counts, lib_sizes)
+    return _compute_loglik(state.pars, counts, lib_sizes)
 
 ########################################################################################################################
 
@@ -48,13 +48,13 @@ def sample_prior(size, shape, scale):
 ########################################################################################################################
 
 
-def sample_params(theta, shape, scale):
+def sample_hpars(pars, shape, scale):
     """Samples the shape and scale of the gamma distribution from its posterior, given theta"""
 
     ## compute sufficient statistics
-    s = theta.sum()
-    ls = np.log(theta).sum()
-    n = theta.size
+    s = pars.sum()
+    ls = np.log(pars).sum()
+    n = pars.size
 
     ## sample scale, then sample shape
     shape = st.sample_gamma_shape(ls, n, shape, scale)
@@ -81,7 +81,7 @@ def sample_posterior(idx, data, state):
     m = np.sum(lib_sizes * n)
 
     ## parameters
-    shape, scale = state.pars
+    shape, scale = state.hpars
 
     ## return
     return rn.gamma(shape + s, scale / (m * scale + 1))
