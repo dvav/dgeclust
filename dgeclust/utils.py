@@ -49,7 +49,7 @@ def normalize_log_weights(lw):
 def plot_fitted_model(sample, res, data, model, xmin=-1, xmax=12, npoints=1000, nbins=100, log_scale=True, epsilon=0.5):
     """Computes the fitted model"""
 
-    ## fetch index of group
+    ## fetch group
     group = [k for k, v in data.groups.items() if sample in v][0]
 
     ## compute cluster occupancies
@@ -71,11 +71,11 @@ def plot_fitted_model(sample, res, data, model, xmin=-1, xmax=12, npoints=1000, 
         fakedata = cl.namedtuple('FakeCountData', 'counts, groups, lib_sizes')(
             pd.DataFrame(x), {0: [0]}, pd.DataFrame([data.lib_sizes[sample]]))
         y = np.exp(model.compute_loglik(0, fakedata, state).sum(0))
-    y = y * occ / res.zz[group].size                             # notice the normalisation of y
+    y = y * occ / len(res.zz)                             # notice the normalisation of y
 
     ## plot
     pl.hist(counts, nbins, histtype='stepfilled', linewidth=0, normed=True, color='gray')
-    pl.plot(x, y, 'k', x, y.sum(1), 'r')
+    pl.plot(x, y, 'k', x, np.sum(y, 1), 'r')
 
     ## return
     return x, y
