@@ -13,10 +13,9 @@ def _compute_loglik(phi, mu, counts, lib_sizes):
 
     ## prepare data
     counts = counts.T
-    counts = np.atleast_2d(counts)
     counts = counts[:, :, np.newaxis]
 
-    lib_sizes = np.atleast_2d(lib_sizes).T
+    lib_sizes = lib_sizes.T
     lib_sizes = lib_sizes[:, :, np.newaxis]
 
     ## compute p
@@ -34,9 +33,9 @@ def compute_loglik(j, data, state):
     """Computes the log-likelihood of each element of counts for each element of theta"""
 
     ## read data
-    group = data.groups[j]
-    counts = data.counts[:, group]
-    lib_sizes = data.lib_sizes[group]
+    group = data.groups.values()[j]
+    counts = data.counts[group].values
+    lib_sizes = data.lib_sizes[group].values
 
     ## read theta
     phi = state.theta[:, 0]
@@ -102,8 +101,9 @@ def sample_posterior(idx, data, state):
     """Sample phi and mu from their posterior, using Metropolis"""
 
     ## fetch all data points that belong to cluster idx
-    counts = [data.counts[:, group][zz == idx] for group, zz in zip(data.groups, state.zz)]
-    lib_sizes = [data.lib_sizes[group] for group in data.groups]
+    groups = data.groups.values()
+    counts = [data.counts[group][zz == idx].values for group, zz in zip(groups, state.zz)]
+    lib_sizes = [data.lib_sizes[group].values for group in groups]
 
     ## read theta
     phi, mu = state.theta[idx]

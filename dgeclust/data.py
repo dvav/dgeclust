@@ -2,6 +2,7 @@ from __future__ import division
 
 import numpy as np
 import pandas as pd
+import collections as cl
 
 ########################################################################################################################
 
@@ -9,17 +10,11 @@ import pandas as pd
 class CountData(object):
     """Represents a counts data set"""
 
-    def __init__(self, counts, sample_names, feature_names, groups, ngroups, nreplicas, nfeatures, nsamples, lib_sizes):
+    def __init__(self, counts, groups, lib_sizes):
         """Initialise state from raw data"""
 
         self.counts = counts
-        self.sample_names = sample_names
-        self.feature_names = feature_names
         self.groups = groups
-        self.ngroups = ngroups
-        self.nreplicas = nreplicas
-        self.nfeatures = nfeatures
-        self.nsamples = nsamples
         self.lib_sizes = lib_sizes
 
     ####################################################################################################################
@@ -29,35 +24,28 @@ class CountData(object):
         """Reads a data file containing a matrix of count data"""
 
         ## read data file
-        data = pd.read_table(file_name, index_col=0)  # .astype(np.uint32)
-
-        ## fetch counts
-        counts = data.values
-
-        ## names of features and samples
-        sample_names = data.columns.tolist()
-        feature_names = data.index.tolist()
-
-        ## number of features and samples
-        nfeatures, nsamples = counts.shape
+        counts = pd.read_table(file_name, index_col=0)  # .astype(np.uint32)
 
         ## group information
-        groups = range(nsamples) if groups is None else groups
-        ngroups = len(groups)
-        nreplicas = np.asarray([np.size(group) for group in groups])
+        groups = range(counts.columns.size) if groups is None else groups
+        labels = set(groups)
+        igroups = [[col for col, group in zip(counts.columns, groups) if label == group] for label in labels]
+        groups = cl.OrderedDict(zip(labels, igroups))
 
-        ## compute normalisation factors and library sizes
-        # norm_factors = estimate_norm_factors(counts, locfcn) if norm_factors is None else norm_factors
+        ## compute library sizes
         lib_sizes = {
             'Total': lambda x: np.sum(x, 0),
             'Quantile': lambda x: estimate_lib_sizes_quantile(x),
-            'DESeq': lambda x: estimate_lib_sizes_deseq(x)  # notice that we divide by norm factors
-        }[norm_method](counts)
+            'DESeq': lambda x: estimate_lib_sizes_deseq(x)
+        }[norm_method](counts.values)
+
+        lib_sizes = pd.DataFrame(lib_sizes, index=counts.columns, columns=['Library sizes']).T
 
         ## return
-        return cls(counts, sample_names, feature_names, groups, ngroups, nreplicas, nfeatures, nsamples, lib_sizes)
+        return cls(counts, groups, lib_sizes)
 
-    ####################################################################################################################
+
+########################################################################################################################
 
 
 def estimate_lib_sizes_quantile(counts, quant=75):

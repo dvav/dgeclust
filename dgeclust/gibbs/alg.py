@@ -53,7 +53,7 @@ class GibbsSampler(object):
         state.t += 1
 
         ## do local (i.e. sample-specific) updates
-        args = zip(range(data.ngroups), it.repeat((data, state, model.compute_loglik)))
+        args = zip(range(len(state.z)), it.repeat((data, state, model.compute_loglik)))
         state.lu, state.c, state.z, state.eta, state.nactive = zip(*pool.map(do_local_sampling, args))
 
         ## get top-level cluster info

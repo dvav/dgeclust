@@ -13,9 +13,8 @@ def compute_loglik(j, data, state):
     """Computes the log-likelihood of each element of counts for each element of theta"""
 
     ## read data
-    counts = data.counts[:, data.groups[j]]
-    counts = counts.T
-    counts = np.atleast_2d(counts)
+    group = data.groups.values()[j]
+    counts = data.counts[group].values.T
     counts = counts[:, :, np.newaxis]
 
     ## read theta
@@ -44,8 +43,28 @@ def sample_prior(size, mu0, k0, a0, s0):
 def sample_params(theta, mu0, k0, a0, s0):
     """Samples the mean and var of the log-normal from the posterior, given theta"""
 
+    ## read parameters
+    mean = theta[:, 0]
+    prec = 1 / theta[:, 1]
+
+    ## compute sufficient statistics
+    n = prec.size
+
+    s = prec.sum()
+    ls = np.log(prec).sum()
+
+    s1 = mean.sum()
+    s2 = np.sum(mean**2)
+
+    ## sample a0 and b0
+    a0 = st.sample_gamma_shape(ls, n, a0, 1 / s0)
+    b0 = st.sample_gamma_scale(s, n, a0)
+
+    ## sample mu0 and k0
+    mu0, var = st.sample_normal_mean_var(s1, s2, n)
+
     ## return
-    return mu0, k0, a0, s0
+    return mu0, var * b0, a0, 1 / b0
     
 ########################################################################################################################
 
@@ -54,7 +73,8 @@ def sample_posterior(idx, data, state):
     """Sample mean and var from their posterior, given counts"""
 
     ## fetch all data points that belong to cluster idx
-    counts = [data.counts[:, group][zz == idx].ravel() for group, zz in zip(data.groups, state.zz)]
+    groups = data.groups.values()
+    counts = [data.counts[group][zz == idx].values.ravel() for group, zz in zip(groups, state.zz)]
     counts = np.hstack(counts)
 
     ## compute sufficient statistics

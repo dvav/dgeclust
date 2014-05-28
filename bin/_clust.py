@@ -2,10 +2,10 @@ from __future__ import division
 
 import os
 import sys
+import json
 import multiprocessing as mp
+import collections as cl
 import argparse as ap
-
-import numpy as np
 
 import dgeclust.config as cfg
 
@@ -22,7 +22,7 @@ parser = ap.ArgumentParser(prog='clust',
 parser.add_argument('data', type=str, help='data file to process')
 parser.add_argument('-n', type=str, dest='norm', help='normalisation method', default=cfg.norm['default'],
                     choices=cfg.norm['options'].keys())
-parser.add_argument('-g', type=str, dest='groups', help='grouping of samples', default=None)
+parser.add_argument('-g', type=str, nargs='+', dest='groups', help='grouping of samples', default=None)
 parser.add_argument('-o', type=str, dest='outdir', help='output directory', default=cfg.fnames['clust'])
 parser.add_argument('-t', type=int, dest='niters', help='number of iterations', default=cfg.clust['niters'])
 parser.add_argument('-t0', type=int, dest='burnin',  help='burn-in period', default=cfg.clust['burnin'])
@@ -33,25 +33,17 @@ parser.add_argument('-r', type=int, dest='nthreads', help='number of threads', d
 parser.add_argument('-e', dest='extend', help='extend simulation', action='store_true', default=cfg.clust['extend'])
 parser.add_argument('-m', type=str, dest='model', help='model to use', default=cfg.models['default'],
                     choices=cfg.models['options'].keys())
-parser.add_argument('-p', type=str, dest='pars', help='initial model parameters', default=None)
+parser.add_argument('-p', type=float, nargs='+', dest='pars', help='initial model parameters', default=None)
 
 args = parser.parse_args()
 
-model = {
-    'NegBinom': nbinom,
-    'Poisson': poisson,
-    'BetaBinom': bbinom,
-    'Binom': binom,
-    'Normal': normal
-}[args.model]
-pars = cfg.models['options'][args.model]['pars'] if args.pars is None else eval(args.pars)
-groups = None if args.groups is None else eval(args.groups)
-nthreads = args.nthreads if args.nthreads > 0 else mp.cpu_count()
+args.pars = cfg.models['options'][args.model]['pars'] if args.pars is None else args.pars
+args.nthreads = args.nthreads if args.nthreads > 0 else mp.cpu_count()
 
 ########################################################################################################################
 
 ## prepare output file names
-fnames = {
+args.fnames = {
     'theta': os.path.join(args.outdir, cfg.fnames['theta']),
     'lw': os.path.join(args.outdir, cfg.fnames['lw']),
     'lu': os.path.join(args.outdir, cfg.fnames['lu']),
@@ -66,27 +58,47 @@ fnames = {
 ########################################################################################################################
 
 ## load data
-data = CountData.load(args.data, args.norm, groups)
+data = CountData.load(args.data, args.norm, args.groups)
 
-## generate initial state
+## prepare model
+model = {
+    'NegativeBinomial': nbinom,
+    'Poisson': poisson,
+    'BetaBinomial': bbinom,
+    'Binomial': binom,
+    'Normal': normal
+}[args.model]
+
+## generate initial sampler state
 if os.path.exists(args.outdir):
     if args.extend is False:
         raise Exception("Directory '{0}' already exists!".format(args.outdir))
     else:
         print >> sys.stderr, "Extending previous simulation...".format(args.outdir)
-        state = GibbsState.load(fnames)
+        state = GibbsState.load(args.fnames)
 else:
-    os.makedirs(fnames['zz'])
-    state = GibbsState.random(data.ngroups, data.nfeatures, model.sample_prior, pars, args.nglobal, args.nlocal)
+    os.makedirs(args.fnames['zz'])
+    state = GibbsState.random(len(data.groups), len(data.counts), model.sample_prior, args.pars,
+                              args.nglobal, args.nlocal)
 
-    ## write feature and sample names on disk
-    np.savetxt(os.path.join(args.outdir, cfg.fnames['featureNames']), data.feature_names, fmt='%s')
-    np.savetxt(os.path.join(args.outdir, cfg.fnames['sampleNames']), data.sample_names, fmt='%s')
+    ## write groups, feature and sample names on disk
+    with open(os.path.join(args.outdir, cfg.fnames['config']), 'w') as f:
+        json.dump(cl.OrderedDict({
+            "data": args.data,
+            "norm": args.norm,
+            "groups": data.groups,
+            "nglobal": args.nglobal,
+            "nlocal": args.nlocal,
+            "model": args.model,
+            "pars": args.pars,
+            "sampleNames": data.counts.columns.tolist(),
+            "featureNames": data.counts.index.tolist()
+        }), f, indent=4, separators=(',', ':'))
 
 ## use multiple cores
-pool = mp.Pool(processes=nthreads)
+pool = mp.Pool(processes=args.nthreads)
 
 ## execute
-GibbsSampler(data, model, state, args.niters, args.burnin, args.nlog, fnames, pool).run()
+GibbsSampler(data, model, state, args.niters, args.burnin, args.nlog, args.fnames, pool).run()
 
 ########################################################################################################################

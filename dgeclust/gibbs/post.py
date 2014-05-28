@@ -1,7 +1,10 @@
 from __future__ import division
 
 import os
+import json
 import itertools as it
+import collections as cl
+
 import numpy as np
 import pandas as pd
 
@@ -10,16 +13,16 @@ import pandas as pd
 
 def _compute_pvals(args):
     """Given a particular sample, identify differential expression between features"""
-    sample_name, (indir, group1, group2) = args
+    sample_name, (indir, igroup1, igroup2) = args
 
     ## read sample and identify differentially expressed features
     z = np.loadtxt(os.path.join(indir, str(sample_name)), dtype='uint32')
-    p = z[group1] == z[group2]
+    p = z[igroup1] == z[igroup2]
 
     ## return
     return p
 
-##
+########################################################################################################################
 
 
 def compute_pvals(indir, fname, t0, tend, dt, group1, group2, pool):
@@ -33,8 +36,17 @@ def compute_pvals(indir, fname, t0, tend, dt, group1, group2, pool):
     idxs = (sample_names >= t0) & (sample_names <= tend) & (np.arange(sample_names.size) % dt == 0)
     sample_names = sample_names[idxs]
 
+    ## fetch feature names and groups
+    with open(fname) as f:
+        config = json.load(f, object_pairs_hook=cl.OrderedDict)
+        feature_names = config['featureNames']
+        groups = config['groups'].keys()  # order is preserved here
+
+    igroup1 = groups.index(group1)
+    igroup2 = groups.index(group2)
+
     ## compute un-normalized values of posteriors
-    args = zip(sample_names, it.repeat((indir, group1, group2)))
+    args = zip(sample_names, it.repeat((indir, igroup1, igroup2)))
     p = pool.map(_compute_pvals, args)
     nsamples = len(p)
 
@@ -44,9 +56,6 @@ def compute_pvals(indir, fname, t0, tend, dt, group1, group2, pool):
     tmp = p[ii].cumsum() / np.arange(1, p.size+1)
     padj = np.zeros(p.shape)
     padj[ii] = tmp
-
-    ## fetch feature names
-    feature_names = np.loadtxt(fname, dtype='str')
 
     ## return
     return pd.DataFrame(np.vstack((p, padj)).T, columns=('Posteriors', 'FDR'), index=feature_names).sort(

@@ -25,16 +25,17 @@ parser.add_argument('-r', type=int, dest='nthreads', help='number of threads', d
 
 args = parser.parse_args()
 
+args.zz = os.path.join(args.indir, cfg.fnames['zz'])   # input directory
+args.nthreads = args.nthreads if args.nthreads > 0 else mp.cpu_count()
+
 ########################################################################################################################
 
 ## use multiple cores
-nthreads = args.nthreads if args.nthreads > 0 else mp.cpu_count()
-pool = mp.Pool(processes=nthreads)
+pool = mp.Pool(processes=args.nthreads)
 
 ## compute similarity matrix ...
-indir = os.path.join(args.indir, cfg.fnames['zz'])   # input directory
-simmat, nsamples = post.compute_similarity_matrix(indir, args.t0, args.tend, args.dt, args.comp, pool)
-print >> sys.stderr, '{0} samples processed from directory "{1}"'.format(nsamples, indir)
+simmat, nsamples = post.compute_similarity_matrix(args.zz, args.t0, args.tend, args.dt, args.comp, pool)
+print >> sys.stderr, '{0} samples processed from directory "{1}"'.format(nsamples, args.zz)
 
 ## ... and save to output file
 np.savetxt(args.outfile, simmat, delimiter='\t')

@@ -1,21 +1,21 @@
 {
 	"models": {
-		"default": "NegBinom",
+		"default": "NegativeBinomial",
 		"options" : {
-			"NegBinom": {
+			"NegativeBinomial": {
 			    "pars": [0,1,0,1]
 			}, 
 			"Poisson": {
 				"pars": [1,1]
 			}, 
-			"BetaBinom": {
+			"BetaBinomial": {
 			    "pars": [0,1,0,1]
 			},
-			"Binom": {
+			"Binomial": {
 			    "pars": [1,1]
 			},
 			"Normal": {
-				"pars": [0,1,0,1]
+				"pars": [0,1,1,1]
 			}
 		}
 	},
@@ -31,8 +31,7 @@
         "clust": "_clust",
 		"pvals": "_pvals.txt",
 		"simmat": "_simmat.txt",
-		"sampleNames": "sample_names.txt",
-		"featureNames": "feature_names.txt",
+        "config": "config.json",
         "theta": "theta.txt",
         "lw": "lw.txt",
         "lu": "lu.txt",
@@ -55,8 +54,6 @@
         "t0": 0,
         "tend": 10000,
         "dt": 1,
-		"group1": 0,
-		"group2": 1,
 		"compareFeatures": false
     },
 	"nthreads": 0
