@@ -59,11 +59,11 @@ class GibbsSampler(object):
         ## get top-level cluster info
         nglobal = state.lw.size
         state.zz = [c[z] for c, z in zip(state.c, state.z)]
-        cluster_occupancies, iact, state.nact0, _ = ut.get_cluster_info(nglobal, np.asarray(state.zz).ravel())
+        occ, iact, state.nact0, _ = ut.get_cluster_info(nglobal, np.asarray(state.zz).ravel())
         idxs = iact.nonzero()[0]
 
         ## sample lw and eta0
-        state.lw, _ = st.sample_stick(cluster_occupancies, state.eta0)
+        state.lw, _ = st.sample_stick(occ, state.eta0)
 
         ## sample theta
         args = zip(idxs, it.repeat((data, state, model.sample_posterior)))
@@ -72,7 +72,7 @@ class GibbsSampler(object):
 
         ## update hyper-parameters
         state.eta0 = st.sample_eta(state.lw)
-        state.hpars = model.sample_hpars(state.pars[cluster_occupancies > 0], *state.hpars)
+        state.hpars = model.sample_hpars(state.pars[iact], *state.hpars)
 
     ####################################################################################################################
 
@@ -107,7 +107,7 @@ class GibbsSampler(object):
             np.savetxt(f, np.atleast_2d(np.r_[state.t, state.eta0, state.eta]),
                        fmt='%d\t%f' + '\t%f' * np.size(state.eta))
 
-        ## write nactive's
+        ## write nact's
         with open(fnames['nact'], 'a') as f:
             np.savetxt(f, np.atleast_2d(np.r_[state.t, state.nact0, state.nact]),
                        fmt='%d\t%d' + '\t%d' * np.size(state.nact))
@@ -167,14 +167,14 @@ def do_local_sampling(args):
             z[vec] = group[0]
 
     ## get local cluster info
-    local_occupancies, _, nact, occupancy_matrix = ut.get_cluster_info(lu.size, z)
+    occ, _, nact, occ_mat = ut.get_cluster_info(lu.size, z)
 
     ## sample lu and eta
-    lu, _ = st.sample_stick(local_occupancies, eta)
+    lu, _ = st.sample_stick(occ, eta)
     eta = st.sample_eta(lu)
 
     ## sample c
-    logw = [state.lw + loglik[occ].sum(0) for occ in occupancy_matrix]
+    logw = [state.lw + loglik[occ_vec].sum(0) for occ_vec in occ_mat]
     logw = np.asarray(logw)
     logw = ut.normalize_log_weights(logw.T)
     c = st.sample_categorical(np.exp(logw))
