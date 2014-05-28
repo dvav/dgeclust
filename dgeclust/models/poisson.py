@@ -51,14 +51,11 @@ def sample_prior(size, shape, scale):
 def sample_hpars(pars, shape, scale):
     """Samples the shape and scale of the gamma distribution from its posterior, given theta"""
 
-    ## compute sufficient statistics
-    s = pars.sum()
-    ls = np.log(pars).sum()
-    n = pars.size
-
     ## sample scale, then sample shape
-    shape = st.sample_gamma_shape(ls, n, shape, scale)
-    scale = st.sample_gamma_scale(s, n, shape)
+    ndata = pars.size
+
+    shape = st.sample_gamma_shape(np.log(pars).sum(), ndata, shape, scale)
+    scale = st.sample_gamma_scale(pars.sum(), ndata, shape)
 
     ## return
     return shape, scale
