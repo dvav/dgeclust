@@ -43,12 +43,12 @@ def compute_loglik(j, data, state):
 ########################################################################################################################
 
 
-def compute_logprior(alpha, beta, mu_alpha, s2_alpha, mu_beta, s2_beta):
+def compute_logprior(alpha, beta, m1, v1, m2, v2):
     """Computes the log-density of the prior of theta"""
 
     ## compute log-priors for phi and mu
-    logprior_alpha = st.lognormalln(alpha, mu_alpha, s2_alpha)
-    logprior_beta = st.lognormalln(beta, mu_beta, s2_beta)
+    logprior_alpha = st.lognormalln(alpha, m1, v1)
+    logprior_beta = st.lognormalln(beta, m2, v2)
 
     ## return
     return logprior_alpha + logprior_beta
@@ -56,12 +56,12 @@ def compute_logprior(alpha, beta, mu_alpha, s2_alpha, mu_beta, s2_beta):
 ########################################################################################################################
 
 
-def sample_prior(size, mu_alpha, s2_alpha, mu_beta, s2_beta):
+def sample_prior(size, m1, v1, m2, v2):
     """Samples alpha and beta from their priors, log-normal in both cases"""
 
     ## sample alpha and beta
-    alpha = np.exp(rn.randn(size, 1) * np.sqrt(s2_alpha) + mu_alpha)
-    beta = np.exp(rn.randn(size, 1) * np.sqrt(s2_beta) + mu_beta)
+    alpha = np.exp(rn.randn(size, 1) * np.sqrt(v1) + m1)
+    beta = np.exp(rn.randn(size, 1) * np.sqrt(v2) + m2)
 
     ## return
     return np.hstack((alpha, beta))
@@ -72,23 +72,18 @@ def sample_prior(size, mu_alpha, s2_alpha, mu_beta, s2_beta):
 def sample_hpars(pars, *args, **kargs):
     """Samples the mean and var of the log-normal from the posterior, given phi"""
 
+    ## read parameters
     alpha = np.log(pars[:, 0])
     beta = np.log(pars[:, 1])
 
-    ## compute S1_phi, S2_phi, S1_mu, S2_mu and n
-    n = alpha.size
+    ## sample hyper-parameters
+    ndata = len(pars)
 
-    s1_alpha = alpha.sum()
-    s1_beta = beta.sum()
-
-    s2_alpha = np.sum(alpha**2)
-    s2_beta = np.sum(beta**2)
-
-    mu_alpha, s2_alpha = st.sample_normal_mean_var(s1_alpha, s2_alpha, n)
-    mu_beta, s2_beta = st.sample_normal_mean_var(s1_beta, s2_beta, n)
+    m1, v1 = st.sample_normal_mean_var(alpha.sum(), np.sum(alpha**2), ndata)
+    m2, v2 = st.sample_normal_mean_var(beta.sum(), np.sum(beta**2), ndata)
 
     ## return
-    return mu_alpha, s2_alpha, mu_beta, s2_beta
+    return m1, v1, m2, v2
 
 ########################################################################################################################
 
