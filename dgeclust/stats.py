@@ -3,7 +3,6 @@ from __future__ import division
 import numpy as np
 import numpy.random as rn
 import scipy.special as sp
-import scipy.stats as st
 
 ########################################################################################################################
 
@@ -76,21 +75,21 @@ def bbinomln(x, n, alpha, beta):
 ########################################################################################################################
 
 
-def sample_normal_mean_var(s1, s2, n, mu0=0, k0=1e-3, a0=1, s0=1e-3):
+def sample_normal_mean_var(s1, s2, ndata, mu=0, k=1e-3, shape=1, rate=1e-3):
     """Samples the mean and variance of a normal distribution given data with sufficient statistics s1, s2 and n"""
 
-    ## compute mu, k, a, s
-    avg = s1 / n
-    dot = s2 - 2 * avg * s1 + n * avg**2
+    ## update mu, k, shape, rate
+    avg = s1 / ndata
+    dot = s2 - 2 * avg * s1 + ndata * avg * avg
 
-    mu = (k0 * mu0 + s1) / (k0 + n)
-    k = k0 + n
-    a = a0 + n
-    s = s0 + dot + n * k0 / (n + k0) * (avg - mu0) * (avg - mu0)
+    mu_ = (k * mu + s1) / (k + ndata)
+    k_ = k + ndata
+    shape_ = shape + ndata * 0.5
+    rate_ = rate + 0.5 * dot + 0.5 * ndata * k / (ndata + k) * (avg - mu) * (avg - mu)
     
     ## compute var and mean
-    var = st.invgamma.rvs(a * 0.5, 0, s * 0.5)
-    mean = rn.randn() * np.sqrt(var / k) + mu
+    var = 1 / rn.gamma(shape_, 1 / rate_)
+    mean = rn.randn() * np.sqrt(var / k_) + mu_
 
     ## return
     return mean, var
