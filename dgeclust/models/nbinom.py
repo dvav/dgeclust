@@ -47,12 +47,12 @@ def compute_loglik(j, data, state):
 ########################################################################################################################
 
 
-def compute_logprior(phi, mu, mu_phi, s2_phi, mu_mu, s2_mu):
+def compute_logprior(phi, mu, m1, v1, m2, v2):
     """Computes the log-density of the prior of theta"""
 
     ## compute log-priors for phi and mu
-    logprior_phi = st.lognormalln(phi, mu_phi, s2_phi)
-    logprior_mu = st.lognormalln(mu, mu_mu, s2_mu)
+    logprior_phi = st.lognormalln(phi, m1, v1)
+    logprior_mu = st.lognormalln(mu, m2, v2)
 
     ## return
     return logprior_phi + logprior_mu
@@ -60,12 +60,12 @@ def compute_logprior(phi, mu, mu_phi, s2_phi, mu_mu, s2_mu):
 ########################################################################################################################
 
 
-def sample_prior(size, mu_phi, s2_phi, mu_mu, s2_mu):
+def sample_prior(size, m1, v1, m2, v2):
     """Samples phi and mu from their priors, log-normal in both cases"""
 
     ## sample phi and mu
-    phi = np.exp(rn.randn(size, 1) * np.sqrt(s2_phi) + mu_phi)
-    mu = np.exp(rn.randn(size, 1) * np.sqrt(s2_mu) + mu_mu)
+    phi = np.exp(rn.randn(size, 1) * np.sqrt(v1) + m1)
+    mu = np.exp(rn.randn(size, 1) * np.sqrt(v2) + m2)
 
     ## return
     return np.hstack((phi, mu))
@@ -76,23 +76,18 @@ def sample_prior(size, mu_phi, s2_phi, mu_mu, s2_mu):
 def sample_hpars(pars, *args, **kargs):
     """Samples the mean and var of the log-normal from the posterior, given phi"""
 
+    ## read parameters
     phi = np.log(pars[:, 0])
     mu = np.log(pars[:, 1])
 
-    ## compute S1_phi, S2_phi, S1_mu, S2_mu and n
-    n = phi.size
+    ## sample hyper-parameters
+    ndata = len(pars)
 
-    s1_phi = phi.sum()
-    s1_mu = mu.sum()
-
-    s2_phi = np.sum(phi**2)
-    s2_mu = np.sum(mu**2)
-
-    mu_phi, s2_phi = st.sample_normal_mean_var(s1_phi, s2_phi, n)
-    mu_mu, s2_mu = st.sample_normal_mean_var(s1_mu, s2_mu, n)
+    m1, v1 = st.sample_normal_mean_var(np.sum(phi), np.sum(phi**2), ndata)
+    m2, v2 = st.sample_normal_mean_var(np.sum(mu), np.sum(mu**2), ndata)
 
     ## return
-    return mu_phi, s2_phi, mu_mu, s2_mu
+    return m1, v1, m2, v2
 
 ########################################################################################################################
 
