@@ -73,7 +73,7 @@ def sample_prior(size, m1, v1, m2, v2):
 ########################################################################################################################
 
 
-def sample_hpars(pars, *args, **kargs):
+def sample_hpars(pars, *_):
     """Samples the mean and var of the log-normal from the posterior, given phi"""
 
     ## read parameters
