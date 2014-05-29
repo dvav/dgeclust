@@ -75,6 +75,6 @@ def sample_posterior(idx, data, state):
     alpha, beta = state.hpars
 
     ## return
-    return rn.beta(alpha + s, m - s + beta)
+    return rn.beta(alpha + s, abs(m - s) + beta)    # use abs to avoid the rare error where m < s
     
 ########################################################################################################################
