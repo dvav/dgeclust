@@ -10,10 +10,9 @@
                     "m2": 0,
                     "v2": 1
                 }
-                
 			}, 
 			"Poisson": {
-				"pars": ["lambda"],
+				"pars": ["rate"],
                 "hpars": {
                     "shape": 1,
                     "scale": 1
@@ -31,17 +30,17 @@
 			"Binomial": {
                 "pars": ["p"],
 			    "hpars": {
-                    "alpha": 1,
-                    "beta": 1
+                    "alpha": 0.5,
+                    "beta": 0.5
                 }
 			},
 			"Normal": {
-                "pars": ["mu", "var"],
+                "pars": ["mean", "var"],
 				"hpars": {
                     "mu": 0,
                     "k": 1,
                     "shape": 1,
-                    "scale": 1
+                    "rate": 1
                 }
 			}
 		}
