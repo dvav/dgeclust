@@ -215,10 +215,28 @@ def sample_stick(cluster_occupancies, eta):
 ########################################################################################################################
 
 
-def sample_eta(lw, a=0, b=0):
+def sample_eta(lw, a=1, b=1):
     """Samples the concentration parameter eta given a vector of mixture log-weights"""
 
     ## return
-    return rn.gamma(lw.size - 1 + a, 1 / (b - np.min(lw)) + 1e-12)
+    return rn.gamma(lw.size + a - 1, 1 / (b - lw[-1]) + 1e-12)
+
+########################################################################################################################
+
+
+def sample_eta2(eta, nact, n0, a=1, b=1):
+    """Samples the concentration parameter eta"""
+
+    ## compute x, r and p
+    x = rn.beta(eta + 1, n0)
+    lx = np.log(x)
+    r = (a + nact - 1) / (n0 * (b - lx))
+    p = r / (r + 1)
+
+    ## update eta
+    eta = rn.gamma(a + nact, 1 / (b - lx)) if rn.rand() < p else rn.gamma(a + nact - 1, 1 / (b - lx))
+
+    ## return
+    return eta
 
 ########################################################################################################################

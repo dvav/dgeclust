@@ -57,9 +57,8 @@ class GibbsSampler(object):
         state.lu, state.c, state.z, state.eta, state.nact = zip(*pool.map(do_local_sampling, args))
 
         ## get top-level cluster info
-        nglobal = state.lw.size
         state.zz = [c[z] for c, z in zip(state.c, state.z)]
-        occ, iact, state.nact0, _ = ut.get_cluster_info(nglobal, np.asarray(state.zz).ravel())
+        occ, iact, state.nact0, _ = ut.get_cluster_info(state.lw.size, np.asarray(state.zz).ravel())
         idxs = iact.nonzero()[0]
 
         ## sample lw and eta0
@@ -67,11 +66,12 @@ class GibbsSampler(object):
 
         ## sample theta
         args = zip(idxs, it.repeat((data, state, model.sample_posterior)))
-        state.pars[iact] = pool.map(do_global_sampling, args)                       # active clusters
-        state.pars[~iact] = model.sample_prior(nglobal - state.nact0, *state.hpars)  # inactive clusters
+        state.pars[iact] = pool.map(do_global_sampling, args)                              # active clusters
+        state.pars[~iact] = model.sample_prior(state.lw.size - state.nact0, *state.hpars)  # inactive clusters
 
         ## update hyper-parameters
-        state.eta0 = st.sample_eta(state.lw)
+        # state.eta0 = st.sample_eta(state.lw)
+        state.eta0 = st.sample_eta2(state.eta0, state.nact0, state.lw.size)
         state.hpars = model.sample_hpars(state.pars[iact], *state.hpars)
 
     ####################################################################################################################
@@ -171,7 +171,8 @@ def do_local_sampling(args):
 
     ## sample lu and eta
     lu, _ = st.sample_stick(occ, eta)
-    eta = st.sample_eta(lu)
+    # eta = st.sample_eta(lu)
+    eta = st.sample_eta2(eta, nact, lu.size)
 
     ## sample c
     logw = [state.lw + loglik[occ_vec].sum(0) for occ_vec in occ_mat]

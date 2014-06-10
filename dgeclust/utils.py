@@ -60,16 +60,17 @@ def plot_fitted_model(sample, res, data, model, xmin=-1, xmax=12, npoints=1000, 
     x = np.reshape(np.linspace(xmin, xmax, npoints), (-1, 1))
     state = cl.namedtuple('FakeGibbsState', 'pars')(res.pars[iact].values)        # wrapper object
     counts = data.counts[sample]
+    lib_sizes = data.lib_sizes[sample]
     if log_scale is True:
         xx = np.exp(x)
         fakedata = cl.namedtuple('FakeCountData', 'counts, groups, lib_sizes')(
-            pd.DataFrame(xx), {0: [0]}, pd.DataFrame([data.lib_sizes[sample]]))
+            pd.DataFrame(xx), {0: [0]}, pd.DataFrame([lib_sizes]))
         y = xx * np.exp(model.compute_loglik(0, fakedata, state).sum(0))
         counts[counts < 1] = epsilon
         counts = np.log(counts)
     else:
         fakedata = cl.namedtuple('FakeCountData', 'counts, groups, lib_sizes')(
-            pd.DataFrame(x), {0: [0]}, pd.DataFrame([data.lib_sizes[sample]]))
+            pd.DataFrame(x), {0: [0]}, pd.DataFrame([lib_sizes]))
         y = np.exp(model.compute_loglik(0, fakedata, state).sum(0))
     y = y * occ / len(res.zz)                             # notice the normalisation of y
 
