@@ -27,10 +27,10 @@ class CountData(object):
         counts = pd.read_table(file_name, index_col=0)  # .astype(np.uint32)
 
         ## group information
-        groups = map(str, range(counts.columns.size)) if groups is None else groups
-        labels = set(groups)
-        igroups = [[col for col, group in zip(counts.columns, groups) if label == group] for label in labels]
-        groups = cl.OrderedDict(zip(labels, igroups))
+        groups = counts.columns.tolist() if groups is None else groups
+        labels = cl.OrderedDict.fromkeys(groups).keys()     # get unique elements, preserve order
+        groups = [[col for col, group in zip(counts.columns, groups) if label == group] for label in labels]
+        groups = cl.OrderedDict(zip(labels, groups))
 
         ## compute library sizes
         norm_method = {
