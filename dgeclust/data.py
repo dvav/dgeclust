@@ -33,11 +33,12 @@ class CountData(object):
         groups = cl.OrderedDict(zip(labels, igroups))
 
         ## compute library sizes
-        lib_sizes = {
+        norm_method = {
             'Total': lambda x: np.sum(x, 0),
             'Quantile': lambda x: estimate_lib_sizes_quantile(x),
             'DESeq': lambda x: estimate_lib_sizes_deseq(x)
-        }[norm_method](counts.values)
+        }[norm_method]
+        lib_sizes = norm_method(counts.values)
 
         lib_sizes = pd.DataFrame(lib_sizes, index=counts.columns, columns=['Library sizes']).T
 
