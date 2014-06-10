@@ -15,15 +15,18 @@ import dgeclust.config as cfg
 class GibbsOutput(object):
     """Represents the output of the Gibbs sampler"""
 
-    def __init__(self, hpars, eta, nact, pars, c, z, zz):
+    def __init__(self, hpars, eta, nact, pars, lw, c, z, zz, lu):
         """Initialise from raw data"""
         self.hpars = hpars
         self.eta = eta
         self.nact = nact
         self.pars = pars
+        self.lw = lw
         self.c = c
         self.z = z
         self.zz = zz
+        self.lu = lu
+
 
     ####################################################################################################################
 
@@ -38,6 +41,8 @@ class GibbsOutput(object):
         pars = np.loadtxt(os.path.join(indir, cfg.fnames['pars']))
         c = np.loadtxt(os.path.join(indir, cfg.fnames['c']), dtype='uint32')
         z = np.loadtxt(os.path.join(indir, cfg.fnames['z']), dtype='uint32')
+        lw = np.loadtxt(os.path.join(indir, cfg.fnames['lw']))
+        lu = np.loadtxt(os.path.join(indir, cfg.fnames['lu']))
 
         zz = np.asarray([ci[zi] for ci, zi in zip(c, z)])
 
@@ -55,11 +60,13 @@ class GibbsOutput(object):
         eta = pd.DataFrame(eta[:, 1:], index=eta[:, 0], columns=['global']+group_names)
         nact = pd.DataFrame(nact[:, 1:], index=nact[:, 0], columns=['global']+group_names)
         pars = pd.DataFrame(pars, columns=pars_names)
+        lw = pd.DataFrame(lw, columns=['log-weights'])
         c = pd.DataFrame(c.T, columns=group_names)
+        lu = pd.DataFrame(lu.T, columns=group_names)
         z = pd.DataFrame(z.T, index=feature_names, columns=group_names)
         zz = pd.DataFrame(zz.T, index=feature_names, columns=group_names)
 
         ## return
-        return cls(hpars, eta, nact, pars, c, z, zz)
+        return cls(hpars, eta, nact, pars, lw, c, z, zz, lu)
 
 ########################################################################################################################
