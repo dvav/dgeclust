@@ -6,15 +6,22 @@
 			    "pars": ["phi", "mu"],
                 "hpars": {
                     "m1": 0,
-                    "v1": 1,
+                    "v1": 2,
                     "m2": 0,
-                    "v2": 1
+                    "v2": 2
+                }
+			}, 
+			"NegativeBinomial2": {
+			    "pars": ["phi", "p"],
+                "hpars": {
+                    "m": 0,
+                    "v": 2
                 }
 			}, 
 			"Poisson": {
 				"pars": ["rate"],
                 "hpars": {
-                    "shape": 1,
+                    "shape": 0.5,
                     "scale": 1
                 }
 			}, 
@@ -22,9 +29,9 @@
 			    "pars": ["alpha", "beta"],
                 "hpars": {
                     "m1": 0,
-                    "v1": 1,
+                    "v1": 2,
                     "m2": 0,
-                    "v2": 1			        
+                    "v2": 2
 			    }
 			},
 			"Binomial": {
@@ -39,7 +46,7 @@
 				"hpars": {
                     "mu": 0,
                     "k": 1,
-                    "shape": 1,
+                    "shape": 0.5,
                     "rate": 1
                 }
 			}

@@ -50,16 +50,22 @@ def compute_pvals(indir, fname, t0, tend, dt, group1, group2, pool):
     p = pool.map(_compute_pvals, args)
     nsamples = len(p)
 
-    ## normalise and adjust posteriors
-    p = np.mean(p, 0)
-    ii = p.argsort()
-    tmp = p[ii].cumsum() / np.arange(1, p.size+1)
-    padj = np.zeros(p.shape)
-    padj[ii] = tmp
+    ## compute posteriors, FDR and FWER
+    post = np.mean(p, 0)
+    ii = post.argsort()
+
+    tmp = post[ii].cumsum() / np.arange(1, post.size+1)
+    fdr = np.zeros(post.shape)
+    fdr[ii] = tmp
+
+    # pro = post / post.sum()
+    # tmp = pro[ii].cumsum() / pro.size
+    # fwer = np.zeros(pro.shape)
+    # fwer[ii] = tmp
 
     ## return
-    return pd.DataFrame(np.vstack((p, padj)).T, columns=('Posteriors', 'FDR'), index=feature_names).sort(
-        columns = 'FDR'), nsamples
+    return pd.DataFrame(np.vstack((post, fdr)).T, columns=('Posteriors', 'FDR'),
+                        index=feature_names).sort(columns = 'FDR'), nsamples
 
 ########################################################################################################################
 

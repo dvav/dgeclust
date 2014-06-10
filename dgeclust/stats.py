@@ -3,6 +3,7 @@ from __future__ import division
 import numpy as np
 import numpy.random as rn
 import scipy.special as sp
+import scipy.stats as st
 
 ########################################################################################################################
 
@@ -34,16 +35,16 @@ def lognormalln(x, mean=0, var=1):
 ########################################################################################################################
 
 
-def poissonln(x, theta):
+def poissonln(x, rate=1):
     """Returns the log-density of the Poisson distribution at x"""
 
     ## return
-    return x * np.log(theta) - sp.gammaln(x + 1) - theta
+    return x * np.log(rate) - sp.gammaln(x + 1) - rate
 
 ########################################################################################################################
 
 
-def binomln(x, n, p):
+def binomln(x, n=1, p=0.5):
     """Returns the log-density of the binomial distribution at x"""
 
     ## return
@@ -52,7 +53,7 @@ def binomln(x, n, p):
 ########################################################################################################################
 
 
-def nbinomln(x, alpha, p):
+def nbinomln(x, alpha=1, p=0.5):
     """Returns the log-density of the negative binomial distribution at x"""
 
     ## return
@@ -61,7 +62,7 @@ def nbinomln(x, alpha, p):
 ########################################################################################################################
 
 
-def bbinomln(x, n, alpha, beta):
+def bbinomln(x, n=1, alpha=0.5, beta=0.5):
     """Returns the log-density of the beta binomial distribution at x"""
 
     ## compute intermediate quantities
@@ -75,7 +76,7 @@ def bbinomln(x, n, alpha, beta):
 ########################################################################################################################
 
 
-def sample_normal_mean_var(s1, s2, ndata, mu=0, k=1e-3, shape=1, rate=1e-3):
+def sample_normal_mean_var(s1, s2, ndata, mu=0, k=0, shape=0, rate=0):
     """Samples the mean and variance of a normal distribution given data with sufficient statistics s1, s2 and n"""
 
     ## update mu, k, shape, rate
@@ -90,6 +91,23 @@ def sample_normal_mean_var(s1, s2, ndata, mu=0, k=1e-3, shape=1, rate=1e-3):
     ## compute var and mean
     var = 1 / rn.gamma(shape_, 1 / rate_)
     mean = rn.randn() * np.sqrt(var / k_) + mu_
+
+    ## return
+    return mean, var
+
+########################################################################################################################
+
+
+def sample_normal_mean_var_jeffreys(s1, s2, ndata):
+    """Samples the mean and variance of a normal distribution given data with sufficient statistics s1, s2 and n"""
+
+    ## update mu, k, shape, rate
+    avg = s1 / ndata
+    dot = s2 - 2 * avg * s1 + ndata * avg * avg
+
+    ## sample var and mean
+    mean = st.t.rvs(ndata + 1, avg, dot / (ndata*ndata + ndata))
+    var = 1 / rn.gamma((ndata + 1) * 0.5, 2 / dot)
 
     ## return
     return mean, var
@@ -124,7 +142,7 @@ def sample_gamma_shape_scale(suma, logsuma, ndata, shape, scale, lp0=0, q0=0, r0
 ########################################################################################################################
 
 
-def sample_gamma_scale(suma, ndata, shape, a0=1, b0=1e-3):
+def sample_gamma_scale(suma, ndata, shape, a0=0, b0=0):
     """Samples the scale of the gamma distribution from its posterior, when shape is known"""
 
     ## return
@@ -197,10 +215,10 @@ def sample_stick(cluster_occupancies, eta):
 ########################################################################################################################
 
 
-def sample_eta(lw, a=1, b=1e-3):
+def sample_eta(lw, a=0, b=0):
     """Samples the concentration parameter eta given a vector of mixture log-weights"""
 
     ## return
-    return rn.gamma(lw.size - 1 + a, 1 / (b - np.min(lw)) + 1e-12)     # 1 / (b - lw[-1])
+    return rn.gamma(lw.size - 1 + a, 1 / (b - np.min(lw)) + 1e-12)
 
 ########################################################################################################################

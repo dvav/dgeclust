@@ -12,7 +12,7 @@ import dgeclust.config as cfg
 from dgeclust.data import CountData
 from dgeclust.gibbs.state import GibbsState
 from dgeclust.gibbs.alg import GibbsSampler
-from dgeclust.models import nbinom, poisson, bbinom, binom, normal
+from dgeclust.models import nbinom, nbinom2, poisson, bbinom, binom, normal
 
 ########################################################################################################################
 
@@ -63,6 +63,7 @@ data = CountData.load(args.data, args.norm, args.groups)
 ## prepare model
 model = {
     'NegativeBinomial': nbinom,
+    'NegativeBinomial2': nbinom2,
     'Poisson': poisson,
     'BetaBinomial': bbinom,
     'Binomial': binom,

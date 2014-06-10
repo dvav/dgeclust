@@ -83,8 +83,8 @@ def sample_hpars(pars, *_):
     ## sample hyper-parameters
     ndata = len(pars)
 
-    m1, v1 = st.sample_normal_mean_var(np.sum(phi), np.sum(phi**2), ndata)
-    m2, v2 = st.sample_normal_mean_var(np.sum(mu), np.sum(mu**2), ndata)
+    m1, v1 = st.sample_normal_mean_var_jeffreys(np.sum(phi), np.sum(phi**2), ndata)
+    m2, v2 = st.sample_normal_mean_var_jeffreys(np.sum(mu), np.sum(mu**2), ndata)
 
     ## return
     return m1, v1, m2, v2

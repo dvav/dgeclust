@@ -13,15 +13,14 @@ def compute_loglik(j, data, state):
     """Computes the log-likelihood of each element of counts for each element of theta"""
 
     ## read data
-    group = data.groups[j]
-    counts = data.counts[:, group] / data.norm_factors[group]
-    counts = counts.T
-    counts = np.atleast_2d(counts)
+    group = data.groups.values()[j]
+    counts = data.counts[group] / data.lib_sizes[group].values.ravel()
+    counts = counts.T.values
     counts = counts[:, :, np.newaxis]
 
     ## read theta
-    phi = state.theta[:, 0]
-    p = state.theta[:, 1]
+    phi = state.pars[:, 0]
+    p = state.pars[:, 1]
 
     ## compute loglik
     loglik = st.nbinomln(counts, 1 / phi, p)
@@ -45,20 +44,14 @@ def sample_prior(size, mean, var):
 ########################################################################################################################
 
 
-def sample_params(theta, mean, var):
+def sample_hpars(pars, *_):
     """Samples the mean and var of the log-normal from the posterior, given phi"""
 
-    data = np.log(theta[:, 0])
-
-    ## update S1, S2 and N
-    n = data.size
-    s1 = data.sum()
-    s2 = np.sum(data**2)
-
-    mean, var = st.sample_normal_meanvar(s1, s2, n)
+    ## use log(phi)
+    data = np.log(pars[:, 0])
 
     ## return
-    return mean, var
+    return st.sample_normal_mean_var_jeffreys(data.sum(), np.sum(data**2), data.size)
 
 ########################################################################################################################
 
@@ -67,18 +60,19 @@ def sample_posterior(idx, data, state):
     """Sample phi and p from their posterior, given counts"""
 
     ## fetch all data points that belong to cluster idx
-    counts = data.counts / data.norm_factors
-    counts = [counts[:, group][zz == idx].ravel() for group, zz in zip(data.groups, state.zz)]
+    groups = data.groups.values()
+    counts = data.counts / data.lib_sizes.values.ravel()
+    counts = [counts[group][zz == idx].values.ravel() for group, zz in zip(groups, state.zz)]
     counts = np.hstack(counts)
 
     s = counts.sum()
     n = counts.size
 
-    ## read params
-    mean, var = state.pars
+    ## read hyper-parameters
+    mean, var = state.hpars
 
     ## read theta
-    phi, _ = state.theta[idx]
+    phi, _ = state.pars[idx]
     alpha = 1 / phi
 
     ## sample alpha using Metropolis

@@ -48,7 +48,7 @@ def sample_prior(size, alpha, beta):
 ########################################################################################################################
 
 
-def sample_hpars(pars, alpha, beta):
+def sample_hpars(_, alpha, beta):
     """Samples the alpha and beta of the gamma distribution from its posterior, given theta"""
 
     ## return

@@ -42,9 +42,9 @@ def compute_loglik(j, data, state):
 def sample_prior(size, shape, scale):
     """Samples theta from its prior"""
 
-    ## return    
+    ## return
     return rn.gamma(shape, scale, size)
-    
+
 ########################################################################################################################
 
 
@@ -82,5 +82,5 @@ def sample_posterior(idx, data, state):
 
     ## return
     return rn.gamma(shape + s, scale / (m * scale + 1))
-    
+
 ########################################################################################################################
