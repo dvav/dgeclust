@@ -88,11 +88,12 @@ def sample_posterior(idx, data, state):
     if (lp_ > lp) or (rn.rand() < np.exp(lp_ - lp)):    # do Metropolis step
         alpha = alpha_
         phi = 1 / alpha_
+        lp = lp_
 
     ## sample p given the new alpha
     p = rn.beta(n * alpha + 1, s + 1)
 
     ## return
-    return phi, p
+    return (phi, p), lp_
 
 ########################################################################################################################

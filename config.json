@@ -73,7 +73,8 @@
         "hpars": "hpars.txt",
 		"eta": "eta.txt",
 		"nact": "nact.txt",
-		"zz": "zz"
+		"zz": "zz",
+        "lp": "lp.txt"
     },
     "clust": {
         "niters": 10000,

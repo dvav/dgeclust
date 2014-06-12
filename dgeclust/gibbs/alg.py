@@ -66,8 +66,10 @@ class GibbsSampler(object):
 
         ## sample theta
         args = zip(idxs, it.repeat((data, state, model.sample_posterior)))
-        state.pars[iact] = pool.map(do_global_sampling, args)                              # active clusters
-        state.pars[~iact] = model.sample_prior(state.lw.size - state.nact0, *state.hpars)  # inactive clusters
+        state.pars[iact], loglik, logprior = zip(*pool.map(do_global_sampling, args))           # active clusters
+        state.pars[~iact] = model.sample_prior(state.lw.size - state.nact0, *state.hpars)       # inactive clusters
+        state.loglik = np.sum(loglik)
+        state.logprior = np.sum(logprior)
 
         ## update hyper-parameters
         # state.eta0 = st.sample_eta(state.lw)
@@ -82,7 +84,7 @@ class GibbsSampler(object):
         state = self.state
         fnames = self.fnames
 
-        ## write theta
+        ## write pars
         with open(fnames['pars'], 'w') as f:
             np.savetxt(f, state.pars, fmt='%f', delimiter='\t')
 
@@ -112,10 +114,14 @@ class GibbsSampler(object):
             np.savetxt(f, np.atleast_2d(np.r_[state.t, state.nact0, state.nact]),
                        fmt='%d\t%d' + '\t%d' * np.size(state.nact))
 
-        ## write pars
+        ## write hpars
         with open(fnames['hpars'], 'a') as f:
             np.savetxt(f, np.atleast_2d(np.r_[state.t, state.hpars]),
                        fmt='%d' + '\t%f' * np.size(state.hpars))
+
+        ## write log-likelihood and log-prior density
+        with open(fnames['lp'], 'a') as f:
+            np.savetxt(f, np.atleast_2d(np.r_[state.t, state.loglik, state.logprior]), fmt='%d\t%f\t%f')
 
         ## write zz
         if (state.t > self.burnin) and (self.nlog > 0) and not (state.t % self.nlog):
@@ -132,10 +138,10 @@ def do_global_sampling(args):
     idx, (data, state, sample_posterior) = args
 
     ## sample from the posterior
-    pars = sample_posterior(idx, data, state)
+    pars, loglik, logprior = sample_posterior(idx, data, state)
 
     ## return
-    return pars
+    return pars, loglik, logprior
 
 ########################################################################################################################
 

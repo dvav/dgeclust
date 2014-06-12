@@ -52,7 +52,8 @@ args.fnames = {
     'hpars': os.path.join(args.outdir, cfg.fnames['hpars']),
     'eta': os.path.join(args.outdir, cfg.fnames['eta']),
     'nact': os.path.join(args.outdir, cfg.fnames['nact']),
-    'zz': os.path.join(args.outdir, cfg.fnames['zz'])
+    'zz': os.path.join(args.outdir, cfg.fnames['zz']),
+    'lp': os.path.join(args.outdir, cfg.fnames['lp'])
 }
 
 ########################################################################################################################

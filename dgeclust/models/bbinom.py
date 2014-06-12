@@ -118,8 +118,10 @@ def sample_posterior(idx, data, state):
     if (logpost_ > logpost) or (rn.rand() < np.exp(logpost_ - logpost)):    # do Metropolis step
         alpha = alpha_
         beta = beta_
+        loglik = loglik_
+        logprior = logprior_
 
     ## return
-    return alpha, beta
+    return (alpha, beta), loglik, logprior
 
 ########################################################################################################################

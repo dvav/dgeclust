@@ -11,7 +11,7 @@ import dgeclust.utils as ut
 class GibbsState(object):
     """Represents the state of the Gibbs sampler"""
 
-    def __init__(self, pars, lw, lu, c, z, eta0, eta, hpars, t0):
+    def __init__(self, pars, lw, lu, c, z, eta0, eta, hpars, loglik, logprior, t0):
         """Initializes state from raw data"""
 
         ## basic sampler state
@@ -24,6 +24,10 @@ class GibbsState(object):
         self.eta = eta          # vector of local density parameters
         self.hpars = hpars      # vector of hyper-parameters
         self.t = t0             # the current iteration
+
+        ## log-posterior density of the data given the model
+        self.loglik = loglik
+        self.logprior = logprior
 
         ## direct cluster indicators and number of active clusters
         self.zz = [c[z] for c, z in zip(self.c, self.z)]
@@ -48,7 +52,7 @@ class GibbsState(object):
         t0 = 0
 
         ## return
-        return cls(pars, lw, lu, c, z, eta0, eta, hpars, t0)
+        return cls(pars, lw, lu, c, z, eta0, eta, hpars, -np.inf, -np.inf, t0)
 
     ####################################################################################################################
 
@@ -67,8 +71,9 @@ class GibbsState(object):
         tmp = np.loadtxt(fnames['hpars'])
         hpars = tmp[-1, 1:]
         t0 = int(tmp[-1, 0])             # the last iteration of the previous simulation
+        loglik, logprior = np.loadtxt(fnames['lp'])[-1, [1, 2]]
 
         ## return
-        return cls(pars, lw, lu, c, z, eta0, eta, hpars, t0)
+        return cls(pars, lw, lu, c, z, eta0, eta, hpars, loglik, logprior, t0)
 
     ####################################################################################################################
