@@ -47,6 +47,7 @@ args.fnames = {
     'lw': os.path.join(args.outdir, cfg.fnames['lw']),
     'd': os.path.join(args.outdir, cfg.fnames['d']),
     'z': os.path.join(args.outdir, cfg.fnames['z']),
+    'p': os.path.join(args.outdir, cfg.fnames['p']),
     'delta': os.path.join(args.outdir, cfg.fnames['delta']),
     'hpars': os.path.join(args.outdir, cfg.fnames['hpars']),
     'eta': os.path.join(args.outdir, cfg.fnames['eta']),

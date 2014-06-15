@@ -70,7 +70,7 @@ class GibbsSampler(object):
 
         ## sample pars
         args = zip(idxs, it.repeat((data, state, model.sample_posterior)))
-        state.pars[iact] = zip(*pool.map(do_global_sampling, args))           # active clusters
+        state.pars[iact] = map(do_global_sampling, args)           # active clusters
         state.pars[~iact] = model.sample_pars_prior(state.lw.size - state.nact, *state.hpars)       # inactive clusters
 
         ## sample delta and z
@@ -99,40 +99,38 @@ class GibbsSampler(object):
             np.savetxt(f, state.lw, fmt='%f', delimiter='\t')
 
         ## write c
-        with open(fnames['c'], 'w') as f:
-            np.savetxt(f, state.c, fmt='%d', delimiter='\t')
+        with open(fnames['p'], 'w') as f:
+            np.savetxt(f, state.p, fmt='%f', delimiter='\t')
 
         ## write z
         with open(fnames['z'], 'w') as f:
             np.savetxt(f, state.z, fmt='%d', delimiter='\t')
 
-        ## write lu
-        with open(fnames['lu'], 'w') as f:
-            np.savetxt(f, state.lu, fmt='%f', delimiter='\t')
+        ## write d
+        with open(fnames['d'], 'w') as f:
+            np.savetxt(f, state.d, fmt='%f', delimiter='\t')
+
+        ## write log-likelihood and log-prior density
+        with open(fnames['delta'], 'a') as f:
+            np.savetxt(f, state.delta, fmt='%f')
 
         ## write eta's
         with open(fnames['eta'], 'a') as f:
-            np.savetxt(f, np.atleast_2d(np.r_[state.t, state.eta0, state.eta]),
-                       fmt='%d\t%f' + '\t%f' * np.size(state.eta))
+            np.savetxt(f, np.atleast_2d(np.r_[state.t, state.eta]), fmt='%d\t%f')
 
         ## write nact's
         with open(fnames['nact'], 'a') as f:
-            np.savetxt(f, np.atleast_2d(np.r_[state.t, state.nact0, state.nact]),
-                       fmt='%d\t%d' + '\t%d' * np.size(state.nact))
+            np.savetxt(f, np.atleast_2d(np.r_[state.t, state.nact]), fmt='%d\t%d')
 
         ## write hpars
         with open(fnames['hpars'], 'a') as f:
             np.savetxt(f, np.atleast_2d(np.r_[state.t, state.hpars]),
                        fmt='%d' + '\t%f' * np.size(state.hpars))
 
-        ## write log-likelihood and log-prior density
-        with open(fnames['lp'], 'a') as f:
-            np.savetxt(f, np.atleast_2d(np.r_[state.t, state.loglik, state.logprior]), fmt='%d\t%f\t%f')
-
         ## write zz
         if (state.t > self.burnin) and (self.nlog > 0) and not (state.t % self.nlog):
             with open(os.path.join(fnames['zz'], str(state.t)), 'w') as f:
-                np.savetxt(f, state.zz, fmt='%d', delimiter='\t')
+                np.savetxt(f, state.z, fmt='%d', delimiter='\t')
 
 ########################################################################################################################
 
@@ -144,10 +142,10 @@ def do_global_sampling(args):
     idx, (data, state, sample_posterior) = args
 
     ## sample from the posterior
-    pars, loglik, logprior = sample_posterior(idx, data, state)
+    pars = sample_posterior(idx, data, state)
 
     ## return
-    return pars, loglik, logprior
+    return pars
 
 ########################################################################################################################
 

@@ -8,7 +8,7 @@ import dgeclust.stats as st
 ########################################################################################################################
 
 
-def _compute_loglik(phi, mu, counts, lib_sizes):
+def _compute_loglik(phi, mu, delta, counts, lib_sizes):
     """Computes the log-likelihood of each element of counts for each element of phi and mu"""
 
     ## prepare data
@@ -18,9 +18,11 @@ def _compute_loglik(phi, mu, counts, lib_sizes):
     lib_sizes = lib_sizes.T
     lib_sizes = lib_sizes[:, :, np.newaxis]
 
+    delta = delta[:, np.newaxis]
+
     ## compute p
     alpha = 1 / phi
-    p = alpha / (alpha + lib_sizes * mu)
+    p = alpha / (alpha + lib_sizes * mu * delta)
 
     ## return
     return st.nbinomln(counts, alpha, p)
@@ -37,19 +39,14 @@ def compute_loglik1(data, state):
     lib_sizes = [data.lib_sizes[group].values for group in groups]
 
     ## read state
-    delta = state.delta
     phi = state.pars[:, 0]
     mu = state.pars[:, 1]
+    delta = state.delta.T
 
-    ## compute p
-    alpha = 1 / phi
-    mu = delta
-    ## read theta
-    phi = state.pars[:, 0]
-    mu = state.pars[:, 1]
+    loglik = [_compute_loglik(phi, mu, d, c, l).sum(0) for c, l, d in zip(counts, lib_sizes, delta)]
 
     ## return
-    return _compute_loglik(phi, mu, counts, lib_sizes)
+    return np.sum(loglik, 0)
 
 ########################################################################################################################
 
@@ -71,7 +68,7 @@ def compute_loglik(j, data, state):
 ########################################################################################################################
 
 
-def compute_logprior(phi, mu, m1, v1, m2, v2):
+def compute_logprior(phi, mu, m1, v1, m2, v2, *_):
     """Computes the log-density of the prior of theta"""
 
     ## compute log-priors for phi and mu
@@ -111,7 +108,7 @@ def sample_hpars(pars, *_):
     m2, v2 = st.sample_normal_mean_var_jeffreys(np.sum(mu), np.sum(mu**2), ndata)
 
     ## return
-    return m1, v1, m2, v2
+    return m1, v1, m2, v2, 0, 2, 0, 2
 
 ########################################################################################################################
 
@@ -120,9 +117,12 @@ def sample_posterior(idx, data, state):
     """Sample phi and mu from their posterior, using Metropolis"""
 
     ## fetch all data points that belong to cluster idx
+    idxs = state.d == idx
     groups = data.groups.values()
-    counts = [data.counts[group][zz == idx].values for group, zz in zip(groups, state.zz)]
+    counts = data.counts[idxs]
+    counts = [counts[group].values for group in groups]
     lib_sizes = [data.lib_sizes[group].values for group in groups]
+    delta = state.delta[idxs].T
 
     ## read theta
     phi, mu = state.pars[idx]
@@ -131,8 +131,8 @@ def sample_posterior(idx, data, state):
     phi_, mu_ = (phi, mu) * np.exp(0.01 * rn.randn(2))
 
     ## compute log-likelihoods
-    loglik = np.sum([_compute_loglik(phi, mu, cnts, lbsz).sum() for cnts, lbsz in zip(counts, lib_sizes)])
-    loglik_ = np.sum([_compute_loglik(phi_, mu_, cnts, lbsz).sum() for cnts, lbsz in zip(counts, lib_sizes)])
+    loglik = np.sum([_compute_loglik(phi, mu, d, cnts, lbsz).sum() for cnts, lbsz, d in zip(counts, lib_sizes, delta)])
+    loglik_ = np.sum([_compute_loglik(phi_, mu_, d, cnts, lbsz).sum() for cnts, lbsz, d in zip(counts, lib_sizes, delta)])
 
     ## compute log-priors
     logprior = compute_logprior(phi, mu, *state.hpars)
@@ -146,10 +146,8 @@ def sample_posterior(idx, data, state):
     if (logpost_ > logpost) or (rn.rand() < np.exp(logpost_ - logpost)):    # do Metropolis step
         phi = phi_
         mu = mu_
-        loglik = loglik_
-        logprior = logprior_
 
     ## return
-    return (phi, mu), loglik, logprior
+    return phi, mu
 
 ########################################################################################################################
