@@ -28,6 +28,30 @@ def _compute_loglik(phi, mu, counts, lib_sizes):
 
 ########################################################################################################################
 
+def compute_loglik1(data, state):
+    """Computes the log-likelihood of each element of counts for each element of theta"""
+
+    ## read data
+    groups = data.groups.values()
+    counts = [data.counts[group].values for group in groups]
+    lib_sizes = [data.lib_sizes[group].values for group in groups]
+
+    ## read state
+    delta = state.delta
+    phi = state.pars[:, 0]
+    mu = state.pars[:, 1]
+
+    ## compute p
+    alpha = 1 / phi
+    mu = delta
+    ## read theta
+    phi = state.pars[:, 0]
+    mu = state.pars[:, 1]
+
+    ## return
+    return _compute_loglik(phi, mu, counts, lib_sizes)
+
+########################################################################################################################
 
 def compute_loglik(j, data, state):
     """Computes the log-likelihood of each element of counts for each element of theta"""
@@ -60,7 +84,7 @@ def compute_logprior(phi, mu, m1, v1, m2, v2):
 ########################################################################################################################
 
 
-def sample_prior(size, m1, v1, m2, v2):
+def sample_pars_prior(size, m1, v1, m2, v2, *_):
     """Samples phi and mu from their priors, log-normal in both cases"""
 
     ## sample phi and mu

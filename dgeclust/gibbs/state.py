@@ -11,48 +11,40 @@ import dgeclust.utils as ut
 class GibbsState(object):
     """Represents the state of the Gibbs sampler"""
 
-    def __init__(self, pars, lw, lu, c, z, eta0, eta, hpars, loglik, logprior, t0):
+    def __init__(self, pars, lw, p, z, d, eta, delta, hpars, t0):
         """Initializes state from raw data"""
 
         ## basic sampler state
         self.pars = pars        # model parameters
         self.lw = lw            # vector of global log-weights
-        self.lu = lu            # matrix of local (i.e. class-specific) log-weights
-        self.c = c              # matrix of level 0 cluster indicators
+        self.p = p
         self.z = z              # matrix of level 1 cluster indicators
-        self.eta0 = eta0        # global density parameter
-        self.eta = eta          # vector of local density parameters
+        self.d = d
+        self.delta = delta
+        self.eta = eta
         self.hpars = hpars      # vector of hyper-parameters
         self.t = t0             # the current iteration
 
-        ## log-posterior density of the data given the model
-        self.loglik = loglik
-        self.logprior = logprior
-
-        ## direct cluster indicators and number of active clusters
-        self.zz = [c[z] for c, z in zip(self.c, self.z)]
-        _, _, self.nact0, _ = ut.get_cluster_info(self.lw.size, np.asarray(self.zz).ravel())
-
-        ## local number of active clusters
-        _, _, self.nact, _ = zip(*[ut.get_cluster_info(lu.size, z) for z, lu in zip(self.z, self.lu)])
+        _, _, self.nact, _ = ut.get_cluster_info(self.lw.size, self.d)
 
     ####################################################################################################################
 
     @classmethod
-    def random(cls, ngroups, nfeatures, sample_prior, hpars, nglobal, nlocal):
+    def random(cls, nfeatures, ngroups, sample_pars_prior, hpars, nglobal):
         """Initialises state randomly"""
 
-        pars = sample_prior(nglobal, *hpars)
+        pars = sample_pars_prior(nglobal, *hpars)
         lw = np.tile(-np.log(nglobal), nglobal)
-        lu = np.tile(-np.log(nlocal), (ngroups, nlocal))
-        c = rn.randint(0, nglobal, (ngroups, nlocal))
-        z = rn.randint(0, nlocal, (ngroups, nfeatures))
-        eta0 = 1
-        eta = np.ones(ngroups)
+        d = rn.randint(0, nglobal, nfeatures)
+        eta = 1
+
+        p = np.tile(1/3, 3)
+        z = rn.choice(3, size=(nfeatures, ngroups), p = p)
+        delta = np.ones((nfeatures, ngroups))
         t0 = 0
 
         ## return
-        return cls(pars, lw, lu, c, z, eta0, eta, hpars, -np.inf, -np.inf, t0)
+        return cls(pars, lw, p, z, d, eta, delta, hpars, t0)
 
     ####################################################################################################################
 

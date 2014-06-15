@@ -3,6 +3,7 @@ from __future__ import division
 import os
 import itertools as it
 import numpy as np
+import numpy.random as rn
 
 import dgeclust.utils as ut
 import dgeclust.stats as st
@@ -52,28 +53,33 @@ class GibbsSampler(object):
         ## update simulation time
         state.t += 1
 
-        ## do local (i.e. sample-specific) updates
-        args = zip(range(len(state.z)), it.repeat((data, state, model.compute_loglik)))
-        state.lu, state.c, state.z, state.eta, state.nact = zip(*pool.map(do_local_sampling, args))
+        ## sample d
+        loglik = model.compute_loglik1(data, state)
+        logw = state.lw + loglik
+        logw = ut.normalize_log_weights(logw.T)
+        state.d = st.sample_categorical(np.exp(logw))
 
-        ## get top-level cluster info
-        state.zz = [c[z] for c, z in zip(state.c, state.z)]
-        occ, iact, state.nact0, _ = ut.get_cluster_info(state.lw.size, np.asarray(state.zz).ravel())
+        ## get cluster info
+        occ, iact, state.nact, _ = ut.get_cluster_info(state.lw.size, state.d)
         idxs = iact.nonzero()[0]
 
-        ## sample lw and eta0
-        state.lw, _ = st.sample_stick(occ, state.eta0)
+        ## sample lw and eta
+        state.lw, _ = st.sample_stick(occ, state.eta)
+        # state.eta = st.sample_eta(state.lw)
+        state.eta = st.sample_eta2(state.eta, state.nact, state.lw.size)
 
-        ## sample theta
+        ## sample pars
         args = zip(idxs, it.repeat((data, state, model.sample_posterior)))
-        state.pars[iact], loglik, logprior = zip(*pool.map(do_global_sampling, args))           # active clusters
-        state.pars[~iact] = model.sample_prior(state.lw.size - state.nact0, *state.hpars)       # inactive clusters
-        state.loglik = np.sum(loglik)
-        state.logprior = np.sum(logprior)
+        state.pars[iact] = zip(*pool.map(do_global_sampling, args))           # active clusters
+        state.pars[~iact] = model.sample_pars_prior(state.lw.size - state.nact, *state.hpars)       # inactive clusters
+
+        ## sample delta and z
+
+        ## sample p
+        occ, _, _, _ = ut.get_cluster_info(3, np.asarray(state.z).ravel())
+        state.p = rn.dirichlet(1 + occ)
 
         ## update hyper-parameters
-        # state.eta0 = st.sample_eta(state.lw)
-        state.eta0 = st.sample_eta2(state.eta0, state.nact0, state.lw.size)
         state.hpars = model.sample_hpars(state.pars[iact], *state.hpars)
 
     ####################################################################################################################

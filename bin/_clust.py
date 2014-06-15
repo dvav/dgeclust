@@ -28,7 +28,6 @@ parser.add_argument('-t', type=int, dest='niters', help='number of iterations', 
 parser.add_argument('-t0', type=int, dest='burnin',  help='burn-in period', default=cfg.clust['burnin'])
 parser.add_argument('-dt', type=int, dest='nlog', help='save-state interval', default=cfg.clust['nlog'])
 parser.add_argument('-k', type=int, dest='nglobal', help='truncation at level 0', default=cfg.clust['nglobal'])
-parser.add_argument('-l', type=int, dest='nlocal', help='truncation at level 1', default=cfg.clust['nlocal'])
 parser.add_argument('-r', type=int, dest='nthreads', help='number of threads', default=cfg.nthreads)
 parser.add_argument('-e', dest='extend', help='extend simulation', action='store_true', default=cfg.clust['extend'])
 parser.add_argument('-m', type=str, dest='model', help='model to use', default=cfg.models['default'],
@@ -46,14 +45,13 @@ args.nthreads = args.nthreads if args.nthreads > 0 else mp.cpu_count()
 args.fnames = {
     'pars': os.path.join(args.outdir, cfg.fnames['pars']),
     'lw': os.path.join(args.outdir, cfg.fnames['lw']),
-    'lu': os.path.join(args.outdir, cfg.fnames['lu']),
-    'c': os.path.join(args.outdir, cfg.fnames['c']),
+    'd': os.path.join(args.outdir, cfg.fnames['d']),
     'z': os.path.join(args.outdir, cfg.fnames['z']),
+    'delta': os.path.join(args.outdir, cfg.fnames['delta']),
     'hpars': os.path.join(args.outdir, cfg.fnames['hpars']),
     'eta': os.path.join(args.outdir, cfg.fnames['eta']),
     'nact': os.path.join(args.outdir, cfg.fnames['nact']),
     'zz': os.path.join(args.outdir, cfg.fnames['zz']),
-    'lp': os.path.join(args.outdir, cfg.fnames['lp'])
 }
 
 ########################################################################################################################
@@ -80,8 +78,7 @@ if os.path.exists(args.outdir):
         state = GibbsState.load(args.fnames)
 else:
     os.makedirs(args.fnames['zz'])
-    state = GibbsState.random(len(data.groups), len(data.counts), model.sample_prior, args.hpars,
-                              args.nglobal, args.nlocal)
+    state = GibbsState.random(len(data.counts), len(data.groups), model.sample_pars_prior, args.hpars, args.nglobal)
 
     ## write groups, feature and sample names on disk
     with open(os.path.join(args.outdir, cfg.fnames['config']), 'w') as f:
@@ -90,7 +87,6 @@ else:
             ("norm", args.norm),
             ("groups", data.groups),
             ("nglobal", args.nglobal),
-            ("nlocal", args.nlocal),
             ("model", args.model),
             ("pars", cfg.models['options'][args.model]['pars']),
             ("hpars", cl.OrderedDict(zip(cfg.models['options'][args.model]['hpars'].keys(), args.hpars))),
