@@ -20,12 +20,12 @@ class GibbsState(object):
         self.p = p
         self.z = z              # matrix of level 1 cluster indicators
         self.d = d
-        self.delta = delta
+        self.delta = delta;
         self.eta = eta
         self.hpars = hpars      # vector of hyper-parameters
         self.t = t0             # the current iteration
 
-        _, _, self.nact, _ = ut.get_cluster_info(self.lw.size, self.d)
+        _, self.iact, self.nact, _ = ut.get_cluster_info(self.lw.size, self.d)
 
     ####################################################################################################################
 
@@ -38,9 +38,9 @@ class GibbsState(object):
         d = rn.randint(0, nglobal, nfeatures)
         eta = 1
 
-        p = np.tile(1/3, 3)
-        z = rn.choice(3, size=(nfeatures, ngroups), p = p)
-        delta = np.ones((nfeatures, ngroups))
+        p = np.tile(1/2, 2)
+        z = rn.choice(2, size=(nfeatures, ngroups), p = p); z[:, 0] = 0
+        delta = np.ones((nfeatures, ngroups)); delta[:, 0] = 1
         t0 = 0
 
         ## return

@@ -60,8 +60,8 @@ class GibbsSampler(object):
         state.d = st.sample_categorical(np.exp(logw))
 
         ## get cluster info
-        occ, iact, state.nact, _ = ut.get_cluster_info(state.lw.size, state.d)
-        idxs = iact.nonzero()[0]
+        occ, state.iact, state.nact, _ = ut.get_cluster_info(state.lw.size, state.d)
+        idxs = state.iact.nonzero()[0]
 
         ## sample lw and eta
         state.lw, _ = st.sample_stick(occ, state.eta)
@@ -70,17 +70,29 @@ class GibbsSampler(object):
 
         ## sample pars
         args = zip(idxs, it.repeat((data, state, model.sample_posterior)))
-        state.pars[iact] = map(do_global_sampling, args)           # active clusters
-        state.pars[~iact] = model.sample_pars_prior(state.lw.size - state.nact, *state.hpars)       # inactive clusters
+        state.pars[state.iact] = pool.map(do_global_sampling, args)           # active clusters
+        state.pars[~state.iact] = model.sample_pars_prior(state.lw.size - state.nact, *state.hpars)       # inactive clusters
 
         ## sample delta and z
+        z_ = rn.choice(2, state.z.shape, p=state.p); z_[:, 0] = 0  # propose z
+        delta_ = np.zeros(state.z.shape)    # propose delta
+        ee = z_ == 0
+        de = z_ == 1
+        delta_[ee] = 1 #np.exp(rn.randn(np.sum(ee)) * state.hpars[4])   # no DE
+        delta_[de] = np.exp(state.hpars[4] + rn.randn(np.sum(de)) * np.sqrt(state.hpars[5]))   # up-regulation
+        delta_[:, 0] = 1
+        loglik = model.compute_loglik2(data, state.delta, state)
+        loglik_ = model.compute_loglik2(data, delta_, state)
+        idxs = np.any(((loglik_ > loglik), (rn.rand(*state.z.shape) < np.exp(loglik_ - loglik))), 0)
+        state.z[idxs] = z_[idxs]; state.z[:, 0] = 0
+        state.delta[idxs] = delta_[idxs]; state.delta[:, 0] = 1
 
         ## sample p
-        occ, _, _, _ = ut.get_cluster_info(3, np.asarray(state.z).ravel())
+        occ, _, _, _ = ut.get_cluster_info(2, np.asarray(state.z).ravel())
         state.p = rn.dirichlet(1 + occ)
 
         ## update hyper-parameters
-        state.hpars = model.sample_hpars(state.pars[iact], *state.hpars)
+        state.hpars = model.sample_hpars(state, *state.hpars)
 
     ####################################################################################################################
 
@@ -99,8 +111,8 @@ class GibbsSampler(object):
             np.savetxt(f, state.lw, fmt='%f', delimiter='\t')
 
         ## write c
-        with open(fnames['p'], 'w') as f:
-            np.savetxt(f, state.p, fmt='%f', delimiter='\t')
+        with open(fnames['p'], 'a') as f:
+            np.savetxt(f, np.atleast_2d(np.r_[state.t, state.p]), fmt='%d' + '\t%f' * np.size(state.p), delimiter='\t')
 
         ## write z
         with open(fnames['z'], 'w') as f:
@@ -108,10 +120,10 @@ class GibbsSampler(object):
 
         ## write d
         with open(fnames['d'], 'w') as f:
-            np.savetxt(f, state.d, fmt='%f', delimiter='\t')
+            np.savetxt(f, state.d, fmt='%d', delimiter='\t')
 
         ## write log-likelihood and log-prior density
-        with open(fnames['delta'], 'a') as f:
+        with open(fnames['delta'], 'w') as f:
             np.savetxt(f, state.delta, fmt='%f')
 
         ## write eta's
@@ -146,51 +158,5 @@ def do_global_sampling(args):
 
     ## return
     return pars
-
-########################################################################################################################
-
-
-def do_local_sampling(args):
-    """Samples the local variables of the HDPMM"""
-
-    ## read arguments
-    j, (data, state, compute_loglik) = args
-
-    lu = state.lu[j]
-    c = state.c[j]
-    eta = state.eta[j]
-
-    ## compute log-likelihood
-    loglik = compute_loglik(j, data, state).sum(0)
-
-    ## sample z
-    logw = lu + loglik[:, c]
-    logw = ut.normalize_log_weights(logw.T)
-    z = st.sample_categorical(np.exp(logw))
-
-    ## apply correction
-    groups = [np.nonzero(c == idx)[0] for idx in range(state.lw.size)]
-    mats = [z == np.reshape(group, (-1, 1)) for group in groups]
-    vecs = [np.any(mat, 0) for mat in mats]
-    for vec, group in zip(vecs, groups):
-        if np.any(group):
-            z[vec] = group[0]
-
-    ## get local cluster info
-    occ, _, nact, occ_mat = ut.get_cluster_info(lu.size, z)
-
-    ## sample lu and eta
-    lu, _ = st.sample_stick(occ, eta)
-    # eta = st.sample_eta(lu)
-    eta = st.sample_eta2(eta, nact, lu.size)
-
-    ## sample c
-    logw = [state.lw + loglik[occ_vec].sum(0) for occ_vec in occ_mat]
-    logw = np.asarray(logw)
-    logw = ut.normalize_log_weights(logw.T)
-    c = st.sample_categorical(np.exp(logw))
-
-    ## return
-    return lu, c, z, eta, nact
 
 ########################################################################################################################

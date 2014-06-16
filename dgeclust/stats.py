@@ -115,6 +115,21 @@ def sample_normal_mean_var_jeffreys(s1, s2, ndata):
 ########################################################################################################################
 
 
+def sample_normal_var_jeffreys(s1, s2, ndata):
+    """Samples the mean and variance of a normal distribution given data with sufficient statistics s1, s2 and n"""
+
+    ## update mu, k, shape, rate
+    avg = s1 / ndata
+    dot = s2 - 2 * avg * s1 + ndata * avg * avg
+
+    ## sample var and mean
+    var = 1 / rn.gamma(ndata * 0.5, 2 / dot)
+
+    ## return
+    return var
+
+########################################################################################################################
+
 def sample_gamma_shape_scale(suma, logsuma, ndata, shape, scale, lp0=0, q0=0, r0=0, s0=0):
     """Samples the shape and scale of the gamma distribution from their posterior"""
 

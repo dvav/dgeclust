@@ -16,7 +16,7 @@ def _compute_pvals(args):
     sample_name, (indir, igroup1, igroup2) = args
 
     ## read sample and identify differentially expressed features
-    z = np.loadtxt(os.path.join(indir, str(sample_name)), dtype='uint32')
+    z = np.loadtxt(os.path.join(indir, str(sample_name)), dtype='uint32').T
     p = z[igroup1] == z[igroup2]
 
     ## return

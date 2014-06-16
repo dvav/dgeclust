@@ -50,20 +50,27 @@ def compute_loglik1(data, state):
 
 ########################################################################################################################
 
-def compute_loglik(j, data, state):
+
+def compute_loglik2(data, delta, state):
     """Computes the log-likelihood of each element of counts for each element of theta"""
 
-    ## read data
-    group = data.groups.values()[j]
-    counts = data.counts[group].values
-    lib_sizes = data.lib_sizes[group].values
-
     ## read theta
-    phi = state.pars[:, 0]
-    mu = state.pars[:, 1]
+    pars = state.pars[state.d]
+    phi = pars[:, 0]
+    mu = pars[:, 1]
+    alpha = 1 / phi
+
+    ## read data
+    groups = data.groups.values()
+    counts = [data.counts[group].values.T for group in groups]
+    lib_sizes = [data.lib_sizes[group].values.T for group in groups]
+
+    ## compute p and loglik
+    p = [alpha / (alpha + lbsz * m) for lbsz, m in zip(lib_sizes, mu * delta.T)]
+    loglik = [st.nbinomln(cnts, alpha, p).sum(0) for cnts, p in zip(counts, p)]
 
     ## return
-    return _compute_loglik(phi, mu, counts, lib_sizes)
+    return np.asarray(loglik).T
 
 ########################################################################################################################
 
@@ -94,21 +101,28 @@ def sample_pars_prior(size, m1, v1, m2, v2, *_):
 ########################################################################################################################
 
 
-def sample_hpars(pars, *_):
+def sample_hpars(state, *_):
     """Samples the mean and var of the log-normal from the posterior, given phi"""
 
     ## read parameters
-    phi = np.log(pars[:, 0])
-    mu = np.log(pars[:, 1])
+    phi = np.log(state.pars[state.iact, 0])
+    mu = np.log(state.pars[state.iact, 1])
 
     ## sample hyper-parameters
-    ndata = len(pars)
+    ndata = np.sum(state.iact)
 
     m1, v1 = st.sample_normal_mean_var_jeffreys(np.sum(phi), np.sum(phi**2), ndata)
     m2, v2 = st.sample_normal_mean_var_jeffreys(np.sum(mu), np.sum(mu**2), ndata)
 
+    ## also do this
+    ee = np.log(state.delta[state.z == 0])
+    de = np.log(state.delta[state.z == 1])
+    # v0 = st.sample_normal_var_jeffreys(np.sum(ee), np.sum(ee**2), ee.size) if ee.size > 0 else state.hpars[4]
+    m3, v3 = st.sample_normal_mean_var_jeffreys(np.sum(de), np.sum(de**2), de.size) if de.size > 0 else state.hpars[[4, 5]]
+    # m4, v4 = st.sample_normal_mean_var_jeffreys(np.sum(down), np.sum(down**2), down.size) if down.size > 0 else state.hpars[[7, 8]]
+
     ## return
-    return m1, v1, m2, v2, 0, 2, 0, 2
+    return np.asarray([m1, v1, m2, v2, m3, v3])
 
 ########################################################################################################################
 
