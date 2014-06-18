@@ -20,7 +20,7 @@ class GibbsState(object):
         self.p = p
         self.z = z              # matrix of level 1 cluster indicators
         self.d = d
-        self.delta = delta;
+        self.delta = delta
         self.eta = eta
         self.hpars = hpars      # vector of hyper-parameters
         self.t = t0             # the current iteration
@@ -38,9 +38,9 @@ class GibbsState(object):
         d = rn.randint(0, nglobal, nfeatures)
         eta = 1
 
-        p = np.tile(1/2, 2)
-        z = rn.choice(2, size=(nfeatures, ngroups), p = p); z[:, 0] = 0
-        delta = np.ones((nfeatures, ngroups)); delta[:, 0] = 1
+        p = np.tile(1/ngroups, ngroups)
+        z = rn.choice(ngroups, size=(nfeatures, ngroups), p = p)
+        delta = np.ones((nfeatures, ngroups))
         t0 = 0
 
         ## return
@@ -54,18 +54,17 @@ class GibbsState(object):
 
         pars = np.loadtxt(fnames['pars'])
         lw = np.loadtxt(fnames['lw'])
-        lu = np.loadtxt(fnames['lu'])
-        c = np.loadtxt(fnames['c'], dtype='uint32')
+        delta = np.loadtxt(fnames['delta'])
+        p = np.loadtxt(fnames['p'])
+        d = np.loadtxt(fnames['d'], dtype='uint32')
         z = np.loadtxt(fnames['z'], dtype='uint32')
-        tmp = np.loadtxt(fnames['eta'])
-        eta0 = tmp[-1, 1]
-        eta = tmp[-1, 2:]
-        tmp = np.loadtxt(fnames['hpars'])
-        hpars = tmp[-1, 1:]
-        t0 = int(tmp[-1, 0])             # the last iteration of the previous simulation
-        loglik, logprior = np.loadtxt(fnames['lp'])[-1, [1, 2]]
+        eta = np.loadtxt(fnames['eta'])
+        eta = eta[-1, 1]
+        hpars = np.loadtxt(fnames['hpars'])
+        hpars = hpars[-1, 1:]
+        t0 = int(hpars[-1, 0])             # the last iteration of the previous simulation
 
         ## return
-        return cls(pars, lw, lu, c, z, eta0, eta, hpars, loglik, logprior, t0)
+        return cls(pars, lw, p, z, d, eta, delta, hpars, t0)
 
     ####################################################################################################################

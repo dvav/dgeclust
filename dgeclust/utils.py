@@ -53,12 +53,14 @@ def plot_fitted_model(sample, res, data, model, xmin=-1, xmax=12, npoints=1000, 
     group = [k for k, v in data.groups.items() if sample in v][0]
 
     ## compute cluster occupancies
-    occ, iact, _, _ = get_cluster_info(len(res.pars), res.zz[group].values)
+    pars = res.pars[res.d]
+    delta = res.delta[:, group]
+    occ, iact, _, _ = get_cluster_info(len(res.pars), res.d[group].values)
     occ = occ[iact]                     # keep occupancies of active clusters, only
 
     ## compute fitted model
     x = np.reshape(np.linspace(xmin, xmax, npoints), (-1, 1))
-    state = cl.namedtuple('FakeGibbsState', 'pars')(res.pars[iact].values)        # wrapper object
+    state = cl.namedtuple('FakeGibbsState', 'pars', 'delta')(res.pars[iact].values, res.delta[group].values) # wrapper object
     counts = data.counts[sample]
     lib_sizes = data.lib_sizes[sample]
     if log_scale is True:

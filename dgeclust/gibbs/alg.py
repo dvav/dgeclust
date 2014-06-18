@@ -65,8 +65,8 @@ class GibbsSampler(object):
 
         ## sample lw and eta
         state.lw, _ = st.sample_stick(occ, state.eta)
-        # state.eta = st.sample_eta(state.lw)
-        state.eta = st.sample_eta2(state.eta, state.nact, state.lw.size)
+        state.eta = rn.rand() * 2   # st.sample_eta(state.lw)
+        # state.eta = st.sample_eta2(state.eta, state.nact, state.lw.size)
 
         ## sample pars
         args = zip(idxs, it.repeat((data, state, model.sample_posterior)))
@@ -74,21 +74,25 @@ class GibbsSampler(object):
         state.pars[~state.iact] = model.sample_pars_prior(state.lw.size - state.nact, *state.hpars)       # inactive clusters
 
         ## sample delta and z
-        z_ = rn.choice(2, state.z.shape, p=state.p); z_[:, 0] = 0  # propose z
-        delta_ = np.zeros(state.z.shape)    # propose delta
-        ee = z_ == 0
-        de = z_ == 1
-        delta_[ee] = 1 #np.exp(rn.randn(np.sum(ee)) * state.hpars[4])   # no DE
-        delta_[de] = np.exp(state.hpars[4] + rn.randn(np.sum(de)) * np.sqrt(state.hpars[5]))   # up-regulation
-        delta_[:, 0] = 1
+        nrows, ncols = state.z.shape
+        delta_space = np.exp(rn.randn(nrows, ncols-1) + np.sqrt(state.hpars[4]))
+        delta_space = np.hstack((np.ones((nrows, 1)), delta_space))
+
+        z_ = rn.choice(len(state.p), state.z.shape, p=state.p)   # propose z
+        cls = [z_ == i for i in range(len(state.p))]
+        delta_ = np.zeros(state.z.shape) # propose delta
+        for i, cl in enumerate(cls):
+            sp = np.tile(delta_space[:, [i]], (1, state.p.size))
+            delta_[cl] = sp[cl]
+
         loglik = model.compute_loglik2(data, state.delta, state)
         loglik_ = model.compute_loglik2(data, delta_, state)
         idxs = np.any(((loglik_ > loglik), (rn.rand(*state.z.shape) < np.exp(loglik_ - loglik))), 0)
-        state.z[idxs] = z_[idxs]; state.z[:, 0] = 0
-        state.delta[idxs] = delta_[idxs]; state.delta[:, 0] = 1
+        state.z[idxs] = z_[idxs]
+        state.delta[idxs] = delta_[idxs]
 
         ## sample p
-        occ, _, _, _ = ut.get_cluster_info(2, np.asarray(state.z).ravel())
+        occ, _, _, _ = ut.get_cluster_info(len(state.p), np.asarray(state.z).ravel())
         state.p = rn.dirichlet(1 + occ)
 
         ## update hyper-parameters
