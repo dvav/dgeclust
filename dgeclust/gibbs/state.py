@@ -17,7 +17,6 @@ class GibbsState(object):
         ## basic sampler state
         self.pars = pars        # model parameters
         self.lw = lw            # vector of global log-weights
-        self.u = rn.rand(d.size)
         self.p = p
         self.z = z              # matrix of level 1 cluster indicators
         self.d = d

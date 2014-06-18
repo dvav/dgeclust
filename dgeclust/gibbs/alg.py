@@ -55,16 +55,16 @@ class GibbsSampler(object):
 
         ## sample lw and u
         state.lw, _ = st.sample_stick(state.occ, state.eta)
-        state.u = rn.rand(state.d.size) * np.exp(state.lw[state.d])
+        u = rn.rand(state.d.size) * np.exp(state.lw[state.d])
 
         ## sample pars
         idxs = state.iact.nonzero()[0]
         args = zip(idxs, it.repeat((data, state, model.sample_posterior)))
         state.pars[state.iact] = pool.map(do_global_sampling, args)           # active clusters
-        state.pars[~state.iact] = model.sample_pars_prior(state.lw.size - state.nact, *state.hpars)       # inactive clusters
+        state.pars[~state.iact] = model.sample_pars_prior(state.lw.size - state.nact, *state.hpars)  # inactive clusters
 
         ## sample d
-        idxs = np.exp(state.lw) > state.u.reshape(-1, 1)
+        idxs = np.exp(state.lw) > u.reshape(-1, 1)
         ids = np.any(idxs, 0)
 
         tmp = state.pars
@@ -93,7 +93,7 @@ class GibbsSampler(object):
         z_ = rn.choice(len(state.p), state.z.shape, p=state.p)   # propose z
         z_[:, 0] = 0
         cls = [z_ == i for i in range(len(state.p))]
-        delta_ = np.zeros(state.z.shape) # propose delta
+        delta_ = np.zeros(state.z.shape)      # propose delta
         delta_[:, 0] = 1
         for i, cl in enumerate(cls):
             sp = np.tile(delta_space[:, [i]], (1, state.p.size))
