@@ -53,25 +53,39 @@ class GibbsSampler(object):
         ## update simulation time
         state.t += 1
 
+        ## sample lw and u
+        state.lw, _ = st.sample_stick(state.occ, state.eta)
+        state.u = rn.rand(state.d.size) * state.lw[state.d]
+
+        ## sample pars
+        idxs = state.iact.nonzero()[0]
+        args = zip(idxs, it.repeat((data, state, model.sample_posterior)))
+        state.pars[state.iact] = pool.map(do_global_sampling, args)           # active clusters
+        state.pars[~state.iact] = model.sample_pars_prior(state.lw.size - state.nact, *state.hpars)       # inactive clusters
+
         ## sample d
-        loglik = model.compute_loglik1(data, state)
-        logw = state.lw + loglik
+        isrt = np.argsort(state.lw)
+        ids = np.cumsum(np.exp(state.lw[isrt])) > 1 - np.min(state.u)
+        i = ids.nonzero()[0]
+        if i:
+            ids[i[0]] = False
+        idxs = np.zeros(ids.shape, dtype='bool')
+        idxs[isrt] = ids
+        idxs = ~idxs
+        tmp = state.pars
+        state.pars = state.pars[idxs]
+        logw = -np.ones((state.d.size, state.lw.size)) * np.inf
+        logw[:, idxs] = model.compute_loglik1(data, state)
+        state.pars = tmp
         logw = ut.normalize_log_weights(logw.T)
         state.d = st.sample_categorical(np.exp(logw))
 
         ## get cluster info
-        occ, state.iact, state.nact, _ = ut.get_cluster_info(state.lw.size, state.d)
-        idxs = state.iact.nonzero()[0]
+        state.occ, state.iact, state.nact, _ = ut.get_cluster_info(state.lw.size, state.d)
 
-        ## sample lw and eta
-        state.lw, _ = st.sample_stick(occ, state.eta)
-        state.eta = rn.rand() * 2   # st.sample_eta(state.lw)
+        ## update eta
+        # state.eta = st.sample_eta(state.lw[idxs])
         # state.eta = st.sample_eta2(state.eta, state.nact, state.lw.size)
-
-        ## sample pars
-        args = zip(idxs, it.repeat((data, state, model.sample_posterior)))
-        state.pars[state.iact] = pool.map(do_global_sampling, args)           # active clusters
-        state.pars[~state.iact] = model.sample_pars_prior(state.lw.size - state.nact, *state.hpars)       # inactive clusters
 
         ## sample delta and z
         nrows, ncols = state.z.shape
