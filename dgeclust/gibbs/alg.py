@@ -55,7 +55,7 @@ class GibbsSampler(object):
 
         ## sample lw and u
         state.lw, _ = st.sample_stick(state.occ, state.eta)
-        state.u = rn.rand(state.d.size) * state.lw[state.d]
+        state.u = rn.rand(state.d.size) * np.exp(state.lw[state.d])
 
         ## sample pars
         idxs = state.iact.nonzero()[0]
@@ -64,19 +64,17 @@ class GibbsSampler(object):
         state.pars[~state.iact] = model.sample_pars_prior(state.lw.size - state.nact, *state.hpars)       # inactive clusters
 
         ## sample d
-        isrt = np.argsort(state.lw)
-        ids = np.cumsum(np.exp(state.lw[isrt])) > 1 - np.min(state.u)
-        i = ids.nonzero()[0]
-        if i:
-            ids[i[0]] = False
-        idxs = np.zeros(ids.shape, dtype='bool')
-        idxs[isrt] = ids
-        idxs = ~idxs
+        idxs = np.exp(state.lw) > state.u.reshape(-1, 1)
+        ids = np.any(idxs, 0)
+
         tmp = state.pars
-        state.pars = state.pars[idxs]
-        logw = -np.ones((state.d.size, state.lw.size)) * np.inf
-        logw[:, idxs] = model.compute_loglik1(data, state)
+        state.pars = state.pars[ids]
+        loglik = -np.ones((state.d.size, state.lw.size)) * np.inf
+        loglik[:, ids] = model.compute_loglik1(data, state)
         state.pars = tmp
+
+        logw = -np.ones((state.d.size, state.lw.size)) * np.inf
+        logw[idxs] = loglik[idxs]
         logw = ut.normalize_log_weights(logw.T)
         state.d = st.sample_categorical(np.exp(logw))
 
@@ -93,8 +91,10 @@ class GibbsSampler(object):
         delta_space = np.hstack((np.ones((nrows, 1)), delta_space))
 
         z_ = rn.choice(len(state.p), state.z.shape, p=state.p)   # propose z
+        z_[:, 0] = 0
         cls = [z_ == i for i in range(len(state.p))]
         delta_ = np.zeros(state.z.shape) # propose delta
+        delta_[:, 0] = 1
         for i, cl in enumerate(cls):
             sp = np.tile(delta_space[:, [i]], (1, state.p.size))
             delta_[cl] = sp[cl]
@@ -103,7 +103,9 @@ class GibbsSampler(object):
         loglik_ = model.compute_loglik2(data, delta_, state)
         idxs = np.any(((loglik_ > loglik), (rn.rand(*state.z.shape) < np.exp(loglik_ - loglik))), 0)
         state.z[idxs] = z_[idxs]
+        state.z[:, 0] = 0
         state.delta[idxs] = delta_[idxs]
+        state.delta[:, 0] = 1
 
         ## sample p
         occ, _, _, _ = ut.get_cluster_info(len(state.p), np.asarray(state.z).ravel())
