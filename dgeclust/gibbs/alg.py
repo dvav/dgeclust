@@ -1,6 +1,7 @@
 from __future__ import division
 
 import os
+import sys
 import itertools as it
 import numpy as np
 import numpy.random as rn
@@ -67,6 +68,11 @@ class GibbsSampler(object):
         idxs = np.exp(state.lw) > u.reshape(-1, 1)
         ids = np.any(idxs, 0)
 
+        if np.sum(ids) == state.lw.size and state.t > 1:
+            print >> sys.stderr, 'Truncation level too low. If this message starts appearing repeatedly, try ' \
+                                 'increasing the value of parameter -k at the command line ...'
+
+
         tmp = state.pars
         state.pars = state.pars[ids]
         loglik = -np.ones((state.d.size, state.lw.size)) * np.inf
@@ -82,34 +88,58 @@ class GibbsSampler(object):
         state.occ, state.iact, state.nact, _ = ut.get_cluster_info(state.lw.size, state.d)
 
         ## update eta
-        # state.eta = st.sample_eta(state.lw[idxs])
-        # state.eta = st.sample_eta2(state.eta, state.nact, state.lw.size)
+        # state.eta = rn.gamma(1000, 1/1000)
+        # state.eta = st.sample_eta(state.lw[ids], a=1, b=np.sum(ids))
+        state.eta = 1 / np.sum(ids)
+        # state.eta = st.sample_eta2(state.eta, state.nact, state.d.size, a=0, b=0)
 
         ## sample delta and z
-        nrows, ncols = state.z.shape
-        delta_space = np.exp(rn.randn(nrows, ncols-1) + np.sqrt(state.hpars[4]))
-        delta_space = np.hstack((np.ones((nrows, 1)), delta_space))
-
-        z_ = rn.choice(len(state.p), state.z.shape, p=state.p)   # propose z
-        z_[:, 0] = 0
-        cls = [z_ == i for i in range(len(state.p))]
-        delta_ = np.zeros(state.z.shape)      # propose delta
-        delta_[:, 0] = 1
-        for i, cl in enumerate(cls):
-            sp = np.tile(delta_space[:, [i]], (1, state.p.size))
-            delta_[cl] = sp[cl]
-
+        patt = np.asarray([[0, 0], [0, 1]])
+        # patt = np.asarray([[0, 0, 0], [0, 0, 1], [0, 1, 0], [0, 1, 1], [0, 1, 2]])
+        # patt = np.asarray([
+        #     [0, 0, 0, 0],
+        #     [0, 0, 0, 1],
+        #     [0, 0, 1, 0],
+        #     [0, 0, 1, 1],
+        #     [0, 0, 1, 2],
+        #     [0, 1, 0, 0],
+        #     [0, 1, 0, 1],
+        #     [0, 1, 0, 2],
+        #     [0, 1, 1, 0],
+        #     [0, 1, 1, 1],
+        #     [0, 1, 1, 2],
+        #     [0, 1, 2, 0],
+        #     [0, 1, 2, 1],
+        #     [0, 1, 2, 2],
+        #     [0, 1, 2, 3]
+        # ])
+        p = np.exp([np.log(state.p[el]).sum() for el in patt])
+        zz = rn.choice(len(p), state.d.shape, p=p/np.sum(p))
+        z_ = patt[zz]
+        # z_ = rn.choice(state.p.size, state.z.shape, p=state.p)  # propose z
+        # for i in range(state.p.size):    # correct nulls
+        #     z_[np.all(z_ == i, 1), :] = 0
+        # # z_[np.all(z_ == [1, 0], 1), :] = [0, 1]
+        de = [z_ == i for i in range(state.p.size)]
+        # null = np.ones((state.d.size, 1))
+        delta_space = np.exp(rn.randn(*state.z.shape) * np.sqrt(state.hpars[4]))
+        # delta_space = np.hstack(rnds)
+        delta_ = np.zeros(state.delta.shape)      # propose delta
+        for i, el in enumerate(de):
+            if i == 0:
+                delta_[el] = 1
+            else:
+                delta_[el] = np.tile(delta_space[:, [i]], (1, state.p.size))[el]
+                # delta_[el] = np.exp(rn.randn(el.sum()) * np.sqrt(state.hpars[4]))
         loglik = model.compute_loglik2(data, state.delta, state)
         loglik_ = model.compute_loglik2(data, delta_, state)
-        idxs = np.any(((loglik_ > loglik), (rn.rand(*state.z.shape) < np.exp(loglik_ - loglik))), 0)
+        idxs = np.any(((loglik_ > loglik), (rn.rand(*loglik.shape) < np.exp(loglik_ - loglik))), 0)
         state.z[idxs] = z_[idxs]
-        state.z[:, 0] = 0
         state.delta[idxs] = delta_[idxs]
-        state.delta[:, 0] = 1
 
         ## sample p
-        occ, _, _, _ = ut.get_cluster_info(len(state.p), np.asarray(state.z).ravel())
-        state.p = rn.dirichlet(1 + occ)
+        occ, _, _, _ = ut.get_cluster_info(state.p.size, state.z.ravel())
+        state.p = rn.dirichlet(1 / len(occ) + occ)
 
         ## update hyper-parameters
         state.hpars = model.sample_hpars(state, *state.hpars)
@@ -132,7 +162,7 @@ class GibbsSampler(object):
 
         ## write c
         with open(fnames['p'], 'a') as f:
-            np.savetxt(f, np.atleast_2d(np.r_[state.t, state.p]), fmt='%d' + '\t%f' * np.size(state.p), delimiter='\t')
+            np.savetxt(f, np.atleast_2d(np.r_[state.t, state.p]), fmt='%d' + '\t%f' * state.p.size, delimiter='\t')
 
         ## write z
         with open(fnames['z'], 'w') as f:

@@ -117,7 +117,7 @@ def sample_hpars(state, *_):
     ## also do this
     de = np.log(state.delta[state.z > 0])
     v0 = st.sample_normal_var_jeffreys(np.sum(de), np.sum(de**2), de.size) if de.size > 0 else state.hpars[4]
-    # m3, v3 = st.sample_normal_mean_var_jeffreys(np.sum(de), np.sum(de**2), de.size) if de.size > 0 else state.hpars[[4, 5]]
+    # m3, v3 = st.sample_normal_mean_var_jeffreys(np.sum(de), np.sum(de**2), de.size) if de.size > 0 else state.hpars[[5, 6]]
     # m4, v4 = st.sample_normal_mean_var_jeffreys(np.sum(down), np.sum(down**2), down.size) if down.size > 0 else state.hpars[[7, 8]]
 
     ## return

@@ -39,7 +39,7 @@ class GibbsState(object):
         eta = 1
 
         p = np.tile(1/ngroups, ngroups)
-        z = rn.choice(ngroups, size=(nfeatures, ngroups), p = p)
+        z = rn.choice(p.size, (nfeatures, ngroups), p=p)   # propose z
         delta = np.ones((nfeatures, ngroups))
         t0 = 0
 
@@ -55,14 +55,13 @@ class GibbsState(object):
         pars = np.loadtxt(fnames['pars'])
         lw = np.loadtxt(fnames['lw'])
         delta = np.loadtxt(fnames['delta'])
-        p = np.loadtxt(fnames['p'])
+        p = np.loadtxt(fnames['p'])[-1, 1:]
         d = np.loadtxt(fnames['d'], dtype='uint32')
         z = np.loadtxt(fnames['z'], dtype='uint32')
-        eta = np.loadtxt(fnames['eta'])
-        eta = eta[-1, 1]
-        hpars = np.loadtxt(fnames['hpars'])
-        hpars = hpars[-1, 1:]
-        t0 = int(hpars[-1, 0])             # the last iteration of the previous simulation
+        eta = np.loadtxt(fnames['eta'])[-1, 1]
+        tmp = np.loadtxt(fnames['hpars'])
+        hpars = tmp[-1, 1:]
+        t0 = int(tmp[-1, 0])             # the last iteration of the previous simulation
 
         ## return
         return cls(pars, lw, p, z, d, eta, delta, hpars, t0)
