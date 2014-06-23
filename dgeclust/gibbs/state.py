@@ -11,13 +11,13 @@ import dgeclust.utils as ut
 class GibbsState(object):
     """Represents the state of the Gibbs sampler"""
 
-    def __init__(self, pars, lw, p, z, d, eta, delta, hpars, t0):
+    def __init__(self, pars, lw, a, z, d, eta, delta, hpars, t0):
         """Initializes state from raw data"""
 
         ## basic sampler state
         self.pars = pars        # model parameters
         self.lw = lw            # vector of global log-weights
-        self.p = p
+        self.a = a
         self.z = z              # matrix of level 1 cluster indicators
         self.d = d
         self.delta = delta
@@ -38,13 +38,13 @@ class GibbsState(object):
         d = rn.randint(0, nglobal, nfeatures)
         eta = 1
 
-        p = np.tile(1/ngroups, ngroups)
-        z = rn.choice(p.size, (nfeatures, ngroups), p=p)   # propose z
+        a = np.tile(1/ngroups, ngroups)
+        z = np.zeros((nfeatures, ngroups), dtype='int32')   # propose z
         delta = np.ones((nfeatures, ngroups))
         t0 = 0
 
         ## return
-        return cls(pars, lw, p, z, d, eta, delta, hpars, t0)
+        return cls(pars, lw, a, z, d, eta, delta, hpars, t0)
 
     ####################################################################################################################
 

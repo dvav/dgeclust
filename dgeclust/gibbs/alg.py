@@ -94,52 +94,39 @@ class GibbsSampler(object):
         # state.eta = st.sample_eta2(state.eta, state.nact, state.d.size, a=0, b=0)
 
         ## sample delta and z
-        patt = np.asarray([[0, 0], [0, 1]])
-        # patt = np.asarray([[0, 0, 0], [0, 0, 1], [0, 1, 0], [0, 1, 1], [0, 1, 2]])
-        # patt = np.asarray([
-        #     [0, 0, 0, 0],
-        #     [0, 0, 0, 1],
-        #     [0, 0, 1, 0],
-        #     [0, 0, 1, 1],
-        #     [0, 0, 1, 2],
-        #     [0, 1, 0, 0],
-        #     [0, 1, 0, 1],
-        #     [0, 1, 0, 2],
-        #     [0, 1, 1, 0],
-        #     [0, 1, 1, 1],
-        #     [0, 1, 1, 2],
-        #     [0, 1, 2, 0],
-        #     [0, 1, 2, 1],
-        #     [0, 1, 2, 2],
-        #     [0, 1, 2, 3]
-        # ])
-        p = np.exp([np.log(state.p[el]).sum() for el in patt])
-        zz = rn.choice(len(p), state.d.shape, p=p/np.sum(p))
-        z_ = patt[zz]
-        # z_ = rn.choice(state.p.size, state.z.shape, p=state.p)  # propose z
-        # for i in range(state.p.size):    # correct nulls
-        #     z_[np.all(z_ == i, 1), :] = 0
-        # # z_[np.all(z_ == [1, 0], 1), :] = [0, 1]
-        de = [z_ == i for i in range(state.p.size)]
-        # null = np.ones((state.d.size, 1))
-        delta_space = np.exp(rn.randn(*state.z.shape) * np.sqrt(state.hpars[4]))
-        # delta_space = np.hstack(rnds)
+        nfeatures, ngroups = state.z.shape
+        z_ = np.zeros((nfeatures, ngroups), dtype='int')
+
+        p = [1, state.a[1]]
+        z_[:, 1] = rn.choice(len(p), state.d.shape, p=p/sum(p))
+
+        occ = np.asarray([
+            np.sum(z_[:, [0, 1]] == 0, 1),
+            np.sum(z_[:, [0, 1]] == 1, 1),
+            np.sum(z_[:, [0, 1]] == 2, 1)
+        ], dtype='float').T
+        idxs = (np.arange(nfeatures), np.max(z_, 1) + 1)
+        occ[idxs] = state.a[idxs[1]]
+        p = occ / np.sum(occ, 1).reshape(-1, 1)
+        z_[:, 2] = [rn.choice(len(p), 1, p=p) for p in p]
+
+        de = [z_ == i for i in range(len(state.a))]
         delta_ = np.zeros(state.delta.shape)      # propose delta
         for i, el in enumerate(de):
             if i == 0:
                 delta_[el] = 1
             else:
-                delta_[el] = np.tile(delta_space[:, [i]], (1, state.p.size))[el]
-                # delta_[el] = np.exp(rn.randn(el.sum()) * np.sqrt(state.hpars[4]))
-        loglik = model.compute_loglik2(data, state.delta, state)
-        loglik_ = model.compute_loglik2(data, delta_, state)
+                rnds = np.exp(rn.randn(nfeatures, 1) * np.sqrt(state.hpars[4]))
+                delta_[el] = np.tile(rnds, (1, delta_.shape[1]))[el]
+        loglik = model.compute_loglik2(data, state.delta, state).sum(1)
+        loglik_ = model.compute_loglik2(data, delta_, state).sum(1)
         idxs = np.any(((loglik_ > loglik), (rn.rand(*loglik.shape) < np.exp(loglik_ - loglik))), 0)
         state.z[idxs] = z_[idxs]
         state.delta[idxs] = delta_[idxs]
 
         ## sample p
-        occ, _, _, _ = ut.get_cluster_info(state.p.size, state.z.ravel())
-        state.p = rn.dirichlet(1 / len(occ) + occ)
+        occ, _, _, _ = ut.get_cluster_info(state.a.size, state.z[:, 1:].ravel())
+        state.a = rn.dirichlet(1 / occ.size + occ)
 
         ## update hyper-parameters
         state.hpars = model.sample_hpars(state, *state.hpars)
@@ -162,7 +149,7 @@ class GibbsSampler(object):
 
         ## write c
         with open(fnames['p'], 'a') as f:
-            np.savetxt(f, np.atleast_2d(np.r_[state.t, state.p]), fmt='%d' + '\t%f' * state.p.size, delimiter='\t')
+            np.savetxt(f, np.atleast_2d(np.r_[state.t, state.a]), fmt='%d' + '\t%f' * state.a.size, delimiter='\t')
 
         ## write z
         with open(fnames['z'], 'w') as f:
