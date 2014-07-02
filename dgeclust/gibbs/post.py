@@ -16,7 +16,7 @@ def _compute_pvals(args):
     sample_name, (indir, igroup1, igroup2) = args
 
     ## read sample and identify differentially expressed features
-    z = np.loadtxt(os.path.join(indir, str(sample_name)), dtype='uint32').T
+    z = np.loadtxt(os.path.join(indir, str(sample_name)), dtype='int').T
     p = z[igroup1] == z[igroup2]
 
     ## return
@@ -30,7 +30,7 @@ def compute_pvals(indir, fname, t0, tend, dt, group1, group2, pool):
 
     ## read and sort contents of input directory
     sample_names = os.listdir(indir)
-    sample_names = np.sort(np.asarray(sample_names, dtype='uint32'))      # ordered list of sample file names
+    sample_names = np.sort(np.asarray(sample_names, dtype='int'))      # ordered list of sample file names
 
     ## keep every dt-th sample between t0 and tend
     idxs = (sample_names >= t0) & (sample_names <= tend) & (np.arange(sample_names.size) % dt == 0)
@@ -65,7 +65,7 @@ def compute_pvals(indir, fname, t0, tend, dt, group1, group2, pool):
 
     ## return
     return pd.DataFrame(np.vstack((post, fdr)).T, columns=('Posteriors', 'FDR'),
-                        index=feature_names).sort(columns = 'FDR'), nsamples
+                        index=feature_names), nsamples
 
 ########################################################################################################################
 
@@ -75,7 +75,7 @@ def _compute_similarity_matrix(args):
     sample_name, (indir, compare_features) = args
 
     ## read sample
-    z = np.loadtxt(os.path.join(indir, str(sample_name)), dtype='uint32')
+    z = np.loadtxt(os.path.join(indir, str(sample_name)), dtype='int').T
     z = z.T if compare_features is True else z
 
     ## calculate un-normalised similarity matrix
@@ -94,7 +94,7 @@ def compute_similarity_matrix(indir, t0, tend, dt, compare_features, pool):
 
     ## read and sort contents of path
     sample_names = os.listdir(indir)
-    sample_names = np.sort(np.asarray(sample_names, dtype='uint32'))      # ordered list of sample file names
+    sample_names = np.sort(np.asarray(sample_names, dtype='int'))      # ordered list of sample file names
 
     ## keep every dt-th sample between t0 and tend
     idxs = (sample_names >= t0) & (sample_names <= tend) & (np.arange(sample_names.size) % dt == 0)

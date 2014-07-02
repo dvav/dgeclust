@@ -1,10 +1,8 @@
 from __future__ import division
 
-import collections as cl
 import numpy as np
 import scipy.misc as ms
 import matplotlib.pylab as pl
-import pandas as pd
 
 ########################################################################################################################
 
@@ -46,39 +44,38 @@ def normalize_log_weights(lw):
 ########################################################################################################################
 
 
-def plot_fitted_model(sample, res, data, model, xmin=-1, xmax=12, npoints=1000, nbins=100, log_scale=True, epsilon=0.5):
+def plot_fitted_model(sample, state, data, model, xmin=-1, xmax=12, npoints=1000, nbins=100, epsilon=0.5):
     """Computes the fitted model"""
 
     ## fetch group
-    group = [k for k, v in data.groups.items() if sample in v][0]
+    group = [i for i, item in enumerate(data.groups.items()) if sample in item[1]][0]
 
-    ## compute cluster occupancies
-    pars = res.pars[res.d]
-    delta = res.delta[:, group]
-    occ, iact, _, _ = get_cluster_info(len(res.pars), res.d[group].values)
-    occ = occ[iact]                     # keep occupancies of active clusters, only
+    ## fetch clusters
+    z = state.z
+    delta = state.delta[:, [group]]
+    pars = state.pars
+
+    occ, _ = compute_cluster_occupancies(len(pars), z)
+
+    ## fetch data
+    counts = data.counts[sample].values.astype('float')
+    counts[counts < 1] = epsilon
+    counts = np.log(counts)
+
+    lib_size = data.lib_sizes[sample].values.ravel()
 
     ## compute fitted model
     x = np.reshape(np.linspace(xmin, xmax, npoints), (-1, 1))
-    state = cl.namedtuple('FakeGibbsState', 'pars', 'delta')(res.pars[iact].values, res.delta[group].values) # wrapper object
-    counts = data.counts[sample]
-    lib_sizes = data.lib_sizes[sample]
-    if log_scale is True:
-        xx = np.exp(x)
-        fakedata = cl.namedtuple('FakeCountData', 'counts, groups, lib_sizes')(
-            pd.DataFrame(xx), {0: [0]}, pd.DataFrame([lib_sizes]))
-        y = xx * np.exp(model.compute_loglik(0, fakedata, state).sum(0))
-        counts[counts < 1] = epsilon
-        counts = np.log(counts)
-    else:
-        fakedata = cl.namedtuple('FakeCountData', 'counts, groups, lib_sizes')(
-            pd.DataFrame(x), {0: [0]}, pd.DataFrame([lib_sizes]))
-        y = np.exp(model.compute_loglik(0, fakedata, state).sum(0))
-    y = y * occ / len(res.zz)                             # notice the normalisation of y
+    xx = np.exp(x)
+    y = xx * np.exp(model.compute_loglik(([xx[:, :, np.newaxis]], [lib_size]), pars[z], delta).sum(-1))
+
+    ## groups
+    idxs = np.nonzero(occ)[0]
+    yg = np.asarray([np.sum(y[:, z == idx], 1) / z.size for idx in idxs]).T
 
     ## plot
     pl.hist(counts, nbins, histtype='stepfilled', linewidth=0, normed=True, color='gray')
-    pl.plot(x, y, 'k', x, np.sum(y, 1), 'r')
+    pl.plot(x, yg, 'k', x, yg.sum(1), 'r')
 
     ## return
     return x, y
@@ -86,22 +83,27 @@ def plot_fitted_model(sample, res, data, model, xmin=-1, xmax=12, npoints=1000, 
 ########################################################################################################################
 
 
-def compute_ra_plot(samples1, samples2, epsilon=0.5):
+def plot_ra(x, y, idxs=None):
     """Computes the RA plot of two groups of samples. Use the returned arrays to actually plot the diagram"""
 
-    ## set zero elements to epsilon
-    samples1[samples1 < 1] = epsilon
-    samples2[samples2 < 1] = epsilon
-
     ## compute log2 values
-    l1 = np.log2(samples1)
-    l2 = np.log2(samples2)
+    l1 = np.log2(x)
+    l2 = np.log2(y)
 
     ## compute A and R
-    r = l2 - l1
-    a = (l2 + l1) * 0.5
+    r = l1 - l2
+    a = (l1 + l2) * 0.5
+
+    h = pl.figure()
+    if idxs is None:
+        pl.plot(a, r, '.k', markersize=2)
+    else:
+        pl.plot(a[~idxs], r[~idxs], '.k', markersize=2)
+        pl.plot(a[idxs], r[idxs], '.r')
+
+    pl.plot(pl.gca().get_xlim(), [0, 0], '--k')
 
     ## return
-    return r, a
+    return h
 
 ########################################################################################################################

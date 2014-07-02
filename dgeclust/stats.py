@@ -81,7 +81,7 @@ def sample_normal_mean_var(s1, s2, ndata, mu=0, k=0, shape=0, rate=0):
 
     ## update mu, k, shape, rate
     avg = s1 / ndata
-    dot = s2 - 2 * avg * s1 + ndata * avg * avg
+    dot = s2 - 2 * avg * s1 + ndata * avg * avg + 1e-12     # do not let dot become zero
 
     mu_ = (k * mu + s1) / (k + ndata)
     k_ = k + ndata
@@ -103,7 +103,7 @@ def sample_normal_mean_var_jeffreys(s1, s2, ndata):
 
     ## update mu, k, shape, rate
     avg = s1 / ndata
-    dot = s2 - 2 * avg * s1 + ndata * avg * avg
+    dot = s2 - 2 * avg * s1 + ndata * avg * avg + 1e-12     # do not let dot become zero
 
     ## sample var and mean
     mean = st.t.rvs(ndata + 1, avg, dot / (ndata*ndata + ndata))
@@ -120,7 +120,7 @@ def sample_normal_var_jeffreys(s1, s2, ndata):
 
     ## update mu, k, shape, rate
     avg = s1 / ndata
-    dot = s2 - 2 * avg * s1 + ndata * avg * avg
+    dot = s2 - 2 * avg * s1 + ndata * avg * avg + 1e-12     # do not let dot become zero
 
     ## sample var and mean
     var = 1 / rn.gamma(ndata * 0.5, 2 / dot)
@@ -129,6 +129,7 @@ def sample_normal_var_jeffreys(s1, s2, ndata):
     return var
 
 ########################################################################################################################
+
 
 def sample_gamma_shape_scale(suma, logsuma, ndata, shape, scale, lp0=0, q0=0, r0=0, s0=0):
     """Samples the shape and scale of the gamma distribution from their posterior"""
@@ -230,7 +231,7 @@ def sample_stick(cluster_occupancies, eta):
 ########################################################################################################################
 
 
-def sample_eta(lw, a=1, b=0):
+def sample_eta_ishwaran(lw, a=0, b=0):
     """Samples the concentration parameter eta given a vector of mixture log-weights"""
 
     ## return
@@ -239,7 +240,7 @@ def sample_eta(lw, a=1, b=0):
 ########################################################################################################################
 
 
-def sample_eta2(eta, nact, n0, a=1, b=0):
+def sample_eta_west(eta, nact, n0, a=0, b=0):
     """Samples the concentration parameter eta"""
 
     ## compute x, r and p
@@ -248,10 +249,23 @@ def sample_eta2(eta, nact, n0, a=1, b=0):
     r = (a + nact - 1) / (n0 * (b - lx))
     p = r / (r + 1)
 
-    ## update eta
-    eta = rn.gamma(a + nact, 1 / (b - lx)) if rn.rand() < p else rn.gamma(a + nact - 1, 1 / (b - lx))
+    ## return
+    return rn.gamma(a + nact, 1 / (b - lx)) if rn.rand() < p else rn.gamma(a + nact - 1, 1 / (b - lx))
+
+########################################################################################################################
+
+
+def sample_eta(eta, nact, n0, a=0, b=0):
+    """Samples the concentration parameter eta"""
+
+    ## proposal
+    eta_ = np.exp(rn.randn() * 0.01)
+
+    ## posterior densities
+    lp = sp.gammaln(eta) - sp.gammaln(eta + n0) + (nact + a - 1) * np.log(eta) - eta * b
+    lp_ = sp.gammaln(eta_) - sp.gammaln(eta_ + n0) + (nact + a - 1) * np.log(eta_) - eta_ * b
 
     ## return
-    return eta
+    return eta_ if lp_ > lp or rn.rand() < np.exp(lp_ - lp) else eta
 
 ########################################################################################################################

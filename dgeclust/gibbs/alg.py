@@ -56,136 +56,75 @@ class GibbsSampler(object):
 
         ## sample lw and u
         state.lw, _ = st.sample_stick(state.occ, state.eta)
-        u = rn.rand(state.d.size) * np.exp(state.lw[state.d])
+        u = rn.rand(state.z.size) * np.exp(state.lw[state.z])
 
         ## sample pars
         idxs = state.iact.nonzero()[0]
         args = zip(idxs, it.repeat((data, state, model.sample_posterior)))
-        state.pars[state.iact] = pool.map(do_global_sampling, args)           # active clusters
-        state.pars[~state.iact] = model.sample_pars_prior(state.lw.size - state.nact, *state.hpars)  # inactive clusters
+        state.pars[state.iact] = pool.map(_do_global_sampling, args)                                # active clusters
+        state.pars[~state.iact] = model.sample_pars_prior(state.lw.size - state.nact, state.hpars)  # inactive clusters
 
-        ## sample d
-        idxs = np.exp(state.lw) > u.reshape(-1, 1)
-        ids = np.any(idxs, 0)
-
-        if np.sum(ids) == state.lw.size and state.t > 1:
-            print >> sys.stderr, 'Truncation level too low. If this message starts appearing repeatedly, try ' \
-                                 'increasing the value of parameter -k at the command line ...'
-
-
-        tmp = state.pars
-        state.pars = state.pars[ids]
-        loglik = -np.ones((state.d.size, state.lw.size)) * np.inf
-        loglik[:, ids] = model.compute_loglik1(data, state)
-        state.pars = tmp
-
-        logw = -np.ones((state.d.size, state.lw.size)) * np.inf
-        logw[idxs] = loglik[idxs]
-        logw = ut.normalize_log_weights(logw.T)
-        state.d = st.sample_categorical(np.exp(logw))
+        ## sample z
+        state.z, ids = _sample_z(data, state, model, u)
 
         ## get cluster info
-        state.occ, state.iact, state.nact, _ = ut.get_cluster_info(state.lw.size, state.d)
+        state.occ, state.iact, state.nact, _ = ut.get_cluster_info(state.lw.size, state.z)
+        state.ntot = np.sum(ids)
 
         ## update eta
-        # state.eta = rn.gamma(1000, 1/1000)
-        # state.eta = st.sample_eta(state.lw[ids], a=1, b=np.sum(ids))
-        state.eta = 1 / np.sum(ids)
-        # state.eta = st.sample_eta2(state.eta, state.nact, state.d.size, a=0, b=0)
+        # state.eta = max(1e-6, 0.97**state.t)
+        # state.eta = st.sample_eta_west(state.eta, state.nact, state.z.size, b=state.z.size)
+        # state.eta = st.sample_eta_ishwaran(state.lw[ids], b=state.z.size)
 
-        ## sample delta and z
-        nfeatures, ngroups = state.z.shape
-        z_ = np.zeros((nfeatures, ngroups), dtype='int')
+        ## sample c and delta
+        state.c, state.delta = _sample_c_delta(data, state, model)
 
-        p = [1, state.a[1]]
-        z_[:, 1] = rn.choice(len(p), state.d.shape, p=p/sum(p))
+        ## compute p
+        occ, _, _, _ = ut.get_cluster_info(state.c.shape[1], state.c.ravel())
+        state.p = occ / np.sum(occ)
 
-        occ = np.asarray([
-            np.sum(z_[:, [0, 1]] == 0, 1),
-            np.sum(z_[:, [0, 1]] == 1, 1),
-            np.sum(z_[:, [0, 1]] == 2, 1)
-        ], dtype='float').T
-        idxs = (np.arange(nfeatures), np.max(z_, 1) + 1)
-        occ[idxs] = state.a[idxs[1]]
-        p = occ / np.sum(occ, 1).reshape(-1, 1)
-        z_[:, 2] = [rn.choice(len(p), 1, p=p) for p in p]
+        ## update zeta
+        # state.zeta = st.sample_eta_west(state.zeta, np.sum(occ > 0), np.sum(occ))
 
-        de = [z_ == i for i in range(len(state.a))]
-        delta_ = np.zeros(state.delta.shape)      # propose delta
-        for i, el in enumerate(de):
-            if i == 0:
-                delta_[el] = 1
-            else:
-                rnds = np.exp(rn.randn(nfeatures, 1) * np.sqrt(state.hpars[4]))
-                delta_[el] = np.tile(rnds, (1, delta_.shape[1]))[el]
-        loglik = model.compute_loglik2(data, state.delta, state).sum(1)
-        loglik_ = model.compute_loglik2(data, delta_, state).sum(1)
-        idxs = np.any(((loglik_ > loglik), (rn.rand(*loglik.shape) < np.exp(loglik_ - loglik))), 0)
-        state.z[idxs] = z_[idxs]
-        state.delta[idxs] = delta_[idxs]
+        ## compute x
+        ndown = np.sum(np.logical_and(state.c > 0, state.delta < 1))
+        nup = np.sum(np.logical_and(state.c > 0, state.delta > 1))
+        occ = np.asarray([ndown, nup])
 
-        ## sample p
-        occ, _, _, _ = ut.get_cluster_info(state.a.size, state.z[:, 1:].ravel())
-        state.a = rn.dirichlet(1 / occ.size + occ)
+        # state.x = occ / np.sum(occ)
+        state.x = rn.dirichlet(1 / occ.size + occ)
 
-        ## update hyper-parameters
-        state.hpars = model.sample_hpars(state, *state.hpars)
+        ## sample hyper-parameters
+        state.hpars = model.sample_hpars(state.pars[state.iact], state.c, state.delta, state.hpars)
 
     ####################################################################################################################
 
     def save(self):
-        """Saves the state of the Gibbs sampler to disk"""
+        """Saves the state of the Gibbs sampler"""
 
         state = self.state
         fnames = self.fnames
 
-        ## write pars
-        with open(fnames['pars'], 'w') as f:
-            np.savetxt(f, state.pars, fmt='%f', delimiter='\t')
+        ## save state
+        state.save(fnames['state'])
 
-        ## write lw
-        with open(fnames['lw'], 'w') as f:
-            np.savetxt(f, state.lw, fmt='%f', delimiter='\t')
+        ## save chains
+        pars = np.hstack([state.t, state.ntot, state.nact, state.zeta, state.eta, state.x, state.p, state.hpars])
+        with open(fnames['pars'], 'a') as f:
+            np.savetxt(f, np.atleast_2d(pars),
+                       fmt='%d\t%d\t%d\t%f\t%f\t%f\t%f' + '\t%f' * (state.p.size+state.hpars.size),
+                       delimiter='\t')
 
-        ## write c
-        with open(fnames['p'], 'a') as f:
-            np.savetxt(f, np.atleast_2d(np.r_[state.t, state.a]), fmt='%d' + '\t%f' * state.a.size, delimiter='\t')
-
-        ## write z
-        with open(fnames['z'], 'w') as f:
-            np.savetxt(f, state.z, fmt='%d', delimiter='\t')
-
-        ## write d
-        with open(fnames['d'], 'w') as f:
-            np.savetxt(f, state.d, fmt='%d', delimiter='\t')
-
-        ## write log-likelihood and log-prior density
-        with open(fnames['delta'], 'w') as f:
-            np.savetxt(f, state.delta, fmt='%f')
-
-        ## write eta's
-        with open(fnames['eta'], 'a') as f:
-            np.savetxt(f, np.atleast_2d(np.r_[state.t, state.eta]), fmt='%d\t%f')
-
-        ## write nact's
-        with open(fnames['nact'], 'a') as f:
-            np.savetxt(f, np.atleast_2d(np.r_[state.t, state.nact]), fmt='%d\t%d')
-
-        ## write hpars
-        with open(fnames['hpars'], 'a') as f:
-            np.savetxt(f, np.atleast_2d(np.r_[state.t, state.hpars]),
-                       fmt='%d' + '\t%f' * np.size(state.hpars))
-
-        ## write zz
+        ## write cc
         if (state.t > self.burnin) and (self.nlog > 0) and not (state.t % self.nlog):
-            with open(os.path.join(fnames['zz'], str(state.t)), 'w') as f:
-                np.savetxt(f, state.z, fmt='%d', delimiter='\t')
+            with open(os.path.join(fnames['cc'], str(state.t)), 'w') as f:
+                np.savetxt(f, state.c, fmt='%d', delimiter='\t')
 
 ########################################################################################################################
 
 
-def do_global_sampling(args):
-    """Samples the global cluster centers of the HDPMM"""
+def _do_global_sampling(args):
+    """Samples the gene-wise cluster centers of the DP"""
 
     ## read arguments
     idx, (data, state, sample_posterior) = args
@@ -195,5 +134,83 @@ def do_global_sampling(args):
 
     ## return
     return pars
+
+########################################################################################################################
+
+
+def _sample_z(data, state, model, u):
+    """Samples gene-specific indicator variables"""
+
+    ## fetch indices of sufficient clusters
+    idxs = np.exp(state.lw) > u.reshape(-1, 1)
+    idxs2 = np.any(idxs, 0)
+
+    if state.t > 1 and np.sum(idxs2) == state.lw.size:
+        print >> sys.stderr, 'Maximum number of clusters ({0}) is too low. If this message persists, try ' \
+                             'increasing the value of parameter -k at the command line ...'.format(state.lw.size)
+
+    ## compute log-likelihoods
+    loglik = -np.ones((state.z.size, state.lw.size)) * np.inf
+    loglik[:, idxs2] = model.compute_loglik(data, state.pars[idxs2][:, np.newaxis, :], state.delta).sum(-1).T
+
+    ## compute log-weights
+    logw = -np.ones(loglik.shape) * np.inf
+    logw[idxs] = loglik[idxs]
+    logw = ut.normalize_log_weights(logw.T)
+
+    ## return z
+    return st.sample_categorical(np.exp(logw)), idxs2
+
+
+########################################################################################################################
+
+
+def _sample_c_delta(data, state, model):
+    """Propose matrix of indicators c and corresponding delta"""
+
+    ##
+    c, delta = state.c, state.delta
+
+    ##
+    c_ = _propose_c(state.zeta, *state.c.shape)
+    delta_ = model.sample_delta_prior(c_, state.hpars)
+
+    ##
+    loglik = model.compute_loglik(data, state.pars[state.z], state.delta).sum(-1)
+    loglik_ = model.compute_loglik(data, state.pars[state.z], delta_).sum(-1)
+
+    ##
+    idxs = np.any(((loglik_ > loglik), (rn.rand(*loglik.shape) < np.exp(loglik_ - loglik))), 0)
+    c[idxs] = c_[idxs]
+    delta[idxs] = delta_[idxs]
+
+    ## return
+    return c, delta
+
+########################################################################################################################
+
+
+def _propose_c(zeta, nfeatures, ngroups):
+    """Propose c using Polya urn scheme"""
+
+    ##
+    c = np.zeros((nfeatures, ngroups), dtype='int')
+
+    ##
+    w = np.asarray([1, zeta])
+    c[:, 1] = rn.choice(w.size, nfeatures, p=w / np.sum(w))
+
+    ##  !!! DOUBLE  CHECK THIS !!!!
+    if ngroups > 2:
+        for i in range(2, ngroups):
+            occ = [c[:, :i] == j for j in range(i+1)]
+            occ = np.sum(occ, 2, dtype='float').T
+            idxs = (range(nfeatures), np.max(c, 1) + 1)
+            occ[idxs] = zeta
+            w = occ / np.sum(occ, 1).reshape(-1, 1)
+            c[:, i] = st.sample_categorical(w.T)
+
+    ## return
+    return c
 
 ########################################################################################################################

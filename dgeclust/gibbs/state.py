@@ -1,8 +1,11 @@
 from __future__ import division
 
+import pickle as pkl
+
 import numpy as np
 import numpy.random as rn
 
+import dgeclust.config as cfg
 import dgeclust.utils as ut
 
 ########################################################################################################################
@@ -11,59 +14,72 @@ import dgeclust.utils as ut
 class GibbsState(object):
     """Represents the state of the Gibbs sampler"""
 
-    def __init__(self, pars, lw, a, z, d, eta, delta, hpars, t0):
+    def __init__(self, pars, lw, eta, z, delta, c, zeta, p, x, hpars, t0):
         """Initializes state from raw data"""
 
         ## basic sampler state
-        self.pars = pars        # model parameters
-        self.lw = lw            # vector of global log-weights
-        self.a = a
-        self.z = z              # matrix of level 1 cluster indicators
-        self.d = d
-        self.delta = delta
-        self.eta = eta
-        self.hpars = hpars      # vector of hyper-parameters
+        self.pars = pars        # cluster centers
+        self.lw = lw            # vector of log-weights
+        self.eta = eta          # concentration parameter
+        self.z = z              # vector of gene-specific indicator variables
+
+        self.occ, self.iact, self.nact, _ = ut.get_cluster_info(self.lw.size, self.z)  # gene-wise cluster info
+        self.ntot = lw.size
+
+        self.delta = delta      # matrix of fold-changes
+        self.c = c              # matrix of gene- and group-specific indicator variables
+        self.zeta = zeta        # concentration parameter
+        self.p = p              # gene- and group-specific relative occupancies
+        self.x = x              # down- and up-regulation probabilities
+        self.hpars = hpars      # vector of model hyper-parameters (other than concentration parameters)
         self.t = t0             # the current iteration
 
-        self.occ, self.iact, self.nact, _ = ut.get_cluster_info(self.lw.size, self.d)
+    ####################################################################################################################
+
+    def save(self, fname=None):
+        """Save the state of the Gibbs sampler"""
+
+        fname = cfg.fnames['state'] if fname is None else fname
+
+        with open(fname, 'wb') as f:
+            pkl.dump(self, f)
 
     ####################################################################################################################
 
     @classmethod
-    def random(cls, nfeatures, ngroups, sample_pars_prior, hpars, nglobal):
+    def random(cls, nfeatures, ngroups, sample_pars_prior, hpars, nclusters_max):
         """Initialises state randomly"""
 
-        pars = sample_pars_prior(nglobal, *hpars)
-        lw = np.tile(-np.log(nglobal), nglobal)
-        d = rn.randint(0, nglobal, nfeatures)
-        eta = 1
-
-        a = np.tile(1/ngroups, ngroups)
-        z = np.zeros((nfeatures, ngroups), dtype='int32')   # propose z
-        delta = np.ones((nfeatures, ngroups))
         t0 = 0
 
+        ##
+        pars = sample_pars_prior(nclusters_max, hpars)
+        lw = np.tile(-np.log(nclusters_max), nclusters_max)
+        z = rn.choice(nclusters_max, nfeatures, p=np.exp(lw))
+        eta = 1e-6
+
+        ##
+        delta = np.ones((nfeatures, ngroups))
+        c = np.zeros((nfeatures, ngroups), dtype='int')
+        zeta = 1
+        p = np.tile(1 / ngroups, ngroups)
+        x = np.tile(1 / 2, 2)
+
         ## return
-        return cls(pars, lw, a, z, d, eta, delta, hpars, t0)
+        return cls(pars, lw, eta, z, delta, c, zeta, p, x, hpars, t0)
 
     ####################################################################################################################
 
     @classmethod
-    def load(cls, fnames):
+    def load(cls, fname=None):
         """Initializes state from file"""
 
-        pars = np.loadtxt(fnames['pars'])
-        lw = np.loadtxt(fnames['lw'])
-        delta = np.loadtxt(fnames['delta'])
-        p = np.loadtxt(fnames['p'])[-1, 1:]
-        d = np.loadtxt(fnames['d'], dtype='uint32')
-        z = np.loadtxt(fnames['z'], dtype='uint32')
-        eta = np.loadtxt(fnames['eta'])[-1, 1]
-        tmp = np.loadtxt(fnames['hpars'])
-        hpars = tmp[-1, 1:]
-        t0 = int(tmp[-1, 0])             # the last iteration of the previous simulation
+        fname = cfg.fnames['state'] if fname is None else fname
+
+        with open(fname, 'rb') as f:
+            state = pkl.load(f)
 
         ## return
-        return cls(pars, lw, p, z, d, eta, delta, hpars, t0)
+        return state
 
     ####################################################################################################################

@@ -10,24 +10,27 @@ import collections as cl
 class CountData(object):
     """Represents a counts data set"""
 
-    def __init__(self, counts, groups, lib_sizes):
+    def __init__(self, counts, lib_sizes, groups):
         """Initialise state from raw data"""
 
         self.counts = counts
-        self.groups = groups
         self.lib_sizes = lib_sizes
+        self.groups = groups
 
     ####################################################################################################################
 
     @classmethod
-    def load(cls, file_name, norm_method='Quantile', groups=None):
+    def load(cls, file_name, norm_method='Quantile', groups=None, samples=None):
         """Reads a data file containing a matrix of count data"""
 
         ## read data file
-        counts = pd.read_table(file_name, index_col=0)  # .astype(np.uint32)
+        counts = pd.read_table(file_name, index_col=0, usecols=samples)  # .astype(np.uint32)
 
         ## group information
         groups = counts.columns.tolist() if groups is None else groups
+        if len(groups) != len(counts.columns.tolist()):
+            raise Exception("The list of groups is not the same length as the list of samples!")
+
         labels = cl.OrderedDict.fromkeys(groups).keys()     # get unique elements, preserve order
         groups = [[col for col, group in zip(counts.columns, groups) if label == group] for label in labels]
         groups = cl.OrderedDict(zip(labels, groups))
@@ -43,7 +46,7 @@ class CountData(object):
         lib_sizes = pd.DataFrame(lib_sizes, index=counts.columns, columns=['Library sizes']).T
 
         ## return
-        return cls(counts, groups, lib_sizes)
+        return cls(counts, lib_sizes, groups)
 
 
 ########################################################################################################################
@@ -52,7 +55,7 @@ class CountData(object):
 def estimate_lib_sizes_quantile(counts, quant=75):
     """Estimate library sizes using the quantile method"""
 
-    ## Consider only features smaller that the 75% quantile of non-zero counts
+    ## Consider only features smaller that the quant quantile of non-zero counts
     counts = [sample[sample > 0] for sample in counts.T]
     counts = [sample[sample <= np.percentile(sample, quant)] for sample in counts]
     lib_sizes = [sample.sum() for sample in counts]

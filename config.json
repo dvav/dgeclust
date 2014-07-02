@@ -9,50 +9,13 @@
                     "v1": 1,
                     "m2": 0,
                     "v2": 1,
-                    "v0": 1
-                }
-			},
-			"NegativeBinomial2": {
-			    "pars": ["phi", "p"],
-                "hpars": {
-                    "m": 0,
-                    "v": 2
-                }
-			}, 
-			"Poisson": {
-				"pars": ["rate"],
-                "hpars": {
-                    "shape": 0.5,
-                    "scale": 1
-                }
-			}, 
-			"BetaBinomial": {
-			    "pars": ["alpha", "beta"],
-                "hpars": {
-                    "m1": 0,
-                    "v1": 2,
-                    "m2": 0,
-                    "v2": 2
-			    }
-			},
-			"Binomial": {
-                "pars": ["p"],
-			    "hpars": {
-                    "alpha": 0.5,
-                    "beta": 0.5
-                }
-			},
-			"Normal": {
-                "pars": ["mean", "var"],
-				"hpars": {
-                    "mu": 0,
-                    "k": 1,
-                    "shape": 0.5,
-                    "rate": 1
+                    "a0": 0,
+                    "s0": 1
                 }
 			}
-		}
+        }
 	},
+    
 	"norm": {
 	    "default": "Quantile",
 	    "options": {
@@ -61,35 +24,31 @@
             "DESeq": ""
         }
 	},
+    
     "fnames": {
         "clust": "_clust",
 		"pvals": "_pvals.txt",
 		"simmat": "_simmat.txt",
         "config": "config.json",
+        "state": "state.pkl",
         "pars": "pars.txt",
-        "lw": "lw.txt",
-        "d": "d.txt",
-        "p": "p.txt",
-        "delta": "delta.txt",
-        "z": "z.txt",
-        "hpars": "hpars.txt",
-		"eta": "eta.txt",
-		"nact": "nact.txt",
-		"zz": "zz"
+        "cc": "cc"
     },
+    
     "clust": {
         "niters": 10000,
         "burnin": 0,
         "nlog": 1,
-		"nglobal": 100,
-		"nlocal": 100,
+		"nclusters_max": 100,
 		"extend": false
     },
+    
     "post": {
         "t0": 0,
         "tend": 10000,
         "dt": 1,
 		"compareFeatures": false
     },
+    
 	"nthreads": 0
 }

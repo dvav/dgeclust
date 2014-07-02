@@ -24,7 +24,7 @@ parser.add_argument('-r', type=int, dest='nthreads', help='number of threads', d
 args = parser.parse_args()
 
 args.nthreads = args.nthreads if args.nthreads > 0 else mp.cpu_count()
-args.zz = os.path.join(args.indir, cfg.fnames['zz'])       # input directory
+args.cc = os.path.join(args.indir, cfg.fnames['cc'])       # input directory
 args.config = os.path.join(args.indir, cfg.fnames['config'])   # includes config info
 
 ########################################################################################################################
@@ -33,9 +33,9 @@ args.config = os.path.join(args.indir, cfg.fnames['config'])   # includes config
 pool = mp.Pool(processes=args.nthreads)
 
 ## compute p values
-pvals, nsamples = post.compute_pvals(args.zz, args.config, args.t0, args.tend, args.dt,
+pvals, nsamples = post.compute_pvals(args.cc, args.config, args.t0, args.tend, args.dt,
                                      args.group1, args.group2, pool)
-print >> sys.stderr, '{0} samples processed from directory "{1}"'.format(nsamples, args.zz)
+print >> sys.stderr, '{0} samples processed from directory "{1}"'.format(nsamples, args.cc)
 
 
 ## save pvals to output file

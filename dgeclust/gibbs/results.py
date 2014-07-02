@@ -7,6 +7,7 @@ import collections as cl
 import numpy as np
 import pandas as pd
 
+from dgeclust.gibbs.state import GibbsState
 import dgeclust.config as cfg
 
 ########################################################################################################################
@@ -15,19 +16,15 @@ import dgeclust.config as cfg
 class GibbsOutput(object):
     """Represents the output of the Gibbs sampler"""
 
-    def __init__(self, hpars, eta, nact, pars, lw, c, z, zz, lu, lp):
+    def __init__(self, state, nclust, conc, x, p, hpars):
         """Initialise from raw data"""
-        self.hpars = hpars
-        self.eta = eta
-        self.nact = nact
-        self.pars = pars
-        self.lw = lw
-        self.c = c
-        self.z = z
-        self.zz = zz
-        self.lu = lu
-        self.lp = lp
 
+        self.state = state
+        self.nclust = nclust
+        self.conc = conc
+        self.x = x
+        self.p = p
+        self.hpars = hpars
 
     ####################################################################################################################
 
@@ -35,42 +32,25 @@ class GibbsOutput(object):
     def load(cls, indir):
         """Reads the results of a previously executed simulation from the disk"""
 
-        ## read output
-        hpars = np.loadtxt(os.path.join(indir, cfg.fnames['hpars']))
-        eta = np.loadtxt(os.path.join(indir, cfg.fnames['eta']))
-        nact = np.loadtxt(os.path.join(indir, cfg.fnames['nact']), dtype='uint32')
+        ## read state and pars
+        state = GibbsState.load(os.path.join(indir, cfg.fnames['state']))
         pars = np.loadtxt(os.path.join(indir, cfg.fnames['pars']))
-        c = np.loadtxt(os.path.join(indir, cfg.fnames['c']), dtype='uint32')
-        z = np.loadtxt(os.path.join(indir, cfg.fnames['z']), dtype='uint32')
-        lw = np.loadtxt(os.path.join(indir, cfg.fnames['lw']))
-        lu = np.loadtxt(os.path.join(indir, cfg.fnames['lu']))
-        lp = np.loadtxt(os.path.join(indir, cfg.fnames['lp']))
-
-        zz = np.asarray([ci[zi] for ci, zi in zip(c, z)])
 
         ## read config file
         with open(os.path.join(indir, cfg.fnames['config'])) as f:
             config = json.load(f, object_pairs_hook=cl.OrderedDict)
 
-        pars_names = config['pars']
         hpar_names = config['hpars'].keys()
         group_names = config['groups'].keys()
-        feature_names = config['featureNames']
 
         ## create data frames
-        hpars = pd.DataFrame(hpars[:, 1:], index=hpars[:, 0], columns=hpar_names)
-        eta = pd.DataFrame(eta[:, 1:], index=eta[:, 0], columns=['global']+group_names)
-        nact = pd.DataFrame(nact[:, 1:], index=nact[:, 0], columns=['global']+group_names)
-        pars = pd.DataFrame(pars, columns=pars_names)
-        lw = pd.DataFrame(lw, columns=['global'])
-        c = pd.DataFrame(c.T, columns=group_names)
-        lu = pd.DataFrame(lu.T, columns=group_names)
-        z = pd.DataFrame(z.T, index=feature_names, columns=group_names)
-        zz = pd.DataFrame(zz.T, index=feature_names, columns=group_names)
-
-        lp = pd.DataFrame(lp[:, 1:], index=lp[:, 0], columns=['loglik', 'logprior'])
+        nclust = pd.DataFrame(pars[:, [1, 2]], index=pars[:, 0], columns=['total', 'active'])
+        conc = pd.DataFrame(pars[:, [3, 4]], index=pars[:, 0], columns=['zeta', 'eta'])
+        x = pd.DataFrame(pars[:, [5, 6]], index=pars[:, 0], columns=['down-regulated', 'up-regulated'])
+        p = pd.DataFrame(pars[:, 7:7+state.p.size], index=pars[:, 0], columns=group_names)
+        hpars = pd.DataFrame(pars[:, 7+state.p.size:], index=pars[:, 0], columns=hpar_names)
 
         ## return
-        return cls(hpars, eta, nact, pars, lw, c, z, zz, lu, lp)
+        return cls(state, nclust, conc, x, p, hpars)
 
 ########################################################################################################################
