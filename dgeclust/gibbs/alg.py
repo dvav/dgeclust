@@ -72,9 +72,9 @@ class GibbsSampler(object):
         state.ntot = np.sum(ids)
 
         ## update eta
-        state.eta = max(1e-6, 0.986**state.t)
+        # state.eta = max(1e-6, 0.9**state.t)
         # state.eta = st.sample_eta_west(state.eta, state.nact, state.z.size, b=state.z.size)
-        # state.eta = st.sample_eta_ishwaran(state.lw[ids], b=state.z.size)
+        state.eta = st.sample_eta_ishwaran(state.lw[ids], b=state.z.size)
 
         ## sample c and delta
         state.c, state.delta = _sample_c_delta(data, state, model)
