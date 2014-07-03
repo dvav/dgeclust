@@ -1,6 +1,6 @@
 **DGEclust** is a program for clustering digital expression data, generated from next-generation sequencing
 assays, such as RNA-seq, CAGE and others. It takes as input a table of count data and it estimates the
-number and parameters of the clusters supported by the data. Internally, **DGEclust** uses a *Hierarchical Dirichlet
+number and parameters of the clusters supported by the data. Internally, **DGEclust** uses a hierarchical *Dirichlet
 Process Mixture Model* for modelling (over-dispersed) count data, combined with a *blocked Gibbs sampler* for
 efficient Bayesian learning.
 
