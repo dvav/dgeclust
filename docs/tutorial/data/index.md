@@ -12,7 +12,7 @@ have a matrix of count data stored in the file `data.txt`. In this tutorial, we
 shall use the *pasilla* RNA-seq dataset, which is available through 
 <a href="http://www.bioconductor.org/packages/release/data/experiment/html/pasilla.html" target="_blank">Bioconductor</a>. 
 You can inspect the data using the `head` command at the terminal:
-{% highlight bash %}
+{% highlight bash linenos %}
 $ head /path/to/data.txt
 treated1fb      treated2fb      treated3fb      untreated1fb    untreated2fb    untreated3fb    untreated4fb
 FBgn0000003     0       0       1       0       0       0       0
@@ -33,7 +33,7 @@ classes, *treated* and *untreated*.
 Let's use **IPython** to filter the data. Execute `ipython --pylab` at the terminal and, at the subsequent
 **IPython** command prompt, type the following:
 
-{% highlight python %}
+{% highlight python linenos %}
 import pandas as pd
 data = pd.read_table('/path/to/data.txt')
 row_sums = sum(data, 1)
