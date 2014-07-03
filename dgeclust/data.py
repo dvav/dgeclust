@@ -24,7 +24,8 @@ class CountData(object):
         """Reads a data file containing a matrix of count data"""
 
         ## read data file
-        counts = pd.read_table(file_name, index_col=0, usecols=samples)  # .astype(np.uint32)
+        counts = pd.read_table(file_name, index_col=0)  # .astype(np.uint32)
+        counts = counts if samples is None else counts[samples]
 
         ## group information
         groups = counts.columns.tolist() if groups is None else groups
