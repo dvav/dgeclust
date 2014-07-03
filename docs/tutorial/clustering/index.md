@@ -14,7 +14,7 @@ $ cd path/to/dgeclust
 $ bin/clust path/to/data_filt.txt -g treated treated treated untreated untreated untreated untreated &
 {% endhighlight %}
 
-The above command runs a Gibbs sampler for a default of 10K iterations. The argument `-g treated treated treated untreated untreated untreated untreated`
+The above command runs a Gibbs sampler for a default of 10K iterations. The argument `-g`
 instructs the simulator that the first three samples and the last four form two different groups (i.e. treated and untreated). 
 Depending on the size of your data, this will take some time to finish. The output from the sampler is saved periodically in the directory 
 `_clust`, which you can inspect to check the progress of your simulation, e.g. using `tail`:
