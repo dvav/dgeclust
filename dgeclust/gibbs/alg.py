@@ -84,15 +84,7 @@ class GibbsSampler(object):
         state.p = occ / np.sum(occ)
 
         ## update zeta
-        # state.zeta = st.sample_eta_west(state.zeta, np.sum(occ > 0), np.sum(occ))
-
-        ## compute x
-        ndown = np.sum(np.logical_and(state.c > 0, state.delta < 1))
-        nup = np.sum(np.logical_and(state.c > 0, state.delta > 1))
-        occ = np.asarray([ndown, nup])
-
-        # state.x = occ / np.sum(occ)
-        state.x = rn.dirichlet(1 / occ.size + occ)
+        state.zeta = st.sample_eta_west(state.zeta, np.sum(occ > 0), np.sum(occ))
 
         ## sample hyper-parameters
         state.hpars = model.sample_hpars(state.pars[state.iact], state.c, state.delta, state.hpars)
@@ -109,10 +101,10 @@ class GibbsSampler(object):
         state.save(fnames['state'])
 
         ## save chains
-        pars = np.hstack([state.t, state.ntot, state.nact, state.zeta, state.eta, state.x, state.p, state.hpars])
+        pars = np.hstack([state.t, state.ntot, state.nact, state.zeta, state.eta, state.p, state.hpars])
         with open(fnames['pars'], 'a') as f:
             np.savetxt(f, np.atleast_2d(pars),
-                       fmt='%d\t%d\t%d\t%f\t%f\t%f\t%f' + '\t%f' * (state.p.size+state.hpars.size),
+                       fmt='%d\t%d\t%d\t%f\t%f' + '\t%f' * (state.p.size+state.hpars.size),
                        delimiter='\t')
 
         ## write cc

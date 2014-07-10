@@ -16,13 +16,12 @@ import dgeclust.config as cfg
 class GibbsOutput(object):
     """Represents the output of the Gibbs sampler"""
 
-    def __init__(self, state, nclust, conc, x, p, hpars):
+    def __init__(self, state, nclust, conc, p, hpars):
         """Initialise from raw data"""
 
         self.state = state
         self.nclust = nclust
         self.conc = conc
-        self.x = x
         self.p = p
         self.hpars = hpars
 
@@ -46,11 +45,10 @@ class GibbsOutput(object):
         ## create data frames
         nclust = pd.DataFrame(pars[:, [1, 2]], index=pars[:, 0], columns=['total', 'active'])
         conc = pd.DataFrame(pars[:, [3, 4]], index=pars[:, 0], columns=['zeta', 'eta'])
-        x = pd.DataFrame(pars[:, [5, 6]], index=pars[:, 0], columns=['down-regulated', 'up-regulated'])
-        p = pd.DataFrame(pars[:, 7:7+state.p.size], index=pars[:, 0], columns=group_names)
-        hpars = pd.DataFrame(pars[:, 7+state.p.size:], index=pars[:, 0], columns=hpar_names)
+        p = pd.DataFrame(pars[:, 5:5+state.p.size], index=pars[:, 0], columns=group_names)
+        hpars = pd.DataFrame(pars[:, 5+state.p.size:], index=pars[:, 0], columns=hpar_names)
 
         ## return
-        return cls(state, nclust, conc, x, p, hpars)
+        return cls(state, nclust, conc, p, hpars)
 
 ########################################################################################################################

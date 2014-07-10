@@ -14,7 +14,7 @@ import dgeclust.utils as ut
 class GibbsState(object):
     """Represents the state of the Gibbs sampler"""
 
-    def __init__(self, pars, lw, eta, z, delta, c, zeta, p, x, hpars, t0):
+    def __init__(self, pars, lw, eta, z, delta, c, zeta, p, hpars, t0):
         """Initializes state from raw data"""
 
         ## basic sampler state
@@ -30,7 +30,6 @@ class GibbsState(object):
         self.c = c              # matrix of gene- and group-specific indicator variables
         self.zeta = zeta        # concentration parameter
         self.p = p              # gene- and group-specific relative occupancies
-        self.x = x              # down- and up-regulation probabilities
         self.hpars = hpars      # vector of model hyper-parameters (other than concentration parameters)
         self.t = t0             # the current iteration
 
@@ -63,10 +62,9 @@ class GibbsState(object):
         c = np.zeros((nfeatures, ngroups), dtype='int')
         zeta = 1
         p = np.tile(1 / ngroups, ngroups)
-        x = np.tile(1 / 2, 2)
 
         ## return
-        return cls(pars, lw, eta, z, delta, c, zeta, p, x, hpars, t0)
+        return cls(pars, lw, eta, z, delta, c, zeta, p, hpars, t0)
 
     ####################################################################################################################
 
