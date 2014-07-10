@@ -55,12 +55,12 @@ class GibbsState(object):
         pars = sample_pars_prior(nclusters_max, hpars)
         lw = np.tile(-np.log(nclusters_max), nclusters_max)
         z = rn.choice(nclusters_max, nfeatures, p=np.exp(lw))
-        eta = 1e-6
+        eta = 1e-3
 
         ##
         delta = np.ones((nfeatures, ngroups))
         c = np.zeros((nfeatures, ngroups), dtype='int')
-        zeta = 1e-6
+        zeta = 1e-3
         p = np.tile(1 / ngroups, ngroups)
 
         ## return
