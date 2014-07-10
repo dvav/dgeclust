@@ -60,7 +60,7 @@ class GibbsState(object):
         ##
         delta = np.ones((nfeatures, ngroups))
         c = np.zeros((nfeatures, ngroups), dtype='int')
-        zeta = 1
+        zeta = 1e-6
         p = np.tile(1 / ngroups, ngroups)
 
         ## return

@@ -96,7 +96,7 @@ def sample_delta_prior(c, hpars):
 ########################################################################################################################
 
 
-def sample_hpars(pars, c, delta, _):
+def sample_hpars(pars, c, delta, hpars):
     """Samples the mean and var of the log-normal from the posterior, given phi"""
 
     ## read parameters
@@ -113,7 +113,7 @@ def sample_hpars(pars, c, delta, _):
     de = c > 0
     dde = np.log(delta[de])
 
-    a0, s0 = st.sample_normal_mean_var_jeffreys(np.sum(dde), np.sum(dde**2), dde.size)
+    a0, s0 = st.sample_normal_mean_var_jeffreys(np.sum(dde), np.sum(dde**2), dde.size) if dde.size > 0 else hpars[4:]
 
     ## return
     return np.asarray([m1, v1, m2, v2, a0, s0])
