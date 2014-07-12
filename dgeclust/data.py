@@ -10,12 +10,13 @@ import collections as cl
 class CountData(object):
     """Represents a counts data set"""
 
-    def __init__(self, counts, lib_sizes, groups):
+    def __init__(self, counts, lib_sizes, groups, nreplicas):
         """Initialise state from raw data"""
 
         self.counts = counts
         self.lib_sizes = lib_sizes
         self.groups = groups
+        self.nreplicas = nreplicas
 
     ####################################################################################################################
 
@@ -46,8 +47,12 @@ class CountData(object):
 
         lib_sizes = pd.DataFrame(lib_sizes, index=counts.columns, columns=['Library sizes']).T
 
+        ## compute number of replicas per group
+        nreplicas = [np.size(val) for val in groups.values()]
+        nreplicas = cl.OrderedDict(zip(groups.keys(), nreplicas))
+
         ## return
-        return cls(counts, lib_sizes, groups)
+        return cls(counts, lib_sizes, groups, nreplicas)
 
 
 ########################################################################################################################

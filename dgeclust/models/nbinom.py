@@ -25,11 +25,10 @@ def compute_loglik(data, pars, delta):
     """Computes the log-likelihood of each element of counts for each element of theta"""
 
     ## read input
-    counts, lib_sizes = data
+    counts, lib_sizes, nreplicas = data
 
     ## fix delta, counts and lib_sizes
-    rep = [el.size for el in lib_sizes]
-    delta = np.repeat(delta, rep, axis=1)
+    delta = np.repeat(delta, nreplicas, axis=1)
     counts = np.hstack(counts)
     lib_sizes = np.hstack(lib_sizes)
 
@@ -126,11 +125,10 @@ def sample_posterior(idx, data, state):
     """Sample phi and mu from their posterior, using Metropolis"""
 
     ## read input
-    counts, lib_sizes = data
+    counts, lib_sizes, nreplicas = data
 
     ## fix delta, counts and lib_sizes
-    rep = [len(el) for el in lib_sizes]
-    delta = np.repeat(state.delta, rep, axis=1)
+    delta = np.repeat(state.delta, nreplicas, axis=1)
     counts = np.hstack(counts)
     lib_sizes = np.hstack(lib_sizes)
 

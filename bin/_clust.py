@@ -58,6 +58,7 @@ data = CountData.load(args.data, args.norm, args.groups, args.samples)
 
 counts = [data.counts[samples].values for samples in data.groups.values()]
 lib_sizes = [data.lib_sizes[samples].values.ravel() for samples in data.groups.values()]
+nreplicas = data.nreplicas.values()
 
 ## prepare model
 model = {
@@ -93,6 +94,6 @@ else:
 pool = mp.Pool(processes=args.nthreads)
 
 ## execute
-GibbsSampler((counts, lib_sizes), model, state, args.niters, args.burnin, args.nlog, args.fnames, pool).run()
+GibbsSampler((counts, lib_sizes, nreplicas), model, state, args.niters, args.burnin, args.nlog, args.fnames, pool).run()
 
 ########################################################################################################################
