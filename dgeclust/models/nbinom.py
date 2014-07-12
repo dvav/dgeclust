@@ -72,6 +72,7 @@ def sample_pars_prior(size, hpars):
     
 ########################################################################################################################
 
+
 def sample_delta_prior(c, hpars):
     """Sample delta, given c"""
 
