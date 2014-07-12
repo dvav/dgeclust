@@ -56,8 +56,8 @@ args.fnames = {
 ## load data
 data = CountData.load(args.data, args.norm, args.groups, args.samples)
 
-counts = [data.counts[samples].values for samples in data.groups.values()]
-lib_sizes = [data.lib_sizes[samples].values.ravel() for samples in data.groups.values()]
+counts = np.hstack([data.counts[samples].values for samples in data.groups.values()])
+lib_sizes = np.hstack([data.lib_sizes[samples].values.ravel() for samples in data.groups.values()])
 nreplicas = data.nreplicas.values()
 
 ## prepare model

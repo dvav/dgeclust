@@ -29,8 +29,6 @@ def compute_loglik(data, pars, delta):
 
     ## fix delta, counts and lib_sizes
     delta = np.repeat(delta, nreplicas, axis=1)
-    counts = np.hstack(counts)
-    lib_sizes = np.hstack(lib_sizes)
 
     ## fix pars
     phi = pars[..., [0]]
@@ -129,8 +127,6 @@ def sample_posterior(idx, data, state):
 
     ## fix delta, counts and lib_sizes
     delta = np.repeat(state.delta, nreplicas, axis=1)
-    counts = np.hstack(counts)
-    lib_sizes = np.hstack(lib_sizes)
 
     ## fetch all data points that belong to cluster idx
     idxs = state.z == idx
