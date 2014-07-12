@@ -17,7 +17,7 @@ $ bin/pvals treated untreated -t0 1000
 9001 samples processed from directory "clust/cc"
 {% endhighlight %}
 
-The above command post-processes the contents of the directory `_clust` (using a nominal burn-in period
+The above command post-processes the contents of the directory `_clust` (using a burn-in period
 of 1000 iterations) and returns 
 a file, `_pvals.txt`, which includes a list of features along with their posterior 
 probabilities of being differentially expressed between the treated and untreated 
