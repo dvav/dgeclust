@@ -2,7 +2,6 @@ from __future__ import division
 
 import os
 import sys
-import itertools as it
 import numpy as np
 import numpy.random as rn
 
@@ -60,8 +59,7 @@ class GibbsSampler(object):
 
         ## sample pars
         idxs = state.iact.nonzero()[0]
-        args = zip(idxs, it.repeat((data, state, model.sample_posterior)))
-        state.pars[state.iact] = pool.map(_do_global_sampling, args)                                # active clusters
+        state.pars[state.iact] = model.sample_posterior(idxs, data, state, pool)                    # active clusters
         state.pars[~state.iact] = model.sample_pars_prior(state.lw.size - state.nact, state.hpars)  # inactive clusters
 
         ## sample z
@@ -109,21 +107,6 @@ class GibbsSampler(object):
         if (state.t > self.burnin) and (self.nlog > 0) and not (state.t % self.nlog):
             with open(os.path.join(fnames['cc'], str(state.t)), 'w') as f:
                 np.savetxt(f, state.c, fmt='%d', delimiter='\t')
-
-########################################################################################################################
-
-
-def _do_global_sampling(args):
-    """Samples the gene-wise cluster centers of the DP"""
-
-    ## read arguments
-    idx, (data, state, sample_posterior) = args
-
-    ## sample from the posterior
-    pars = sample_posterior(idx, data, state)
-
-    ## return
-    return pars
 
 ########################################################################################################################
 
