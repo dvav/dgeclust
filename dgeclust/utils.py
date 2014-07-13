@@ -67,7 +67,7 @@ def plot_fitted_model(sample, state, data, model, xmin=-1, xmax=12, npoints=1000
     ## compute fitted model
     x = np.reshape(np.linspace(xmin, xmax, npoints), (-1, 1))
     xx = np.exp(x)
-    y = xx * np.exp(model.compute_loglik(([xx[:, :, np.newaxis]], [lib_size]), pars[z], delta).sum(-1))
+    y = xx * np.exp(model.compute_loglik((xx[:, :, np.newaxis], lib_size, 1), pars[z], delta).sum(-1))
 
     ## groups
     idxs = np.nonzero(occ)[0]
