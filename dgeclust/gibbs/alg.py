@@ -70,7 +70,8 @@ class GibbsSampler(object):
         state.ntot = np.sum(ids)
 
         ## update eta
-        state.eta = st.sample_eta_ishwaran(state.lw[ids], b=state.z.size)
+        # state.eta = 1 / state.nact
+        state.eta = 0.01 * 1 / state.nact + (1 - 0.01) * state.eta
 
         ## sample c and delta
         state.c, state.delta = _sample_c_delta(data, state, model)
@@ -118,9 +119,9 @@ def _sample_z(data, state, model, u):
     idxs = np.exp(state.lw) > u.reshape(-1, 1)
     idxs2 = np.any(idxs, 0)
 
-    if state.t > 1 and np.sum(idxs2) == state.lw.size:
-        print >> sys.stderr, 'Maximum number of clusters ({0}) is too low. If this message persists, try ' \
-                             'increasing the value of parameter -k at the command line ...'.format(state.lw.size)
+    # if state.t > 1 and np.sum(idxs2) == state.lw.size:
+    #     print >> sys.stderr, 'Maximum number of clusters ({0}) is too low. If this message persists, try ' \
+    #                          'increasing the value of parameter -k at the command line ...'.format(state.lw.size)
 
     ## compute log-likelihoods
     loglik = -np.ones((state.z.size, state.lw.size)) * np.inf

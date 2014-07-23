@@ -84,10 +84,10 @@ def sample_delta_prior(c, hpars):
     delta = np.ones(c.shape)
 
     ##
-    de = [c == i for i in range(1, np.max(c) + 1)]
-    rnds = np.exp(a0 + rn.randn(nfeatures, len(de)) * np.sqrt(s0))
-    for i, el in enumerate(de):
-        delta[el] = np.tile(rnds[:, [i]], (1, ngroups))[el]
+    for i in range(1, np.max(c) + 1):
+        de = c == i
+        rnds = np.exp(a0 + rn.randn(nfeatures, 1) * np.sqrt(s0))
+        delta[de] = np.tile(rnds, (1, ngroups))[de]
 
     ## return
     return delta
@@ -109,10 +109,13 @@ def sample_hpars(pars, c, delta, hpars):
     m2, v2 = st.sample_normal_mean_var_jeffreys(np.sum(mu), np.sum(mu**2), ndata)
 
     ## sample second group of hyper-parameters
+    a0, s0 = hpars[4:]
+
     de = c > 0
     dde = np.log(delta[de])
 
-    a0, s0 = st.sample_normal_mean_var_jeffreys(np.sum(dde), np.sum(dde**2), dde.size) if dde.size > 0 else hpars[4:]
+    a0, s0 = st.sample_normal_mean_var_jeffreys(np.sum(dde), np.sum(dde**2), dde.size) if dde.size > 0 else (a0, s0)
+    # s0 = st.sample_normal_var_jeffreys(np.sum(dde), np.sum(dde**2), dde.size) if dde.size > 0 else s0
 
     ## return
     return np.asarray([m1, v1, m2, v2, a0, s0])
@@ -135,7 +138,11 @@ def sample_posterior(idxs, data, state, pool):
 
     ## compute log-likelihoods
     args = zip(idxs, pars, pars_, it.repeat((counts, lib_sizes, delta, state)))
-    loglik, loglik_ = zip(*pool.map(aux, args))
+    loglik, loglik_ = zip(*pool.map(_aux, args))
+    # loglik = [_compute_loglik(counts[state.z == idx], lib_sizes, par[0], par[1], delta[state.z == idx]).sum()
+    #           for par, idx in zip(pars, idxs)]
+    # loglik_ = [_compute_loglik(counts[state.z == idx], lib_sizes, par[0], par[1], delta[state.z == idx]).sum()
+    #            for par, idx in zip(pars_, idxs)]
 
     ## compute log-priors
     logprior = compute_logprior(pars[:, 0], pars[:, 1], state.hpars)
@@ -155,7 +162,7 @@ def sample_posterior(idxs, data, state, pool):
 ########################################################################################################################
 
 
-def aux(args):
+def _aux(args):
     """Auxiliary function"""
 
     ## read args
