@@ -1,3 +1,4 @@
+rm(list=ls())
 setwd('~/Repositories/simdata')
 
 sets = c('set0a/','set0b/','set0c/')
