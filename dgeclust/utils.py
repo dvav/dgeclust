@@ -44,7 +44,8 @@ def normalize_log_weights(lw):
 ########################################################################################################################
 
 
-def plot_fitted_model(sample, state, data, model, xmin=-1, xmax=12, npoints=1000, nbins=100, epsilon=0.5):
+def plot_fitted_model(sample, state, data, model, xmin=-1, xmax=12, npoints=1000, nbins=100, epsilon=0.5,
+                      plot_components=False):
     """Computes the fitted model"""
 
     ## fetch group
@@ -75,7 +76,9 @@ def plot_fitted_model(sample, state, data, model, xmin=-1, xmax=12, npoints=1000
 
     ## plot
     pl.hist(counts, nbins, histtype='stepfilled', linewidth=0, normed=True, color='gray')
-    pl.plot(x, yg, 'k', x, yg.sum(1), 'r')
+    if plot_components is True:
+        pl.plot(x, yg, 'k')
+    pl.plot(x, yg.sum(1), 'r')
 
     ## return
     return x, y
