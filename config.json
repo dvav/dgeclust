@@ -41,6 +41,7 @@
         "nlog": 1,
 		"nclusters_max": 100,
         "lrate": 0.01,
+        "ntries": 10,
 		"extend": false
     },
     

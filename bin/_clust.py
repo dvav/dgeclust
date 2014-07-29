@@ -32,7 +32,8 @@ parser.add_argument('-k', type=int, dest='nclusters_max', help='maximum number o
                     default=cfg.clust['nclusters_max'])
 parser.add_argument('-l', type=float, dest='lrate', help='learning rate for eta',
                     default=cfg.clust['lrate'])
-parser.add_argument('-r', type=int, dest='nthreads', help='number of threads', default=cfg.nthreads)
+parser.add_argument('-N', type=int, dest='ntries', help='number of tries in the multiple-try Metropolis ',
+                    default=cfg.clust['ntries'])
 parser.add_argument('-e', dest='extend', help='extend simulation', action='store_true', default=cfg.clust['extend'])
 parser.add_argument('-m', type=str, dest='model', help='model to use', default=cfg.models['default'],
                     choices=cfg.models['options'].keys())
@@ -75,7 +76,7 @@ if os.path.exists(args.outdir):
 else:
     os.makedirs(args.fnames['cc'])
     state = GibbsState.random(len(data.counts), len(data.groups), model.sample_pars_prior,
-                              args.hpars, args.lrate, args.nclusters_max)
+                              args.hpars, args.lrate, args.nclusters_max, args.ntries)
 
     ## save groups, feature and sample names
     with open(os.path.join(args.outdir, cfg.fnames['config']), 'w') as f:
@@ -85,6 +86,7 @@ else:
             ("groups", data.groups),
             ("nclusters_max", args.nclusters_max),
             ("lrate", args.lrate),
+            ("ntries", args.ntries),
             ("model", args.model),
             ("pars", cfg.models['options'][args.model]['pars']),
             ("hpars", cl.OrderedDict(zip(cfg.models['options'][args.model]['hpars'].keys(), args.hpars))),

@@ -116,21 +116,30 @@ class GibbsSampler(object):
 def _sample_z(data, state, model, u):
     """Samples gene-specific indicator variables"""
 
+    ##
+    z, delta, pars, lw = state.z, state.delta, state.pars, state.lw
+
     ## fetch indices of sufficient clusters
-    idxs = np.exp(state.lw) > u.reshape(-1, 1)
+    idxs = np.exp(lw) > u.reshape(-1, 1)
     idxs2 = np.any(idxs, 0)
 
-    ## compute log-likelihoods
-    loglik = -np.ones((state.z.size, state.lw.size)) * np.inf
-    loglik[:, idxs2] = model.compute_loglik(data, state.pars[idxs2][:, np.newaxis, :], state.delta).sum(-1).T
+    ## propose z
+    z_ = rn.choice(lw.size, (state.z.size, state.ntries), p=np.exp(lw))
 
-    ## compute log-weights
-    logw = -np.ones(loglik.shape) * np.inf
-    logw[idxs] = loglik[idxs]
-    logw = ut.normalize_log_weights(logw.T)
+    ## compute log-likelihoods
+    loglik = model.compute_loglik(data, pars[z], delta).sum(-1)
+
+    pars = np.asarray([pars[el] for el in z_.T])
+    loglik_ = model.compute_loglik(data, pars, delta).sum(-1).T
+    ii = np.argmax(loglik_, 1)
+    loglik_ = loglik_[np.arange(z.size), ii]
+
+    ## do Metropolis step
+    idxs = np.any(((loglik_ > loglik), (rn.rand(*loglik.shape) < np.exp(loglik_ - loglik))), 0)
+    z[idxs] = z_[np.arange(z.size), ii][idxs]
 
     ## return z
-    return st.sample_categorical(np.exp(logw)), idxs2
+    return z, idxs2
 
 
 ########################################################################################################################
