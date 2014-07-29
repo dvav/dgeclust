@@ -40,7 +40,6 @@ parser.add_argument('-p', type=float, nargs='+', dest='hpars', help='initial hyp
 args = parser.parse_args()
 
 args.hpars = np.asarray(cfg.models['options'][args.model]['hpars'].values() if args.hpars is None else args.hpars)
-args.nthreads = args.nthreads if args.nthreads > 0 else mp.cpu_count()
 
 ########################################################################################################################
 
@@ -90,10 +89,7 @@ else:
             ("featureNames", data.counts.index.tolist())
         ]), f, indent=4, separators=(',', ':'))
 
-## use multiple cores
-pool = mp.Pool(processes=args.nthreads)
-
 ## execute
-GibbsSampler((counts, lib_sizes, nreplicas), model, state, args.niters, args.burnin, args.nlog, args.fnames, pool).run()
+GibbsSampler((counts, lib_sizes, nreplicas), model, state, args.niters, args.burnin, args.nlog, args.fnames).run()
 
 ########################################################################################################################

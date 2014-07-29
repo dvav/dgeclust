@@ -14,7 +14,7 @@ import dgeclust.stats as st
 class GibbsSampler(object):
     """Represents a blocked Gibbs sampler for HDPMMs"""
 
-    def __init__(self, data, model, state, niters, burnin, nlog, fnames, pool):
+    def __init__(self, data, model, state, niters, burnin, nlog, fnames):
         """Initialise sampler from raw data"""
 
         self.data = data
@@ -24,7 +24,6 @@ class GibbsSampler(object):
         self.burnin = burnin
         self.nlog = nlog
         self.fnames = fnames
-        self.pool = pool
 
     ####################################################################################################################
 
@@ -48,7 +47,6 @@ class GibbsSampler(object):
         data = self.data
         state = self.state
         model = self.model
-        pool = self.pool
 
         ## update simulation time
         state.t += 1
@@ -59,7 +57,7 @@ class GibbsSampler(object):
 
         ## sample pars
         idxs = state.iact.nonzero()[0]
-        state.pars[state.iact] = model.sample_posterior(idxs, data, state, pool)                    # active clusters
+        state.pars[state.iact] = model.sample_posterior(idxs, data, state)                          # active clusters
         state.pars[~state.iact] = model.sample_pars_prior(state.lw.size - state.nact, state.hpars)  # inactive clusters
 
         ## sample z

@@ -123,7 +123,7 @@ def sample_hpars(pars, c, delta, hpars):
 ########################################################################################################################
 
 
-def sample_posterior(idxs, data, state, pool):
+def sample_posterior(idxs, data, state):
     """Sample phi and mu from their posterior, using Metropolis"""
 
     ## read input
@@ -133,48 +133,30 @@ def sample_posterior(idxs, data, state, pool):
     delta = np.repeat(state.delta, nreplicas, axis=1)
 
     ## read and propose pars
-    pars = state.pars[idxs]
-    pars_ = pars * np.exp(0.01 * rn.randn(*pars.shape))
+    pars = state.pars
+    pars_ = np.zeros(pars.shape)
+    pars_[idxs] = pars[idxs] * np.exp(0.01 * rn.randn(*pars[idxs].shape))
 
     ## compute log-likelihoods
-    args = zip(idxs, pars, pars_, it.repeat((counts, lib_sizes, delta, state)))
-    loglik, loglik_ = zip(*pool.map(_aux, args))
-    # loglik = [_compute_loglik(counts[state.z == idx], lib_sizes, par[0], par[1], delta[state.z == idx]).sum()
-    #           for par, idx in zip(pars, idxs)]
-    # loglik_ = [_compute_loglik(counts[state.z == idx], lib_sizes, par[0], par[1], delta[state.z == idx]).sum()
-    #            for par, idx in zip(pars_, idxs)]
+    loglik = _compute_loglik(counts, lib_sizes, pars[state.z][:, [0]], pars[state.z][:, [1]], delta).sum(-1)
+    loglik = np.bincount(state.z, loglik)[idxs]
+
+    loglik_ = _compute_loglik(counts, lib_sizes, pars_[state.z][:, [0]], pars_[state.z][:, [1]], delta).sum(-1)
+    loglik_ = np.bincount(state.z, loglik_)[idxs]
 
     ## compute log-priors
-    logprior = compute_logprior(pars[:, 0], pars[:, 1], state.hpars)
-    logprior_ = compute_logprior(pars_[:, 0], pars_[:, 1], state.hpars)
+    logprior = compute_logprior(pars[idxs, 0], pars[idxs, 1], state.hpars)
+    logprior_ = compute_logprior(pars_[idxs, 0], pars_[idxs, 1], state.hpars)
 
     ## compute log-posteriors
-    logpost = np.asarray(loglik) + logprior
-    logpost_ = np.asarray(loglik_) + logprior_
+    logpost = loglik + logprior
+    logpost_ = loglik_ + logprior_
 
     ## do Metropolis step
-    idxs = np.any((logpost_ > logpost, rn.rand(*logpost.shape) < np.exp(logpost_ - logpost)))    # do Metropolis step
-    pars[idxs] = pars_[idxs]
+    ii = np.any((logpost_ > logpost, rn.rand(*logpost.shape) < np.exp(logpost_ - logpost)), 0)    # do Metropolis step
+    pars[idxs][ii] = pars_[idxs][ii]
 
     ## return
-    return pars
+    return pars[idxs]
 
 ########################################################################################################################
-
-
-def _aux(args):
-    """Auxiliary function"""
-
-    ## read args
-    idx, par, par_, (counts, lib_sizes, delta, state) = args
-
-    ## fetch counts and delta
-    counts = counts[state.z == idx]
-    delta = delta[state.z == idx]
-
-    ## compute logliks
-    loglik = _compute_loglik(counts, lib_sizes, par[0], par[1], delta).sum()
-    loglik_ = _compute_loglik(counts, lib_sizes, par_[0], par_[1], delta).sum()
-
-    ##
-    return loglik, loglik_
