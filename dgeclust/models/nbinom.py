@@ -2,7 +2,6 @@ from __future__ import division
 
 import numpy as np
 import numpy.random as rn
-import itertools as it
 
 import dgeclust.stats as st
 

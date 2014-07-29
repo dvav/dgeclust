@@ -3,7 +3,6 @@ from __future__ import division
 import os
 import sys
 import json
-import multiprocessing as mp
 import collections as cl
 import argparse as ap
 import numpy as np
@@ -31,6 +30,8 @@ parser.add_argument('-t0', type=int, dest='burnin',  help='burn-in period', defa
 parser.add_argument('-dt', type=int, dest='nlog', help='save-state interval', default=cfg.clust['nlog'])
 parser.add_argument('-k', type=int, dest='nclusters_max', help='maximum number of gene-wise clusters',
                     default=cfg.clust['nclusters_max'])
+parser.add_argument('-l', type=float, dest='lrate', help='learning rate for eta',
+                    default=cfg.clust['lrate'])
 parser.add_argument('-r', type=int, dest='nthreads', help='number of threads', default=cfg.nthreads)
 parser.add_argument('-e', dest='extend', help='extend simulation', action='store_true', default=cfg.clust['extend'])
 parser.add_argument('-m', type=str, dest='model', help='model to use', default=cfg.models['default'],
@@ -74,7 +75,7 @@ if os.path.exists(args.outdir):
 else:
     os.makedirs(args.fnames['cc'])
     state = GibbsState.random(len(data.counts), len(data.groups), model.sample_pars_prior,
-                              args.hpars, args.nclusters_max)
+                              args.hpars, args.lrate, args.nclusters_max)
 
     ## save groups, feature and sample names
     with open(os.path.join(args.outdir, cfg.fnames['config']), 'w') as f:
@@ -83,6 +84,7 @@ else:
             ("norm", args.norm),
             ("groups", data.groups),
             ("nclusters_max", args.nclusters_max),
+            ("lrate", args.lrate),
             ("model", args.model),
             ("pars", cfg.models['options'][args.model]['pars']),
             ("hpars", cl.OrderedDict(zip(cfg.models['options'][args.model]['hpars'].keys(), args.hpars))),

@@ -67,9 +67,12 @@ class GibbsSampler(object):
         state.occ, state.iact, state.nact, _ = ut.get_cluster_info(state.lw.size, state.z)
         state.ntot = np.sum(ids)
 
+        if state.t > 1 and state.ntot == state.lw.size:
+            print >> sys.stderr, 'Maximum number of clusters ({0}) is too low. If this message persists, try ' \
+                                 'increasing the value of parameter -k at the command line ...'.format(state.lw.size)
+
         ## update eta
-        # state.eta = 1 / state.nact
-        state.eta = 0.01 * 1 / state.nact + (1 - 0.01) * state.eta
+        state.eta = state.lrate / state.nact + (1 - state.lrate) * state.eta
 
         ## sample c and delta
         state.c, state.delta = _sample_c_delta(data, state, model)
@@ -117,10 +120,6 @@ def _sample_z(data, state, model, u):
     idxs = np.exp(state.lw) > u.reshape(-1, 1)
     idxs2 = np.any(idxs, 0)
 
-    # if state.t > 1 and np.sum(idxs2) == state.lw.size:
-    #     print >> sys.stderr, 'Maximum number of clusters ({0}) is too low. If this message persists, try ' \
-    #                          'increasing the value of parameter -k at the command line ...'.format(state.lw.size)
-
     ## compute log-likelihoods
     loglik = -np.ones((state.z.size, state.lw.size)) * np.inf
     loglik[:, idxs2] = model.compute_loglik(data, state.pars[idxs2][:, np.newaxis, :], state.delta).sum(-1).T
@@ -148,7 +147,7 @@ def _sample_c_delta(data, state, model):
     delta_ = model.sample_delta_prior(c_, state.hpars)
 
     ##
-    loglik = model.compute_loglik(data, state.pars[state.z], state.delta).sum(-1)
+    loglik = model.compute_loglik(data, state.pars[state.z], delta).sum(-1)
     loglik_ = model.compute_loglik(data, state.pars[state.z], delta_).sum(-1)
 
     ##

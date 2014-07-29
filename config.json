@@ -40,6 +40,7 @@
         "burnin": 0,
         "nlog": 1,
 		"nclusters_max": 100,
+        "lrate": 0.01,
 		"extend": false
     },
     
