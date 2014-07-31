@@ -5,10 +5,10 @@
 			"NegativeBinomial": {
 			    "pars": ["phi", "mu"],
                 "hpars": {
-                    "m1": 0,
-                    "v1": 1,
-                    "m2": 0,
-                    "v2": 1,
+                    "m1": -4,
+                    "v1": 10,
+                    "m2": -8,
+                    "v2": 10,
                     "a0": 0,
                     "s0": 1
                 }
@@ -37,11 +37,11 @@
     
     "clust": {
         "niters": 10000,
-        "burnin": 0,
+        "burnin": 1000,
         "nlog": 1,
-		"nclusters_max": 100,
-        "lrate": 0.01,
+		"nclusters_max": 1000,
         "ntries": 10,
+        "ltries": 1000,
 		"extend": false
     },
     

@@ -152,7 +152,7 @@ def sample_posterior(idxs, data, state):
     logpost_ = loglik_ + logprior_
 
     ## do Metropolis step
-    ii = np.any((logpost_ > logpost, rn.rand(*logpost.shape) < np.exp(logpost_ - logpost)), 0)    # do Metropolis step
+    ii = np.logical_or(logpost_ > logpost, rn.rand(*logpost.shape) < np.exp(logpost_ - logpost))    # do Metropolis step
     pars[idxs][ii] = pars_[idxs][ii]
 
     ## return

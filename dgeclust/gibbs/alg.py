@@ -53,7 +53,14 @@ class GibbsSampler(object):
 
         ## sample lw and u
         state.lw, _ = st.sample_stick(state.occ, state.eta)
-        u = rn.rand(state.z.size) * np.exp(state.lw[state.z])
+        u = rn.rand(state.z.size) * np.exp(state.lw)[state.z]
+
+        ## fetch indices of sufficient clusters
+        state.ntot = np.sum(np.any(np.exp(state.lw) > u.reshape(-1, 1), 0))
+
+        # if state.t > 100 and state.ntot == state.lw.size:
+        #     print >> sys.stderr, 'Maximum number of clusters ({0}) is too low. If this message persists, try ' \
+        #                          'increasing the value of parameter -k at the command line ...'.format(state.lw.size)
 
         ## sample pars
         idxs = state.iact.nonzero()[0]
@@ -61,18 +68,17 @@ class GibbsSampler(object):
         state.pars[~state.iact] = model.sample_pars_prior(state.lw.size - state.nact, state.hpars)  # inactive clusters
 
         ## sample z
-        state.z, ids = _sample_z(data, state, model, u)
+        state.z = _sample_z(data, state, model)
 
         ## get cluster info
         state.occ, state.iact, state.nact, _ = ut.get_cluster_info(state.lw.size, state.z)
-        state.ntot = np.sum(ids)
-
-        if state.t > 1 and state.ntot == state.lw.size:
-            print >> sys.stderr, 'Maximum number of clusters ({0}) is too low. If this message persists, try ' \
-                                 'increasing the value of parameter -k at the command line ...'.format(state.lw.size)
 
         ## update eta
-        state.eta = state.lrate / state.nact + (1 - state.lrate) * state.eta
+        # state.eta = st.sample_eta(state.eta, state.nact, state.z.size)
+        # state.eta = st.sample_eta_west(state.eta, state.nact, state.z.size)
+        state.eta = st.sample_eta_ishwaran(state.lw[state.iact])
+        # state.eta = state.lrate / state.nact + (1 - state.lrate) * state.eta
+        # state.eta = 1 / state.z.size
 
         ## sample c and delta
         state.c, state.delta = _sample_c_delta(data, state, model)
@@ -113,33 +119,30 @@ class GibbsSampler(object):
 ########################################################################################################################
 
 
-def _sample_z(data, state, model, u):
+def _sample_z(data, state, model):
     """Samples gene-specific indicator variables"""
 
     ##
     z, delta, pars, lw = state.z, state.delta, state.pars, state.lw
 
-    ## fetch indices of sufficient clusters
-    idxs = np.exp(lw) > u.reshape(-1, 1)
-    idxs2 = np.any(idxs, 0)
-
     ## propose z
-    z_ = rn.choice(lw.size, (state.z.size, state.ntries), p=np.exp(lw))
+    ntries = state.ntries if state.t < state.ltries else 1
+    z_ = rn.choice(lw.size, (ntries, z.size), p=np.exp(lw))
 
     ## compute log-likelihoods
     loglik = model.compute_loglik(data, pars[z], delta).sum(-1)
 
-    pars = np.asarray([pars[el] for el in z_.T])
-    loglik_ = model.compute_loglik(data, pars, delta).sum(-1).T
-    ii = np.argmax(loglik_, 1)
-    loglik_ = loglik_[np.arange(z.size), ii]
+    pars = np.asarray([pars[el] for el in z_])
+    loglik_ = model.compute_loglik(data, pars, delta).sum(-1)
+    ii = np.argmax(loglik_, 0)
+    loglik_ = loglik_[ii, np.arange(z.size)]
 
     ## do Metropolis step
-    idxs = np.any(((loglik_ > loglik), (rn.rand(*loglik.shape) < np.exp(loglik_ - loglik))), 0)
-    z[idxs] = z_[np.arange(z.size), ii][idxs]
+    idxs = np.logical_or(loglik_ > loglik, rn.rand(*loglik.shape) < np.exp(loglik_ - loglik))
+    z[idxs] = z_[ii, np.arange(z.size)][idxs]
 
     ## return z
-    return z, idxs2
+    return z
 
 
 ########################################################################################################################
@@ -160,7 +163,7 @@ def _sample_c_delta(data, state, model):
     loglik_ = model.compute_loglik(data, state.pars[state.z], delta_).sum(-1)
 
     ##
-    idxs = np.any(((loglik_ > loglik), (rn.rand(*loglik.shape) < np.exp(loglik_ - loglik))), 0)
+    idxs = np.logical_or(loglik_ > loglik, rn.rand(*loglik.shape) < np.exp(loglik_ - loglik))
     c[idxs] = c_[idxs]
     delta[idxs] = delta_[idxs]
 

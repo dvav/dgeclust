@@ -7,6 +7,7 @@ import numpy.random as rn
 
 import dgeclust.config as cfg
 import dgeclust.utils as ut
+import dgeclust.stats as st
 
 ########################################################################################################################
 
@@ -14,7 +15,7 @@ import dgeclust.utils as ut
 class GibbsState(object):
     """Represents the state of the Gibbs sampler"""
 
-    def __init__(self, pars, lw, eta, z, delta, c, zeta, p, hpars, lrate, t0, ntries):
+    def __init__(self, pars, lw, eta, z, delta, c, zeta, p, hpars, ntries, ltries, t0):
         """Initializes state from raw data"""
 
         ## basic sampler state
@@ -26,14 +27,13 @@ class GibbsState(object):
         self.occ, self.iact, self.nact, _ = ut.get_cluster_info(self.lw.size, self.z)  # gene-wise cluster info
         self.ntot = lw.size
 
-        self.ntries = ntries
-
         self.delta = delta      # matrix of fold-changes
         self.c = c              # matrix of gene- and group-specific indicator variables
         self.zeta = zeta        # concentration parameter
         self.p = p              # gene- and group-specific relative occupancies
         self.hpars = hpars      # vector of model hyper-parameters (other than concentration parameters)
-        self.lrate = lrate      # learning rate for eta
+        self.ntries = ntries    # number of trials for the multipoint Metropolis
+        self.ltries = ltries    # apply ntries for ltries iterations
         self.t = t0             # the current iteration
 
     ####################################################################################################################
@@ -49,16 +49,16 @@ class GibbsState(object):
     ####################################################################################################################
 
     @classmethod
-    def random(cls, nfeatures, ngroups, sample_pars_prior, hpars, lrate, nclusters_max, ntries):
+    def random(cls, nfeatures, ngroups, sample_pars_prior, hpars, nclusters_max, ntries, ltries):
         """Initialises state randomly"""
 
         t0 = 0
 
         ##
         pars = sample_pars_prior(nclusters_max, hpars)
-        lw = np.tile(-np.log(nclusters_max), nclusters_max)
-        z = rn.choice(nclusters_max, nfeatures, p=np.exp(lw))
         eta = 1
+        lw, _ = st.sample_stick(np.zeros(nclusters_max), eta)       #np.tile(-np.log(nclusters_max), nclusters_max)
+        z = rn.choice(nclusters_max, nfeatures, p=np.exp(lw))
 
         ##
         delta = np.ones((nfeatures, ngroups))
@@ -67,7 +67,7 @@ class GibbsState(object):
         p = np.tile(1 / ngroups, ngroups)
 
         ## return
-        return cls(pars, lw, eta, z, delta, c, zeta, p, hpars, lrate, t0, ntries)
+        return cls(pars, lw, eta, z, delta, c, zeta, p, hpars, ntries, ltries, t0)
 
     ####################################################################################################################
 
