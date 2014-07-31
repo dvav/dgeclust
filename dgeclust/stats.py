@@ -259,7 +259,7 @@ def sample_eta(eta, nact, n0, a=0, b=0):
     """Samples the concentration parameter eta"""
 
     ## proposal
-    eta_ = np.exp(rn.randn() * 0.01)
+    eta_ = eta * np.exp(rn.randn() * 0.01)
 
     ## posterior densities
     lp = sp.gammaln(eta) - sp.gammaln(eta + n0) + (nact + a - 1) * np.log(eta) - eta * b
