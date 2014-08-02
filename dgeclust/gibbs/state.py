@@ -56,7 +56,7 @@ class GibbsState(object):
 
         ##
         pars = sample_pars_prior(nclusters_max, hpars)
-        eta = 1
+        eta = np.sqrt(nfeatures)
         lw, _ = st.sample_stick(np.zeros(nclusters_max), eta)       #np.tile(-np.log(nclusters_max), nclusters_max)
         z = rn.choice(nclusters_max, nfeatures, p=np.exp(lw))
 
