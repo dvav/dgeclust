@@ -80,13 +80,8 @@ def sample_delta_prior(c, hpars):
     nfeatures, ngroups = c.shape
 
     ##
-    delta = np.ones(c.shape)
-
-    ##
-    for i in range(1, np.max(c) + 1):
-        de = c == i
-        rnds = rn.lognormal(a0, np.sqrt(s0), (nfeatures, 1))
-        delta[de] = np.tile(rnds, (1, ngroups))[de]
+    rnds = np.c_[np.ones((nfeatures, 1)), rn.lognormal(a0, np.sqrt(s0), (nfeatures, ngroups-1))]
+    delta = np.choose(c.T, rnds.T).T
 
     ## return
     return delta
