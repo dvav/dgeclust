@@ -235,7 +235,7 @@ def sample_eta_ishwaran(lw, a=0, b=0):
     """Samples the concentration parameter eta given a vector of mixture log-weights"""
 
     ## return
-    return rn.gamma(lw.size + a - 1, 1 / (b - np.min(lw)))
+    return rn.gamma(lw.size + a - 1, 1 / (b - lw[-1]))  
 
 ########################################################################################################################
 
