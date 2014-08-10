@@ -58,9 +58,9 @@ class GibbsSampler(object):
         ## fetch indices of sufficient clusters
         state.ntot = np.sum(np.any(np.exp(state.lw) > u.reshape(-1, 1), 0))
 
-        # if state.t > 100 and state.ntot == state.lw.size:
-        #     print >> sys.stderr, 'Maximum number of clusters ({0}) is too low. If this message persists, try ' \
-        #                          'increasing the value of parameter -k at the command line ...'.format(state.lw.size)
+        if state.t > 1 and state.ntot == state.lw.size:
+            print >> sys.stderr, 'Maximum number of clusters ({0}) is too low. If this message persists, try ' \
+                                 'increasing the value of parameter -k at the command line ...'.format(state.lw.size)
 
         ## sample pars
         idxs = state.iact.nonzero()[0]
@@ -76,7 +76,7 @@ class GibbsSampler(object):
         ## update eta
         # state.eta = st.sample_eta(state.eta, state.nact, state.z.size)
         # state.eta = st.sample_eta_west(state.eta, state.nact, state.z.size)
-        state.eta = st.sample_eta_ishwaran(state.lw[state.iact])
+        state.eta = st.sample_eta_ishwaran(state.lw)
         # state.eta = state.lrate / state.nact + (1 - state.lrate) * state.eta
         # state.eta = 1 / state.z.size
 
@@ -126,20 +126,15 @@ def _sample_z(data, state, model):
     z, delta, pars, lw = state.z, state.delta, state.pars, state.lw
 
     ## propose z
-    ntries = state.ntries if state.t < state.ltries else 1
-    z_ = rn.choice(lw.size, (ntries, z.size), p=np.exp(lw))
+    z_ = rn.choice(lw.size, z.size, p=np.exp(lw))
 
     ## compute log-likelihoods
     loglik = model.compute_loglik(data, pars[z], delta).sum(-1)
-
-    pars = np.asarray([pars[el] for el in z_])
-    loglik_ = model.compute_loglik(data, pars, delta).sum(-1)
-    ii = np.argmax(loglik_, 0)
-    loglik_ = loglik_[ii, np.arange(z.size)]
+    loglik_ = model.compute_loglik(data, pars[z_], delta).sum(-1)
 
     ## do Metropolis step
     idxs = np.logical_or(loglik_ > loglik, rn.rand(*loglik.shape) < np.exp(loglik_ - loglik))
-    z[idxs] = z_[ii, np.arange(z.size)][idxs]
+    z[idxs] = z_[idxs]
 
     ## return z
     return z
