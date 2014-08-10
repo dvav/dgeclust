@@ -61,8 +61,8 @@ def sample_pars_prior(size, hpars):
     m1, v1, m2, v2 = hpars[:4]
 
     ## sample phi and mu
-    phi = np.exp(rn.randn(size, 1) * np.sqrt(v1) + m1)
-    mu = np.exp(rn.randn(size, 1) * np.sqrt(v2) + m2)
+    phi = rn.lognormal(m1, np.sqrt(v1), (size, 1))
+    mu = rn.lognormal(m2, np.sqrt(v2), (size, 1))
 
     ## return
     return np.hstack((phi, mu))
