@@ -76,8 +76,8 @@ class GibbsSampler(object):
         ## update eta
         # state.eta = st.sample_eta(state.eta, state.nact, state.z.size)
         # state.eta = st.sample_eta_west(state.eta, state.nact, state.z.size)
-        state.eta = st.sample_eta_ishwaran(state.lw)
-        # state.eta = state.lrate / state.nact + (1 - state.lrate) * state.eta
+        # state.eta = st.sample_eta_ishwaran(state.lw)
+        state.eta = state.lrate / state.nact + (1 - state.lrate) * state.eta
         # state.eta = 1 / state.z.size
 
         ## sample c and delta

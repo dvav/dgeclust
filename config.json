@@ -40,8 +40,7 @@
         "burnin": 1000,
         "nlog": 1,
 		"nclusters_max": 1000,
-        "ntries": 10,
-        "ltries": 1000,
+        "lrate": 0.01,
 		"extend": false
     },
     

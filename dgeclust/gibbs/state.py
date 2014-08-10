@@ -15,7 +15,7 @@ import dgeclust.stats as st
 class GibbsState(object):
     """Represents the state of the Gibbs sampler"""
 
-    def __init__(self, pars, lw, eta, z, delta, c, zeta, p, hpars, ntries, ltries, t0):
+    def __init__(self, pars, lw, eta, z, delta, c, zeta, p, hpars, lrate, t0):
         """Initializes state from raw data"""
 
         ## basic sampler state
@@ -32,8 +32,7 @@ class GibbsState(object):
         self.zeta = zeta        # concentration parameter
         self.p = p              # gene- and group-specific relative occupancies
         self.hpars = hpars      # vector of model hyper-parameters (other than concentration parameters)
-        self.ntries = ntries    # number of trials for the multipoint Metropolis
-        self.ltries = ltries    # apply ntries for ltries iterations
+        self.lrate = lrate
         self.t = t0             # the current iteration
 
     ####################################################################################################################
@@ -49,7 +48,7 @@ class GibbsState(object):
     ####################################################################################################################
 
     @classmethod
-    def random(cls, nfeatures, ngroups, sample_pars_prior, hpars, nclusters_max, ntries, ltries):
+    def random(cls, nfeatures, ngroups, sample_pars_prior, hpars, nclusters_max, lrate):
         """Initialises state randomly"""
 
         t0 = 0
@@ -67,7 +66,7 @@ class GibbsState(object):
         p = np.tile(1 / ngroups, ngroups)
 
         ## return
-        return cls(pars, lw, eta, z, delta, c, zeta, p, hpars, ntries, ltries, t0)
+        return cls(pars, lw, eta, z, delta, c, zeta, p, hpars, lrate, t0)
 
     ####################################################################################################################
 

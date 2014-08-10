@@ -30,10 +30,7 @@ parser.add_argument('-t0', type=int, dest='burnin',  help='burn-in period', defa
 parser.add_argument('-dt', type=int, dest='nlog', help='save-state interval', default=cfg.clust['nlog'])
 parser.add_argument('-k', type=int, dest='nclusters_max', help='maximum number of gene-wise clusters',
                     default=cfg.clust['nclusters_max'])
-parser.add_argument('-N', type=int, dest='ntries', help='number of trials for the multipoint Metropolis',
-                    default=cfg.clust['ntries'])
-parser.add_argument('-L', type=int, dest='ltries', help='number of iterations for the multipoint Metropolis',
-                    default=cfg.clust['ltries'])
+parser.add_argument('-l', type=float, dest='lrate', help='learning rate for eta', default=cfg.clust['lrate'])
 parser.add_argument('-e', dest='extend', help='extend simulation', action='store_true', default=cfg.clust['extend'])
 parser.add_argument('-m', type=str, dest='model', help='model to use', default=cfg.models['default'],
                     choices=cfg.models['options'].keys())
@@ -76,7 +73,7 @@ if os.path.exists(args.outdir):
 else:
     os.makedirs(args.fnames['cc'])
     state = GibbsState.random(len(data.counts), len(data.groups), model.sample_pars_prior,
-                              args.hpars, args.nclusters_max, args.ntries, args.ltries)
+                              args.hpars, args.nclusters_max, args.lrate)
 
     ## save groups, feature and sample names
     with open(os.path.join(args.outdir, cfg.fnames['config']), 'w') as f:
@@ -85,8 +82,7 @@ else:
             ("norm", args.norm),
             ("groups", data.groups),
             ("nclusters_max", args.nclusters_max),
-            ("ntries", args.ntries),
-            ("ltries", args.ltries),
+            ("lrate", args.lrate),
             ("model", args.model),
             ("pars", cfg.models['options'][args.model]['pars']),
             ("hpars", cl.OrderedDict(zip(cfg.models['options'][args.model]['hpars'].keys(), args.hpars))),
