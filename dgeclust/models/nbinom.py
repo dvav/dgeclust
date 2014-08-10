@@ -132,20 +132,37 @@ def sample_posterior(idxs, data, state):
     delta = np.repeat(state.delta, nreplicas, axis=1)
 
     ## read and propose pars
-    pars = state.pars
-    pars_ = np.zeros(pars.shape)
-    pars_[idxs] = pars[idxs] * np.exp(0.01 * rn.randn(*pars[idxs].shape))
+    pars, z, hpars = state.pars, state.z, state.hpars
+
+    ## sample phi
+    pars = _sample_posterior_aux(0, idxs, counts, lib_sizes, pars, z, delta, hpars)
+
+    ## sample mu
+    pars = _sample_posterior_aux(1, idxs, counts, lib_sizes, pars, z, delta, hpars)
+
+    ## return
+    return pars[idxs]
+
+########################################################################################################################
+
+
+def _sample_posterior_aux(i, idxs, counts, lib_sizes, pars, z, delta, hpars):
+    """Sample phi from its posterior, using Metropolis"""
+
+    ## propose
+    pars_ = np.copy(pars)
+    pars_[idxs, i] = pars[idxs, i] * np.exp(0.01 * rn.randn(*pars[idxs, i].shape))
 
     ## compute log-likelihoods
-    loglik = _compute_loglik(counts, lib_sizes, pars[state.z][:, [0]], pars[state.z][:, [1]], delta).sum(-1)
-    loglik = np.bincount(state.z, loglik)[idxs]
+    loglik = _compute_loglik(counts, lib_sizes, pars[z][:, [0]], pars[z][:, [1]], delta).sum(-1)
+    loglik = np.bincount(z, loglik)[idxs]
 
-    loglik_ = _compute_loglik(counts, lib_sizes, pars_[state.z][:, [0]], pars_[state.z][:, [1]], delta).sum(-1)
-    loglik_ = np.bincount(state.z, loglik_)[idxs]
+    loglik_ = _compute_loglik(counts, lib_sizes, pars_[z][:, [0]], pars_[z][:, [1]], delta).sum(-1)
+    loglik_ = np.bincount(z, loglik_)[idxs]
 
     ## compute log-priors
-    logprior = compute_logprior(pars[idxs, 0], pars[idxs, 1], state.hpars)
-    logprior_ = compute_logprior(pars_[idxs, 0], pars_[idxs, 1], state.hpars)
+    logprior = compute_logprior(pars[idxs, 0], pars[idxs, 1], hpars)
+    logprior_ = compute_logprior(pars_[idxs, 0], pars_[idxs, 1], hpars)
 
     ## compute log-posteriors
     logpost = loglik + logprior
@@ -153,9 +170,7 @@ def sample_posterior(idxs, data, state):
 
     ## do Metropolis step
     ii = np.logical_or(logpost_ > logpost, rn.rand(*logpost.shape) < np.exp(logpost_ - logpost))    # do Metropolis step
-    pars[idxs][ii] = pars_[idxs][ii]
+    pars[idxs, i][ii] = pars_[idxs, i][ii]
 
-    ## return
-    return pars[idxs]
-
-########################################################################################################################
+    ##
+    return pars
