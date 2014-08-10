@@ -85,7 +85,7 @@ def sample_delta_prior(c, hpars):
     ##
     for i in range(1, np.max(c) + 1):
         de = c == i
-        rnds = np.exp(a0 + rn.randn(nfeatures, 1) * np.sqrt(s0))
+        rnds = rn.lognormal(a0, np.sqrt(s0), (nfeatures, 1))
         delta[de] = np.tile(rnds, (1, ngroups))[de]
 
     ## return
@@ -110,8 +110,7 @@ def sample_hpars(pars, c, delta, hpars):
     ## sample second group of hyper-parameters
     a0, s0 = hpars[4:]
 
-    de = c > 0
-    dde = np.log(delta[de])
+    dde = np.log(np.unique(delta[c > 0]))
 
     a0, s0 = st.sample_normal_mean_var_jeffreys(np.sum(dde), np.sum(dde**2), dde.size) if dde.size > 0 else (a0, s0)
     # s0 = st.sample_normal_var_jeffreys(np.sum(dde), np.sum(dde**2), dde.size) if dde.size > 0 else s0
