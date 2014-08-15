@@ -41,6 +41,9 @@
         "nlog": 1,
 		"nclusters_max": 1000,
         "lrate": 0.01,
+        "T0": 1,
+        "Te": 1,
+        "crate": 0.005,
 		"extend": false
     },
     

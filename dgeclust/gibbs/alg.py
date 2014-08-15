@@ -51,6 +51,9 @@ class GibbsSampler(object):
         ## update simulation time
         state.t += 1
 
+        ## update temperature
+        state.temp = state.Te + (state.T0 - state.Te) * (1 - state.crate)**state.t
+
         ## sample lw and u
         state.lw, _ = st.sample_stick(state.occ, state.eta)
         u = rn.rand(state.z.size) * np.exp(state.lw)[state.z]
@@ -77,7 +80,7 @@ class GibbsSampler(object):
         # state.eta = st.sample_eta(state.eta, state.nact, state.z.size)
         # state.eta = st.sample_eta_west(state.eta, state.nact, state.z.size)
         # state.eta = st.sample_eta_ishwaran(state.lw)
-        state.eta = state.lrate / state.nact + (1 - state.lrate) * state.eta
+        state.eta = state.lrate / state.z.size + (1 - state.lrate) * state.eta
         # state.eta = 1 / state.z.size
 
         ## sample c and delta
@@ -105,10 +108,10 @@ class GibbsSampler(object):
         state.save(fnames['state'])
 
         ## save chains
-        pars = np.hstack([state.t, state.ntot, state.nact, state.zeta, state.eta, state.p, state.hpars])
+        pars = np.hstack([state.t, state.ntot, state.nact, state.zeta, state.eta, state.temp, state.p, state.hpars])
         with open(fnames['pars'], 'a') as f:
             np.savetxt(f, np.atleast_2d(pars),
-                       fmt='%d\t%d\t%d\t%f\t%f' + '\t%f' * (state.p.size+state.hpars.size),
+                       fmt='%d\t%d\t%d\t%f\t%f\t%f' + '\t%f' * (state.p.size+state.hpars.size),
                        delimiter='\t')
 
         ## write cc
@@ -133,7 +136,7 @@ def _sample_z(data, state, model):
     loglik_ = model.compute_loglik(data, pars[z_], delta).sum(-1)
 
     ## do Metropolis step
-    idxs = np.logical_or(loglik_ > loglik, rn.rand(*loglik.shape) < np.exp(loglik_ - loglik))
+    idxs = np.logical_or(loglik_ > loglik, rn.rand(*loglik.shape) < np.exp((loglik_ - loglik) / state.temp))
     z[idxs] = z_[idxs]
 
     ## return z

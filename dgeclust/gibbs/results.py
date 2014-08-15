@@ -16,12 +16,13 @@ import dgeclust.config as cfg
 class GibbsOutput(object):
     """Represents the output of the Gibbs sampler"""
 
-    def __init__(self, state, nclust, conc, p, hpars):
+    def __init__(self, state, nclust, conc, p, hpars, temp):
         """Initialise from raw data"""
 
         self.state = state
         self.nclust = nclust
         self.conc = conc
+        self.temp = temp
         self.p = p
         self.hpars = hpars
 
@@ -45,10 +46,11 @@ class GibbsOutput(object):
         ## create data frames
         nclust = pd.DataFrame(pars[:, [1, 2]], index=pars[:, 0], columns=['total', 'active'])
         conc = pd.DataFrame(pars[:, [3, 4]], index=pars[:, 0], columns=['zeta', 'eta'])
-        p = pd.DataFrame(pars[:, 5:5+state.p.size], index=pars[:, 0], columns=group_names)
-        hpars = pd.DataFrame(pars[:, 5+state.p.size:], index=pars[:, 0], columns=hpar_names)
+        temp = pd.DataFrame(pars[:, 5], index=pars[:, 0], columns=['temperature'])
+        p = pd.DataFrame(pars[:, 6:6+state.p.size], index=pars[:, 0], columns=group_names)
+        hpars = pd.DataFrame(pars[:, 6+state.p.size:], index=pars[:, 0], columns=hpar_names)
 
         ## return
-        return cls(state, nclust, conc, p, hpars)
+        return cls(state, nclust, conc, p, hpars, temp)
 
 ########################################################################################################################

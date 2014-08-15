@@ -15,7 +15,7 @@ import dgeclust.stats as st
 class GibbsState(object):
     """Represents the state of the Gibbs sampler"""
 
-    def __init__(self, pars, lw, eta, z, delta, c, zeta, p, hpars, lrate, t0):
+    def __init__(self, pars, lw, eta, z, delta, c, zeta, p, hpars, lrate, t0, T0, Te, crate):
         """Initializes state from raw data"""
 
         ## basic sampler state
@@ -35,6 +35,12 @@ class GibbsState(object):
         self.lrate = lrate
         self.t = t0             # the current iteration
 
+        ## temperature-related parameters
+        self.crate = crate
+        self.T0 = T0
+        self.Te = Te
+        self.temp = T0
+
     ####################################################################################################################
 
     def save(self, fname=None):
@@ -48,7 +54,7 @@ class GibbsState(object):
     ####################################################################################################################
 
     @classmethod
-    def random(cls, nfeatures, ngroups, sample_pars_prior, hpars, nclusters_max, lrate):
+    def random(cls, nfeatures, ngroups, sample_pars_prior, hpars, nclusters_max, lrate, T0, Te, crate):
         """Initialises state randomly"""
 
         t0 = 0
@@ -56,7 +62,7 @@ class GibbsState(object):
         ##
         pars = sample_pars_prior(nclusters_max, hpars)
         eta = np.sqrt(nfeatures)
-        lw, _ = st.sample_stick(np.zeros(nclusters_max), eta)       #np.tile(-np.log(nclusters_max), nclusters_max)
+        lw, _ = st.sample_stick(np.zeros(nclusters_max), eta)
         z = rn.choice(nclusters_max, nfeatures, p=np.exp(lw))
 
         ##
@@ -66,7 +72,7 @@ class GibbsState(object):
         p = np.tile(1 / ngroups, ngroups)
 
         ## return
-        return cls(pars, lw, eta, z, delta, c, zeta, p, hpars, lrate, t0)
+        return cls(pars, lw, eta, z, delta, c, zeta, p, hpars, lrate, t0, T0, Te, crate)
 
     ####################################################################################################################
 

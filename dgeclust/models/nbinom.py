@@ -163,7 +163,7 @@ def _sample_posterior_aux(i, idxs, counts, lib_sizes, pars, z, delta, hpars):
     logpost_ = loglik_ + logprior_
 
     ## do Metropolis step
-    ii = np.logical_or(logpost_ > logpost, rn.rand(*logpost.shape) < np.exp(logpost_ - logpost))    # do Metropolis step
+    ii = np.logical_or(logpost_ > logpost, rn.rand(*logpost.shape) < np.exp(logpost_ - logpost))
     pars[idxs, i][ii] = pars_[idxs, i][ii]
 
     ##
