@@ -7,7 +7,7 @@ import collections as cl
 ########################################################################################################################
 
 ## read configuration file
-config_file_name = os.path.join(os.path.dirname(__file__), '..', 'config.json')
+config_file_name = os.path.join(os.path.dirname(__file__), 'config.json')
 with open(config_file_name) as f:
     config = json.load(f, object_pairs_hook=cl.OrderedDict)
 

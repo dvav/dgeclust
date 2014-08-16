@@ -1,5 +1,0 @@
-#!/bin/bash
-
-BINPATH=`dirname $0`
-PYTHONPATH=$BINPATH/../ python "$BINPATH/_simmat.py" $@
-

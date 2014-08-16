@@ -1,2 +1,2 @@
-include config.json
-prune tmp
+include README.md
+include LICENSE.md
