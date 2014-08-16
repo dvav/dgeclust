@@ -3,7 +3,10 @@
 .idea
 data
 results
-_clust
-_pvals.txt
-_simmat.txt
+_clust*
+_cage*
+_pvals*
+_simmat*
 _site
+figs
+
