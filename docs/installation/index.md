@@ -12,7 +12,7 @@ The easiest way to install **DGEclust** is using `pip`, as follows:
 $ sudo pip install --install-option='--install-scripts=/usr/local/bin' dgeclust==14.08a
 {% endhighlight %} 
 
-Alternatively, download the source code using the links at the top--right of the page and from
+Alternatively, download the source code using the links at the top-right of the page and from
 the source folder do:
 
 {% highlight bash linenos %}
