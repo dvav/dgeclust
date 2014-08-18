@@ -10,8 +10,7 @@ Next, we need to cluster the data. For this purpose, we shall use the program `c
 From your terminal, do the following:
 
 {% highlight bash linenos %}
-$ cd path/to/dgeclust
-$ bin/clust path/to/data_filt.txt -g treated treated treated untreated untreated untreated untreated &
+$ clust.py path/to/data_filt.txt -g treated treated treated untreated untreated untreated untreated &
 {% endhighlight %}
 
 The above command runs a Gibbs sampler for a default of 10K iterations. The argument `-g`
@@ -43,7 +42,6 @@ There are more arguments that you can pass to `clust`. Type `bin/clust -h` for m
 After the end of the simulation, you can visualize your results using **IPython**:
 
 {% highlight python linenos %}
-cd path/to/dgeclust
 from dgeclust.gibbs.results import GibbsOutput
 res = GibbsOutput.load('_clust')
 figure()
@@ -62,7 +60,7 @@ during the course of the simulation. If you need to extend the simulation for an
 of 20K iterations), you can type:
 
 {% highlight bash linenos %}
-bin/clust /path/to/data_filt.txt -g treated treated treated untreated untreated untreated untreated -t 20000 -e & 
+clust.py /path/to/data_filt.txt -g treated treated treated untreated untreated untreated untreated -t 20000 -e & 
 {% endhighlight %}
  
 The argument `-e` indicates that a previously terminated simulation should
