@@ -13,7 +13,7 @@ posterior probability that any two features between any two groups of samples in
 our dataset are differentially expressed. In a terminal, we type: 
 
 {% highlight bash linenos %}
-$ bin/pvals treated untreated -t0 1000
+$ pvals.py treated untreated -t0 1000
 9001 samples processed from directory "clust/cc"
 {% endhighlight %}
 
