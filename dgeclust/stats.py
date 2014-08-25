@@ -76,6 +76,13 @@ def bbinomln(x, n=1, alpha=0.5, beta=0.5):
 ########################################################################################################################
 
 
+def exponentialln(x, scale=1):
+    """Returns the log-density of the exponential distribution at x"""
+
+    ##
+    return -np.log(scale) - x / scale
+
+
 def sample_normal_mean_var(s1, s2, ndata, mu=0, k=0, shape=0, rate=0):
     """Samples the mean and variance of a normal distribution given data with sufficient statistics s1, s2 and n"""
 
@@ -167,6 +174,15 @@ def sample_gamma_scale(suma, ndata, shape, a0=0, b0=0):
 ########################################################################################################################
 
 
+def sample_exponential_scale(suma, ndata, a0=0, b0=0):
+    """Samples the rate of the exponential distribution from its posterior"""
+
+    ## return
+    return 1 / rn.gamma(a0 + ndata, 1 / (b0 + suma))
+
+########################################################################################################################
+
+
 def sample_gamma_shape(logsuma, ndata, shape, scale, lp0=0, r0=0, s0=0):
     """Samples the shape of the gamma distribution from its posterior, when scale is known"""
 
@@ -240,7 +256,7 @@ def sample_eta_ishwaran(lw, a=0, b=0):
 ########################################################################################################################
 
 
-def sample_eta_west(eta, nact, n0, a=0, b=0):
+def sample_eta_west(eta, nact, n0, a=1, b=0):
     """Samples the concentration parameter eta"""
 
     ## compute x, r and p
@@ -255,7 +271,7 @@ def sample_eta_west(eta, nact, n0, a=0, b=0):
 ########################################################################################################################
 
 
-def sample_eta(eta, nact, n0, a=0, b=0):
+def sample_eta(eta, nact, n0, a=1, b=0):
     """Samples the concentration parameter eta"""
 
     ## proposal
