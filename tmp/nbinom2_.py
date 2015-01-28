@@ -20,7 +20,7 @@ class NBinomModel(object):
 
     ## constructor
     def __init__(self, data, ntrunc=(100, 50), hpars=(0, 1)):
-        """Initialize model from raw data"""
+        """Initializes model from raw data"""
 
         ## various parameters
         self.ngroups = len(data.groups)
@@ -34,12 +34,13 @@ class NBinomModel(object):
         var = np.var(np.log(data.counts_norm.values + 1))
 
         ## initial hyper-parameter values
-        self.mu, self.tau = np.log(np.abs(var - mean) / mean**2), 1
+        self.mu1, self.tau1 = np.log(np.abs(var - mean) / mean**2), 1
+        self.mu2, self.tau2 = mean, 1 / var
         self.m0, self.t0 = hpars
 
         ## initial log-values for phi and mu
-        self.log_phi = rn.normal(self.mu, 1 / np.sqrt(self.tau), self.nfeatures)
-        self.log_mu = rn.normal(mean, np.sqrt(var), self.nfeatures)
+        self.log_phi = rn.normal(self.mu1, 1 / np.sqrt(self.tau1), (self.ngroups, self.nfeatures))
+        self.log_mu = rn.normal(self.mu2, 1 / np.sqrt(self.tau2), self.nfeatures)
 
         ## concentration parameters
         self.eta = 1
@@ -75,15 +76,15 @@ class NBinomModel(object):
 
     ##
     def save(self, outdir):
-        """Save current model state and state traces"""
+        """Saves the state of the Gibbs sampler"""
 
         ## save state
         self.dump(os.path.join(outdir, cfg.fnames['state']))
 
         ## save chains
-        pars = np.hstack([self.iter, self.nact, self.eta, self.mu, self.tau, self.m0, self.t0])
+        pars = np.hstack([self.iter, self.nact, self.eta, self.mu1, self.tau1, self.mu2, self.tau2, self.m0, self.t0])
         with open(os.path.join(outdir, cfg.fnames['pars']), 'a') as f:
-            np.savetxt(f, np.atleast_2d(pars), fmt='%d\t%d' + '\t%f' * 5)
+            np.savetxt(f, np.atleast_2d(pars), fmt='%d\t%d' + '\t%f' * 7)
 
         ## save z
         fout = os.path.join(outdir, cfg.fnames['z'], str(self.iter))
@@ -92,7 +93,7 @@ class NBinomModel(object):
 
     ##
     def plot_fitted_model(self, sample, data, fig=None, xmin=-1, xmax=12, npoints=1000, nbins=100, epsilon=0.5):
-        """Plot fitted model"""
+        """Computes the fitted model"""
 
         ## fetch group
         group = [i for i, item in enumerate(data.groups.items()) if sample in item[1]][0]
@@ -105,7 +106,7 @@ class NBinomModel(object):
         ## compute fitted model
         x = np.reshape(np.linspace(xmin, xmax, npoints), (-1, 1))
         xx = np.exp(x)
-        loglik = _compute_loglik(xx, self.log_phi, self.log_mu, self.beta[self.z[group]])
+        loglik = _compute_loglik(xx, self.log_phi[group], self.log_mu, self.beta[self.z[group]])
         y = xx * np.exp(loglik) / self.nfeatures
 
         ## plot
@@ -133,18 +134,18 @@ class NBinomModel(object):
         # self._update_beta_local(data)
 
         if rn.rand() < 0.5:
-            _update_phi_global(self, data)
-            _update_mu(self, data)
-            _update_beta_global(self, data)
+            self._update_phi_global(data)
+            self._update_mu_global(data)
+            self._update_beta_global(data)
         else:
-            _update_phi_local(self, data)
-            _update_mu(self, data)
-            _update_beta_local(self, data)
+            self._update_phi_local(data)
+            self._update_mu_local(data)
+            self._update_beta_local(data)
 
         ## update group-specific variables
         counts_norm, _ = data
-        common_args = it.repeat((self.log_phi, self.log_mu, self.beta, self.lw))
-        args = zip(self.c[1:], self.d[1:], self.lu[1:], self.zeta[1:], counts_norm[1:], common_args)
+        common_args = it.repeat((self.log_mu, self.beta, self.lw))
+        args = zip(self.log_phi[1:], self.c[1:], self.d[1:], self.lu[1:], self.zeta[1:], counts_norm[1:], common_args)
 
         if pool is None:
             self.c[1:], self.d[1:], self.z[1:], self.lu[1:], self.zeta[1:] = zip(*map(_update_group_vars, args))
@@ -163,7 +164,162 @@ class NBinomModel(object):
         self.lw[:], _ = st.sample_stick(self.occ, self.eta)
 
         ## update hyper-parameters
-        _update_hpars(self)
+        self._update_hpars()
+
+    ##
+    def _update_phi_local(self, data):
+
+        ##
+        counts_norm, nreplicas = data
+        counts_norm = np.hstack(counts_norm)
+
+        ## proposal
+        log_phi_ = self.log_phi * np.exp(0.01 * rn.randn(self.ngroups, self.nfeatures))
+
+        ## log-likelihood
+        beta = np.repeat(self.beta[self.z.T], nreplicas, axis=1)
+        log_phi_1 = np.repeat(self.log_phi.T, nreplicas, axis=1)
+        log_phi_2 = np.repeat(log_phi_.T, nreplicas, axis=1)
+        loglik = _compute_loglik(counts_norm, log_phi_1, self.log_mu.reshape(-1, 1), beta).sum(-1)
+        loglik_ = _compute_loglik(counts_norm, log_phi_2, self.log_mu.reshape(-1, 1), beta).sum(-1)
+
+        ## collapse
+
+        ## log-prior
+        logprior = st.normalln(self.log_phi, self.mu1, 1 / self.tau1)
+        logprior_ = st.normalln(log_phi_, self.mu1, 1 / self.tau1)
+
+        ## log-posterior
+        logpost = loglik + logprior
+        logpost_ = loglik_ + logprior_
+
+        ## update
+        idxs = (logpost_ >= logpost) | (rn.rand(self.ngroups, self.nfeatures) < np.exp(logpost_ - logpost))
+        self.log_phi[idxs] = log_phi_[idxs]
+
+    ##
+    def _update_phi_global(self, data):
+
+        ##
+        counts_norm, nreplicas = data
+        counts_norm = np.hstack(counts_norm)
+
+        ##
+        log_phi_ = rn.normal(self.mu1, 1/np.sqrt(self.tau1), (self.ngroups, self.nfeatures))
+
+        ##
+        beta = np.repeat(self.beta[self.z.T], nreplicas, axis=1)
+        log_phi_1 = np.repeat(self.log_phi.T, nreplicas, axis=1)
+        log_phi_2 = np.repeat(log_phi_.T, nreplicas, axis=1)
+        loglik = _compute_loglik(counts_norm, log_phi_1, self.log_mu.reshape(-1, 1), beta)
+        loglik_ = _compute_loglik(counts_norm, log_phi_2, self.log_mu.reshape(-1, 1), beta)
+
+        ## collapse
+        idxs = []
+        loglik = np.hsplit()
+
+        ##
+        idxs = (loglik_ >= loglik) | (rn.rand(self.ngroups, self.nfeatures) < np.exp(loglik_ - loglik))
+        self.log_phi[idxs] = log_phi_[idxs]
+
+    ##
+    def _update_mu_global(self, data):
+
+        ##
+        counts_norm, nreplicas = data
+        counts_norm = np.hstack(counts_norm)
+
+        ##
+        beta = np.exp(self.beta)[self.z.T]
+        beta = np.repeat(beta, nreplicas, axis=1)
+
+        ##
+        c1 = self.nsamples / np.exp(self.log_phi)
+        c2 = (counts_norm / beta).sum(-1)
+
+        ##
+        p = rn.beta(0.5 + c1, 0.5 + c2)
+        self.log_mu[:] = np.log1p(-p) - np.log(p) - self.log_phi
+
+    ##
+    def _update_beta_global(self, data):
+        """Propose matrix of indicators c and corresponding delta"""
+
+        ##
+        counts_norm, nreplicas = data
+        counts_norm = np.hstack(counts_norm)
+
+        ##
+        beta_ = np.r_[0, rn.normal(self.m0, 1/np.sqrt(self.t0), self.lw.size-1)]
+
+        ##
+        beta1 = np.repeat(self.beta[self.z.T], nreplicas, axis=1)
+        beta2 = np.repeat(beta_[self.z.T], nreplicas, axis=1)
+        loglik = _compute_loglik(counts_norm, self.log_phi.reshape(-1, 1), self.log_mu.reshape(-1, 1), beta1)
+        loglik_ = _compute_loglik(counts_norm, self.log_phi.reshape(-1, 1), self.log_mu.reshape(-1, 1), beta2)
+
+        z = np.repeat(self.z.T, nreplicas, axis=1)
+        loglik = np.bincount(z.ravel(), loglik.ravel(), minlength=self.lw.size)
+        loglik_ = np.bincount(z.ravel(), loglik_.ravel(), minlength=self.lw.size)
+
+        ##
+        idxs = (loglik_ >= loglik) | (rn.rand(self.lw.size) < np.exp(loglik_ - loglik))
+        self.beta[self.iact & idxs] = beta_[self.iact & idxs]
+
+        ##
+        self.beta[~self.iact] = beta_[~self.iact]
+
+    ##
+    def _update_beta_local(self, data):
+        """Propose matrix of indicators c and corresponding delta"""
+
+        ##
+        counts_norm, nreplicas = data
+        counts_norm = np.hstack(counts_norm)
+
+        ##
+        beta_ = np.r_[0, self.beta[1:] * np.exp(0.01 * rn.randn(self.lw.size-1))]
+
+        ##
+        beta1 = np.repeat(self.beta[self.z.T], nreplicas, axis=1)
+        beta2 = np.repeat(beta_[self.z.T], nreplicas, axis=1)
+        loglik = _compute_loglik(counts_norm, self.log_phi.reshape(-1, 1), self.log_mu.reshape(-1, 1), beta1)
+        loglik_ = _compute_loglik(counts_norm, self.log_phi.reshape(-1, 1), self.log_mu.reshape(-1, 1), beta2)
+
+        z = np.repeat(self.z.T, nreplicas, axis=1)
+        loglik = np.bincount(z.ravel(), loglik.ravel(), minlength=self.lw.size)
+        loglik_ = np.bincount(z.ravel(), loglik_.ravel(), minlength=self.lw.size)
+
+        logprior = st.normalln(self.beta, self.m0, 1/self.t0)
+        logprior_ = st.normalln(beta_, self.m0, 1/self.t0)
+
+        logpost = loglik + logprior
+        logpost_ = loglik_ + logprior_
+
+        ##
+        idxs = (logpost_ >= logpost) | (rn.rand(self.lw.size) < np.exp(logpost_ - logpost))
+        self.beta[self.iact & idxs] = beta_[self.iact & idxs]
+
+        ##
+        self.beta[~self.iact] = rn.normal(self.m0, 1/np.sqrt(self.t0), self.lw.size-self.nact)
+
+    ##
+    def _update_hpars(self):
+        """Samples the mean and var of the log-normal from the posterior, given phi"""
+
+        ## sample first group of hyper-parameters
+        s1 = np.sum(self.log_phi)
+        s2 = np.sum(self.log_phi**2)
+        n = self.log_phi.size
+        self.mu, self.tau = st.sample_normal_mean_prec_jeffreys(s1, s2, n)
+
+        ## sample second group of hyper-parameters
+        beta = self.beta[self.iact]
+        s1 = np.sum(beta)
+        s2 = np.sum(beta**2)
+        n = beta.size
+        self.m0, self.t0 = st.sample_normal_mean_prec_jeffreys(s1, s2, n) if n > 2 else (self.m0, self.t0)
+        # self.t0 = st.sample_normal_prec_jeffreys(s1, s2, n) if n > 2 else self.t0
 
     ##
     @staticmethod
@@ -224,164 +380,11 @@ class NBinomModel(object):
         pl.plot(x, y)
         pl.grid()
 
-
 ########################################################################################################################
 
-def _update_phi_local(model, data):
-
-    ##
-    counts_norm, nreplicas = data
-    counts_norm = np.hstack(counts_norm)
-
-    ## proposal
-    log_phi_ = model.log_phi * np.exp(0.01 * rn.randn(model.nfeatures))
-
-    ## log-likelihood
-    beta = np.repeat(model.beta[model.z.T], nreplicas, axis=1)
-    loglik = _compute_loglik(counts_norm, model.log_phi.reshape(-1, 1), model.log_mu.reshape(-1, 1), beta).sum(-1)
-    loglik_ = _compute_loglik(counts_norm, log_phi_.reshape(-1, 1), model.log_mu.reshape(-1, 1), beta).sum(-1)
-
-    ## log-prior
-    logprior = st.normalln(model.log_phi, model.mu, 1 / model.tau)
-    logprior_ = st.normalln(log_phi_, model.mu, 1 / model.tau)
-
-    ## log-posterior
-    logpost = loglik + logprior
-    logpost_ = loglik_ + logprior_
-
-    ## update
-    idxs = (logpost_ >= logpost) | (rn.rand(model.nfeatures) < np.exp(logpost_ - logpost))
-    model.log_phi[idxs] = log_phi_[idxs]
-
-
-########################################################################################################################
-
-def _update_phi_global(model, data):
-
-    ##
-    counts_norm, nreplicas = data
-    counts_norm = np.hstack(counts_norm)
-
-    ##
-    log_phi_ = rn.normal(model.mu, 1/np.sqrt(model.tau), model.nfeatures).reshape(-1, 1)
-
-    ##
-    beta = np.repeat(model.beta[model.z.T], nreplicas, axis=1)
-    loglik = _compute_loglik(counts_norm, model.log_phi.reshape(-1, 1), model.log_mu.reshape(-1, 1), beta).sum(-1)
-    loglik_ = _compute_loglik(counts_norm, log_phi_.reshape(-1, 1), model.log_mu.reshape(-1, 1), beta).sum(-1)
-
-    ##
-    idxs = (loglik_ >= loglik) | (rn.rand(model.nfeatures) < np.exp(loglik_ - loglik))
-    model.log_phi[idxs] = log_phi_[idxs]
-
-
-########################################################################################################################
-
-def _update_mu(model, data):
-
-    ##
-    counts_norm, nreplicas = data
-    counts_norm = np.hstack(counts_norm)
-
-    ##
-    beta = np.exp(model.beta)[model.z.T]
-    beta = np.repeat(beta, nreplicas, axis=1)
-
-    ##
-    c1 = model.nsamples / np.exp(model.log_phi)
-    c2 = (counts_norm / beta).sum(-1)
-
-    ##
-    p = rn.beta(0.5 + c1, 0.5 + c2)
-    model.log_mu[:] = np.log1p(-p) - np.log(p) - model.log_phi
-
-
-########################################################################################################################
-
-def _update_beta_global(model, data):
-
-    ##
-    counts_norm, nreplicas = data
-    counts_norm = np.hstack(counts_norm)
-
-    ##
-    beta_ = np.r_[0, rn.normal(model.m0, 1/np.sqrt(model.t0), model.lw.size-1)]
-
-    ##
-    beta1 = np.repeat(model.beta[model.z.T], nreplicas, axis=1)
-    beta2 = np.repeat(beta_[model.z.T], nreplicas, axis=1)
-    loglik = _compute_loglik(counts_norm, model.log_phi.reshape(-1, 1), model.log_mu.reshape(-1, 1), beta1)
-    loglik_ = _compute_loglik(counts_norm, model.log_phi.reshape(-1, 1), model.log_mu.reshape(-1, 1), beta2)
-
-    z = np.repeat(model.z.T, nreplicas, axis=1)
-    loglik = np.bincount(z.ravel(), loglik.ravel(), minlength=model.lw.size)
-    loglik_ = np.bincount(z.ravel(), loglik_.ravel(), minlength=model.lw.size)
-
-    ##
-    idxs = (loglik_ >= loglik) | (rn.rand(model.lw.size) < np.exp(loglik_ - loglik))
-    model.beta[model.iact & idxs] = beta_[model.iact & idxs]
-
-    ##
-    model.beta[~model.iact] = beta_[~model.iact]
-
-
-########################################################################################################################
-
-def _update_beta_local(model, data):
-
-    ##
-    counts_norm, nreplicas = data
-    counts_norm = np.hstack(counts_norm)
-
-    ##
-    beta_ = np.r_[0, model.beta[1:] * np.exp(0.01 * rn.randn(model.lw.size-1))]
-
-    ##
-    beta1 = np.repeat(model.beta[model.z.T], nreplicas, axis=1)
-    beta2 = np.repeat(beta_[model.z.T], nreplicas, axis=1)
-    loglik = _compute_loglik(counts_norm, model.log_phi.reshape(-1, 1), model.log_mu.reshape(-1, 1), beta1)
-    loglik_ = _compute_loglik(counts_norm, model.log_phi.reshape(-1, 1), model.log_mu.reshape(-1, 1), beta2)
-
-    z = np.repeat(model.z.T, nreplicas, axis=1)
-    loglik = np.bincount(z.ravel(), loglik.ravel(), minlength=model.lw.size)
-    loglik_ = np.bincount(z.ravel(), loglik_.ravel(), minlength=model.lw.size)
-
-    logprior = st.normalln(model.beta, model.m0, 1/model.t0)
-    logprior_ = st.normalln(beta_, model.m0, 1/model.t0)
-
-    logpost = loglik + logprior
-    logpost_ = loglik_ + logprior_
-
-    ##
-    idxs = (logpost_ >= logpost) | (rn.rand(model.lw.size) < np.exp(logpost_ - logpost))
-    model.beta[model.iact & idxs] = beta_[model.iact & idxs]
-
-    ##
-    model.beta[~model.iact] = rn.normal(model.m0, 1/np.sqrt(model.t0), model.lw.size-model.nact)
-
-
-########################################################################################################################
-
-def _update_hpars(model):
-
-    ## sample first group of hyper-parameters
-    s1 = np.sum(model.log_phi)
-    s2 = np.sum(model.log_phi**2)
-    n = model.log_phi.size
-    model.mu, model.tau = st.sample_normal_mean_prec_jeffreys(s1, s2, n)
-
-    ## sample second group of hyper-parameters
-    beta = model.beta[model.iact]
-    s1 = np.sum(beta)
-    s2 = np.sum(beta**2)
-    n = beta.size
-    model.m0, model.t0 = st.sample_normal_mean_prec_jeffreys(s1, s2, n) if n > 2 else (model.m0, model.t0)
-    # self.t0 = st.sample_normal_prec_jeffreys(s1, s2, n) if n > 2 else self.t0
-
-
-########################################################################################################################
 
 def _compute_loglik(counts_norm, log_phi, log_mu, beta):
+    """Computes the log-likelihood of each element of counts for each element of theta"""
 
     ##
     alpha = 1 / np.exp(log_phi)
@@ -390,8 +393,8 @@ def _compute_loglik(counts_norm, log_phi, log_mu, beta):
     ##
     return st.nbinomln(counts_norm, alpha, p)
 
-
 ########################################################################################################################
+
 
 def _update_group_vars(args):
     c, _, lu, zeta, counts_norm, (log_phi, log_mu, beta, lw) = args

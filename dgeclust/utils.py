@@ -7,6 +7,19 @@ import matplotlib.pylab as pl
 ########################################################################################################################
 
 
+def compute_occupancies_2d(nclusters, z):
+    """Compute cluster occupancies per row of matrix z"""
+
+    labels = np.arange(nclusters)
+    occ = z[:, :, np.newaxis] == labels
+    occ = np.sum(occ, 1)
+
+    ##
+    return occ
+
+########################################################################################################################
+
+
 def normalize_log_weights(lw):
     """Normalises a matrix of log-weights, row-wise"""
 
@@ -20,7 +33,7 @@ def normalize_log_weights(lw):
 
 
 def plot_ra(x, y, idxs=None):
-    """Computes the RA plot of two groups of samples. Use the returned arrays to actually plot the diagram"""
+    """Computes the RA plot of two groups of samples"""
 
     ## compute log2 values
     l1 = np.log2(x)
@@ -28,7 +41,7 @@ def plot_ra(x, y, idxs=None):
 
     ## compute A and R
     r = l1 - l2
-    a = (l1 + l2) * 0.5
+    a = np.r_[(l1 + l2) * 0.5]
 
     h = pl.figure()
     if idxs is None:

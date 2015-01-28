@@ -23,8 +23,13 @@ class CountData(object):
         groups = cl.OrderedDict(zip(labels, groups))
 
         ## compute library sizes
-        lib_sizes = estimate_lib_sizes_quantile(counts.values) if lib_sizes is None else lib_sizes
-        lib_sizes = pd.DataFrame(lib_sizes, index=counts.columns, columns=['Library sizes']).T
+        # norm_method = {
+        #     'DESeq': estimate_lib_sizes_deseq,
+        #     'Quantile': estimate_lib_sizes_quantile
+        # }[norm_method]
+        # lib_sizes = norm_method(counts.values) if lib_sizes is None else lib_sizes
+        lib_sizes = estimate_lib_sizes_deseq(counts.values) if lib_sizes is None else lib_sizes
+        lib_sizes = pd.DataFrame(lib_sizes, index=counts.columns, columns=['sizes']).T
 
         ## compute number of replicas per group
         nreplicas = [np.size(val) for val in groups.values()]
@@ -33,12 +38,9 @@ class CountData(object):
         ##
         self.counts = counts
         self.lib_sizes = lib_sizes
+        self.counts_norm = self.counts / self.lib_sizes.values.ravel()
         self.groups = groups
         self.nreplicas = nreplicas
-
-    ##
-    def get_norm_counts(self):
-        return self.counts / self.lib_sizes.values.ravel()
 
 ########################################################################################################################
 
