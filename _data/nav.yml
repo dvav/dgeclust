@@ -35,7 +35,7 @@ docs:
             url: /docs/tutorial/processing
 
         detest:
-            title: Testing for differential expression
+            title: Differential expression
             url: /docs/tutorial/detest
 
         clust:
