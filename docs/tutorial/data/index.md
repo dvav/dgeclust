@@ -12,6 +12,7 @@ shall use the *pasilla* RNA-seq dataset, which is available through
 You can inspect the data using the `head` command at the terminal:
 {% highlight python linenos %}
 $ head /path/to/data.txt
+
 treated1fb      treated2fb      treated3fb      untreated1fb    untreated2fb    untreated3fb    untreated4fb
 FBgn0000003     0       0       1       0       0       0       0
 FBgn0000008     78      46      43      47      89      53      27

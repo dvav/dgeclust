@@ -51,38 +51,48 @@ Its progress can be checked periodically by calling the `plot_progress` method o
 mdl.plot_progress(fig=figure(figsize=(10,7)))
 {% endhighlight %}
 
-A sample output of the above statement after the end of the simulation, is given below: 
+After the end of the simulation, the output of the above statement looks as follows: 
 
 <img class="img-responsive" alt="Simulation progress" title="Simulation progress" src="{{ site.baseurl }}/img/progress.png"></img>
 
-The algorithm converges rapidly after ~500 iterations. From the histogram on the top right, we can see that the data
-supports around 70 clusters. The bottom panels indicate the progress of additional model parameters. Their exact meaning
-is not important at the moment. What is important, however, is that they also reach a stable equilibrium quite rapidly 
-during the course of the simulation. If you need to extend the simulation for another 10K iterations (i.e. a total
-of 20K iterations), you can type:
+Thanks to the blocked Gibbs sampler **DGEclust** uses internally, the algorithm converges rapidly, 
+after ~1000 iterations. **DGEclust** uses a Hierarchical Dirichlet Process (HDP) mixture model to cluster 
+the log-fold changes (LFCs) across genes and across groups of samples. The top left plot illustrates that 
+an average of around 12 clusters are supported by the data. The top right plot illustrates the trace of 
+the global concentration parameter of the HDP. In addition, **DGEclust** assumes normal priors for the 
+log-dispersion parameter of the Negative Binomial distribution and the LFCs. The bottom panels illustrate
+the traces of the estimated mean and variance for each of these two priors. 
+
+Before attempting any further 
+analysis, it is important that the traces illustrated in the abiove figure reach a steady state. This means 
+that we might need to extend the simulation beyond just 10K iteration. This can be achieved by loading the
+state of a previously saved simulation and using this as the initial state for a new simulation, as shown below: 
 
 {% highlight bash linenos %}
-bin/clust /path/to/data_filt.txt -g treated treated treated untreated untreated untreated untreated -t 20000 -e & 
+mdl = NBinomModel.load('sim_output')
+mgr.new(data, mdl, niters=5000) 
 {% endhighlight %}
  
-The argument `-e` indicates that a previously terminated simulation should
-be extended and the argument `-t` indicates the total duration of the simulation. 
+The above code will extend the simulation previously stored in `sim_output` for another 5K iterations.
 
-If you wish, you can see how the fitted model at the end of the simulation compares
-to the actual data:
+At any point during the simulation, we can check how well the model fits the data using the `plot_fitted_model`
+method of an `NBinomModel` object. For example, for the `treated1fb` sample, we have:
 
 {% highlight python linenos %}
-from dgeclust import utils
-from dgeclust.data import CountData
-from dgeclust.models import nbinom
-data = CountData.load('path/to/data_filt.txt', groups=['treated', 'treated', 'treated', 'untreated', 'untreated', 'untreated', 'untreated'])    
-figure()
-x, y = utils.compute_fitted_model('treated1fb', res.state, data, nbinom);    # you can change 'treated1fb' to any other sample 
-xlabel('log counts'); ylabel('frequency')
+mdl.plot_fitted_model('treated1fb', data);
 {% endhighlight %}
 
 <img class="img-responsive" alt="Fitted model" title="Fitted model" src="{{ site.baseurl }}/img/fitted.png"></img>
 
-The next step is to post-process your data in order to test for differential expression. 
+Obviously, a similar plot can be constructed for each sample in the data.
+ 
+In addition, we can inspect the estimated LFC clusters, using the `plot_clusters` method of the `NBinomModel` object:
+
+<img class="img-responsive" alt="Estimated log-fold change cluster" title="Estimated log-fold change cluster" src="{{ site.baseurl }}/img/clusters.png"></img>
+
+The null-cluster corresponds to no differential expression, while negative (positive) LFC clusters imply under(over)-expression
+in relation to the null cluster. 
+ 
+The next step is to post-process these results in order to test for differential expression. 
 <a href="{{ site.baseurl }}{{ site.data.nav.docs.tut.detest.url }}">Learn how!</a>
 
