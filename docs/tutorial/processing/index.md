@@ -6,52 +6,52 @@ layout: docs
 Processing the data
 ===================
 
-Next, we need to process the data using **DGEclust**. For this purpose, we shall use the program `clust`, which comes with **DGEclust**. 
-From your terminal, do the following:
-
-{% highlight bash linenos %}
-$ cd path/to/dgeclust
-$ bin/clust path/to/data_filt.txt -g treated treated treated untreated untreated untreated untreated &
-{% endhighlight %}
-
-The above command runs a Gibbs sampler for a default of 10K iterations. The argument `-g`
-instructs the simulator that the first three samples and the last four form two different groups (i.e. treated and untreated). 
-Depending on the size of your data, this will take some time to finish. The output from the sampler is saved periodically in the directory 
-`_clust`, which you can inspect to check the progress of your simulation, e.g. using `tail`:
-
-{% highlight bash linenos %}
-$ tail -f _clust/pars.txt
-0       100     100     1.000000        0.000001        0.500000        0.500000        0.500000        0.500000        0.000000        1.000000        0.000000        1.000000        0.000000        1.000000
-1       100     25      1.000000        0.013232        0.592728        0.407272        0.789091        0.210909        1.019620        0.856941        -0.624808       1.008012        -0.215131       0.877321
-2       93      36      1.000000        0.010479        0.690192        0.309808        0.747548        0.252452        1.206372        0.689313        -0.995780       1.226596        -0.449124       0.781314
-3       96      34      1.000000        0.010251        0.781343        0.218657        0.729465        0.270535        1.251615        0.800146        -1.527719       0.639356        -0.673721       0.717895
-4       85      29      1.000000        0.009616        0.862315        0.137685        0.716464        0.283536        1.347671        0.825410        -1.863795       1.276711        -0.883036       0.677475
-5       88      32      1.000000        0.010956        0.925837        0.074163        0.705472        0.294528        1.241751        0.567440        -2.235118       1.246565        -1.102693       0.568704
-6       86      31      1.000000        0.009139        0.958201        0.041799        0.691289        0.308711        1.182294        1.339433        -2.605717       1.943154        -1.279828       0.540100
-7       87      36      1.000000        0.011891        0.981414        0.018586        0.675038        0.324962        1.025973        1.544493        -3.123108       1.817990        -1.444316       0.509955
-8       84      36      1.000000        0.009918        0.990247        0.009753        0.649273        0.350727        0.859629        1.532394        -3.601945       1.525379        -1.613195       0.462447
-9       84      41      1.000000        0.011009        0.998402        0.001598        0.621558        0.378442        0.662717        1.565444        -3.860092       1.305714        -1.772060       0.423376
-...
-{% endhighlight %}
-
-The first column in `pars.txt` gives you the number of iterations, while the remaining 
-columns correspond to parameters, some of which depend on the specific distribution being used
-by the simulator to model count data (defaults to the **Negative Binomial** distribution).
-
-There are more arguments that you can pass to `clust`. Type `bin/clust -h` for more details.
-
-After the end of the simulation, you can visualize your results using **IPython**:
+Next, we need to process the data using **DGEclust**. At the **IPython** terminal, type the following:
 
 {% highlight python linenos %}
-cd path/to/dgeclust
-from dgeclust.gibbs.results import GibbsOutput
-res = GibbsOutput.load('_clust')
-figure()
-subplot(2,2,1); plot(res.nclust.active); xlim([0, 500]); xlabel('# of iterations'); ylabel('# of clusters')
-subplot(2,2,2); hist(res.nclust.active, 100, range=(0,100), normed=True); xlabel('# of clusters'); ylabel('frequency')
-subplot(2,2,3); plot(res.hpars.iloc[:,:4]); xlabel('# of terations'); ylabel('p1 to p4')
-subplot(2,2,4); plot(res.hpars.iloc[:,4:]); xlabel('# of iterations'); ylabel('p5, p6')
+from dgeclust import CountData, SimulationManager
+from dgeclust.models import NBinomModel
+
+mgr = SimulationManager()
+
+data = CountData(counts_filt, groups=['treated', 'treated', 'treated', 'untreated', 'untreated', 'untreated', 'untreated'])
+mdl = NBinomModel(data, outdir='sim_output')
+
+mgr.new(data, mdl)
 {% endhighlight %}
+
+**DGEclust** is distributed as the python package `dgeclust`, which you can import and use at the 
+**IPython** command prompt. At `line 4` above, we create a new `SimulationManager` object, which we
+will use for initiating simulations. 
+
+At `line 6`, we create a `CountData` object, which takes as input the filtered count data and a list of strings 
+representing the group assigment (i.e. *treated* or *untreated*) of each sample. If `group` is omitted, each 
+sample is assumed to be a group on its own. This is a very simple way to indicate the presence or absence of 
+**biological replicates**. The `CountData` constructor also accepts a `lib_sizes` argument, which is a list of
+normalisation factors, one for each sample. If omitted, as above, these normalisation factors are computed 
+automatically using the same method `DESeq` uses.  
+
+At `line 7`, we create an `NBinomModel` object, which models the data using a Negative Binomial distribution.
+Simulation results are saved in the directory specified by the argument `outdir` (`sim_output` in this case). 
+If this argument is omitted, the default destination is the sub-directory `_clust` in the current directory.
+       
+Finally, at `line 9`, we fire up a simulation using the `new` method of the `mgr` object and the data and model 
+objects we created earlier as arguments. Notice that the `new` method returns immediately at the command prompt. 
+This permits running additional simulations (i.e. by creating new `CountData` and `NBinomModel` objects and 
+calling `new` with these as arguments) and inspecting them while they are running, as we shall see below. 
+If this behavior is undesirable, we can modify it using the `bg=False` argument. 
+The above command runs a Gibbs sampler for a default of 10K iterations. A different simulation length can be 
+specified using the argument `niters`. By default, the data are processed in parallel using all available 
+processing cores in the system. Again, this behaviour can be modified using the `nthreads` argument.
+
+Depending on the size of your data and system resources, the above simulation will take several minutes to finish. 
+Its progress can be checked periodically by calling the `plot_progress` method of the `mdl` object:
+
+{% highlight python linenos %}
+mdl.plot_progress(fig=figure(figsize=(10,7)))
+{% endhighlight %}
+
+A sample output of the above statement after the end of the simulation, is given below: 
 
 <img class="img-responsive" alt="Simulation progress" title="Simulation progress" src="{{ site.baseurl }}/img/progress.png"></img>
 

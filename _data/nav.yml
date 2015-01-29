@@ -31,7 +31,7 @@ docs:
             url: /docs/tutorial/data
 
         processing:
-            title: Data processing
+            title: Processing
             url: /docs/tutorial/processing
 
         detest:
