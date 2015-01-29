@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name='DGEclust',
-      version='15.01.30',
+      version='15.1.30',
       description='Hierarchical non-parametric Bayesian clustering of digital expression data',
       long_description=open('README.md').read(),
       classifiers=[
