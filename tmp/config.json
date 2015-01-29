@@ -32,7 +32,8 @@
         "config": "config.json",
         "state": "state.pkl",
         "pars": "pars.txt",
-        "cc": "cc"
+        "beta": "beta.txt"
+        "cc": "cc",
     },
     
     "clust": {

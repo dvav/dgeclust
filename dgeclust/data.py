@@ -10,23 +10,8 @@ import collections as cl
 class CountData(object):
     """Represents a counts data set"""
 
-    def __init__(self, counts, lib_sizes, groups, nreplicas):
+    def __init__(self, counts, lib_sizes=None, groups=None):
         """Initialise state from raw data"""
-
-        self.counts = counts
-        self.lib_sizes = lib_sizes
-        self.groups = groups
-        self.nreplicas = nreplicas
-
-    ####################################################################################################################
-
-    @classmethod
-    def load(cls, file_name, norm_method='Quantile', groups=None, samples=None):
-        """Reads a data file containing a matrix of count data"""
-
-        ## read data file
-        counts = pd.read_table(file_name, index_col=0)  # .astype(np.uint32)
-        counts = counts if samples is None else counts[samples]
 
         ## group information
         groups = counts.columns.tolist() if groups is None else groups
@@ -38,22 +23,24 @@ class CountData(object):
         groups = cl.OrderedDict(zip(labels, groups))
 
         ## compute library sizes
-        norm_method = {
-            'Total': lambda x: np.sum(x, 0),
-            'Quantile': lambda x: estimate_lib_sizes_quantile(x),
-            'DESeq': lambda x: estimate_lib_sizes_deseq(x)
-        }[norm_method]
-        lib_sizes = norm_method(counts.values)
-
-        lib_sizes = pd.DataFrame(lib_sizes, index=counts.columns, columns=['Library sizes']).T
+        # norm_method = {
+        #     'DESeq': estimate_lib_sizes_deseq,
+        #     'Quantile': estimate_lib_sizes_quantile
+        # }[norm_method]
+        # lib_sizes = norm_method(counts.values) if lib_sizes is None else lib_sizes
+        lib_sizes = estimate_lib_sizes_deseq(counts.values) if lib_sizes is None else lib_sizes
+        lib_sizes = pd.DataFrame(lib_sizes, index=counts.columns, columns=['sizes']).T
 
         ## compute number of replicas per group
         nreplicas = [np.size(val) for val in groups.values()]
         nreplicas = cl.OrderedDict(zip(groups.keys(), nreplicas))
 
-        ## return
-        return cls(counts, lib_sizes, groups, nreplicas)
-
+        ##
+        self.counts = counts
+        self.lib_sizes = lib_sizes
+        self.counts_norm = self.counts / self.lib_sizes.values.ravel()
+        self.groups = groups
+        self.nreplicas = nreplicas
 
 ########################################################################################################################
 

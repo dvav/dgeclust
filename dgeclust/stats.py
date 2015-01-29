@@ -57,7 +57,7 @@ def nbinomln(x, alpha=1, p=0.5):
     """Returns the log-density of the negative binomial distribution at x"""
 
     ## return
-    return sp.gammaln(x + alpha) - sp.gammaln(alpha) - sp.gammaln(x + 1) + alpha * np.log(p) + x * np.log(1 - p)
+    return sp.gammaln(x + alpha) - sp.gammaln(alpha) - sp.gammaln(x + 1) + alpha * np.log(p) + x * np.log1p(-p)
 
 ########################################################################################################################
 
@@ -76,111 +76,126 @@ def bbinomln(x, n=1, alpha=0.5, beta=0.5):
 ########################################################################################################################
 
 
-def sample_normal_mean_var(s1, s2, ndata, mu=0, k=0, shape=0, rate=0):
-    """Samples the mean and variance of a normal distribution given data with sufficient statistics s1, s2 and n"""
+def exponentialln(x, scale=1):
+    """Returns the log-density of the exponential distribution at x"""
 
-    ## update mu, k, shape, rate
+    ##
+    return -np.log(scale) - x / scale
+
+########################################################################################################################
+
+
+def sample_normal_mean(s1, ndata, prec, m0=0, t0=0):
+    """Samples the mean of a normal distribution"""
+
+    ##
+    t = t0 + prec * ndata
+    m = (t0 * m0 + prec * s1) / t
+
+    ## return
+    return rn.normal(m, 1 / np.sqrt(t))
+
+########################################################################################################################
+
+
+def sample_normal_prec(s1, s2, ndata, mean, a0=0, b0=0):
+    """Samples the precision of a normal distribution"""
+
+    ##
+    dot = s2 - 2 * mean * s1 + ndata * mean**2
+
+    a = a0 + ndata * 0.5
+    b = b0 + 0.5 * dot
+
+    ## return
+    return rn.gamma(a, 1 / b)
+
+########################################################################################################################
+
+
+def sample_normal_mean_prec(s1, s2, ndata, m0=0, l0=0, a0=0, b0=0):
+    """Samples the precision of a normal distribution"""
+
+    ##
     avg = s1 / ndata
-    dot = s2 - 2 * avg * s1 + ndata * avg * avg + 1e-12     # do not let dot become zero
+    dot = s2 - 2 * avg * s1 + ndata * avg**2
 
-    mu_ = (k * mu + s1) / (k + ndata)
-    k_ = k + ndata
-    shape_ = shape + ndata * 0.5
-    rate_ = rate + 0.5 * dot + 0.5 * ndata * k / (ndata + k) * (avg - mu) * (avg - mu)
-    
-    ## compute var and mean
-    var = 1 / rn.gamma(shape_, 1 / rate_)
-    mean = rn.randn() * np.sqrt(var / k_) + mu_
+    l = l0 + ndata
+    m = (l0 * m0 + s1) / l
+    a = a0 + 0.5 * ndata
+    b = b0 + 0.5 * dot + 0.5 * l0 * ndata * (avg - m0)**2 / l
+
+    ##
+    prec = rn.gamma(a, 1 / b)
+    mean = rn.normal(m, 1 / np.sqrt(l * prec))
 
     ## return
-    return mean, var
+    return mean, prec
 
 ########################################################################################################################
 
 
-def sample_normal_mean_var_jeffreys(s1, s2, ndata):
-    """Samples the mean and variance of a normal distribution given data with sufficient statistics s1, s2 and n"""
+def sample_normal_mean_jeffreys(s1, ndata, prec):
+    """Samples the mean of a normal distribution"""
 
-    ## update mu, k, shape, rate
+    ##
+    return rn.normal(s1 / ndata, 1 / np.sqrt(prec * ndata))
+
+########################################################################################################################
+
+
+def sample_normal_prec_jeffreys(s1, s2, ndata):
+    """Samples the precision of a normal distribution"""
+
+    ##
     avg = s1 / ndata
-    dot = s2 - 2 * avg * s1 + ndata * avg * avg + 1e-12     # do not let dot become zero
+    dot = s2 - 2 * avg * s1 + ndata * avg**2
 
-    ## sample var and mean
-    mean = st.t.rvs(ndata + 1, avg, dot / (ndata*ndata + ndata))
-    var = 1 / rn.gamma((ndata + 1) * 0.5, 2 / dot)
-
-    ## return
-    return mean, var
+    ##
+    return rn.gamma(ndata * 0.5, 2 / dot)
 
 ########################################################################################################################
 
 
-def sample_normal_var_jeffreys(s1, s2, ndata):
-    """Samples the mean and variance of a normal distribution given data with sufficient statistics s1, s2 and n"""
+def sample_normal_mean_prec_jeffreys(s1, s2, ndata):
+    """Samples the precision of a normal distribution"""
 
-    ## update mu, k, shape, rate
+    ##
     avg = s1 / ndata
-    dot = s2 - 2 * avg * s1 + ndata * avg * avg + 1e-12     # do not let dot become zero
+    dot = s2 - 2 * avg * s1 + ndata * avg**2
 
-    ## sample var and mean
-    var = 1 / rn.gamma(ndata * 0.5, 2 / dot)
+    mean = st.t.rvs(ndata+1, avg, dot / (ndata * ndata + ndata))
+    prec = rn.gamma((ndata+1) * 0.5, 2 / dot)
 
-    ## return
-    return var
-
-########################################################################################################################
-
-
-def sample_gamma_shape_scale(suma, logsuma, ndata, shape, scale, lp0=0, q0=0, r0=0, s0=0):
-    """Samples the shape and scale of the gamma distribution from their posterior"""
-
-    ## compute updated params
-    lp = lp0 + logsuma
-    q = q0 + suma
-    r = r0 + ndata
-    s = s0 + ndata
-
-    ## make proposals
-    shape_, scale_ = (shape, scale) * np.exp(0.01 * rn.randn(2))
-
-    ## compute logpost and logpost_
-    logpost = (shape - 1) * lp - q / scale - r * sp.gammaln(shape) - shape * s * np.log(scale)
-    logpost_ = (shape_ - 1) * lp - q / scale_ - r * sp.gammaln(shape_) - shape_ * s * np.log(scale_)
-
-    ## do Metropolis step
-    if logpost_ > logpost or rn.rand() < np.exp(logpost_ - logpost):
-        shape = shape_
-        scale = scale_
-
-    ## return
-    return shape, scale
+    ##
+    return mean, prec
 
 ########################################################################################################################
 
 
-def sample_gamma_scale(suma, ndata, shape, a0=0, b0=0):
+def sample_gamma_rate(s, ndata, shape, a0=0, b0=0):
     """Samples the scale of the gamma distribution from its posterior, when shape is known"""
 
     ## return
-    return 1 / rn.gamma(a0 + ndata * shape, 1 / (b0 + suma))
+    return rn.gamma(a0 + ndata * shape, 1 / (b0 + s))
 
 ########################################################################################################################
 
 
-def sample_gamma_shape(logsuma, ndata, shape, scale, lp0=0, r0=0, s0=0):
+def sample_gamma_shape(sl, ndata, shape, rate, la0=0, b0=0, c0=0):
     """Samples the shape of the gamma distribution from its posterior, when scale is known"""
 
     ## compute updated params
-    lp = lp0 + logsuma
-    r = r0 + ndata
-    s = s0 + ndata
+    la = la0 + sl
+    b = b0 + ndata
+    c = c0 + ndata
 
     ## make proposal
     shape_ = shape * np.exp(0.01 * rn.randn())
 
     ## compute logpost and logpost_
-    logpost = (shape - 1) * lp - r * sp.gammaln(shape) - shape * s * np.log(scale)
-    logpost_ = (shape_ - 1) * lp - r * sp.gammaln(shape_) - shape_ * s * np.log(scale)
+    logpost = (shape - 1) * la + shape * c * np.log(rate) - b * sp.gammaln(shape)
+    logpost_ = (shape_ - 1) * la + shape_ * c * np.log(rate) - b * sp.gammaln(shape_)
 
     ## do Metropolis step
     if logpost_ > logpost or rn.rand() < np.exp(logpost_ - logpost):
@@ -192,19 +207,30 @@ def sample_gamma_shape(logsuma, ndata, shape, scale, lp0=0, r0=0, s0=0):
 ########################################################################################################################
 
 
-def sample_categorical(w, n=1):
-    """Samples from the categorical distribution with matrix of weights w"""
+def sample_dirichlet(a):
+    """Sample from multiple Dirichlet distributions given the matrix of concentration parameter columns a"""
+
+    x = rn.gamma(a, 1)
+    w = x / np.sum(x, 0)
+
+    ##
+    return w
+
+########################################################################################################################
+
+
+def sample_categorical(w, nsamples=1):
+    """Samples from the categorical distribution with matrix of weight columns w"""
+
+    _, ncols = w.shape
 
     ws = w.cumsum(0)
     ws[-1] = 1                                      # sum of ws along rows should be equal to 1
 
-    if w.ndim == 1:                                 # w is 1D
-        idxs = np.sum(ws < rn.rand(n, 1), 1)
-    else:                                           # assume w is 2D
-        idxs = np.sum(ws < rn.rand(w.shape[1]), 0)
+    idxs = np.sum(ws[:, :, np.newaxis] < rn.rand(ncols, nsamples), 0)
         
     ## return
-    return idxs
+    return idxs.T
         
 ########################################################################################################################
 
@@ -227,20 +253,22 @@ def sample_stick(cluster_occupancies, eta):
     
     ## return        
     return lw, lv
-    
+
 ########################################################################################################################
 
 
-def sample_eta_ishwaran(lw, a=0, b=0):
+def sample_eta_ishwaran(lw, eta, a=0, b=0):
     """Samples the concentration parameter eta given a vector of mixture log-weights"""
 
-    ## return
-    return rn.gamma(lw.size + a - 1, 1 / (b - lw[-1]))
+    eta = rn.gamma(lw.size + a - 1, 1 / (b - lw[-1])) if np.isfinite(lw[-1]) else eta
+
+    ##
+    return eta
 
 ########################################################################################################################
 
 
-def sample_eta_west(eta, nact, n0, a=0, b=0):
+def sample_eta_west(eta, nact, n0, a=1, b=0):
     """Samples the concentration parameter eta"""
 
     ## compute x, r and p
@@ -259,7 +287,7 @@ def sample_eta(eta, nact, n0, a=0, b=0):
     """Samples the concentration parameter eta"""
 
     ## proposal
-    eta_ = eta * np.exp(rn.randn() * 0.01)
+    eta_ = eta * np.exp(0.01 * rn.randn())
 
     ## posterior densities
     lp = sp.gammaln(eta) - sp.gammaln(eta + n0) + (nact + a - 1) * np.log(eta) - eta * b

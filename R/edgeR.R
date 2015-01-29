@@ -1,26 +1,37 @@
 rm(list=ls())
-setwd('~/Repositories/simdata')
+setwd('~/Repositories/benchmarks/')
 
-sets = c('set0a/','set0b/','set0c/')
-files = c('simdata1.txt', 'simdata2.txt', 'simdata3.txt')
-r = '4rep/'
-samples = c(1,2,3,4, 9,10,11,12)
-conds = c(1,1,1,1, 2,2,2,2)
+files = c('data/simdata1.txt', 'data/simdata2.txt', 'data/simdata3.txt')
+max_nreplicates_per_group = 8
+samples = c(1,2,3)
+sets = c('0a','0b','0c')
+reps = c(8)
+groups = c(2)
 
-for (s in sets) {
-  for (i in 1:3) {
-    fin = paste(s, files[i], sep='') 
-    print(fin)
-    
-    raw = read.table(fin)[,samples]
-    
-    dds = DGEList(counts=raw,group=conds)
-    dds = calcNormFactors(dds)
-    dds = estimateCommonDisp(dds)
-    dds = estimateTagwiseDisp(dds)
-    res = exactTest(dds)
-    top = topTags(res, n=1e6, sort.by='none')
-    
-    write.table(top, paste(s, r, 'pvals', i, '_edgeR.txt', sep=''), quote=F, sep='\t')
+for (s in samples) {
+  for (t in sets) {
+    fin = files[s]
+    raw = read.table(paste('set', t, '/', fin, sep=''))
+    for (r in reps) {
+      for (g in groups) {
+        samples = rep(1:r, g) + rep(0:(g-1)*max_nreplicates_per_group, each = r)
+        conds = rep(1:g, each = r)
+        print(paste('set', t, ', ', fin, ', ', r, ' replicates, ', g, ' groups', sep=''))
+
+        dds = DGEList(counts=raw[, samples],group=conds)
+        dds = calcNormFactors(dds)
+        if (r==1) {
+          res = exactTest(dds, dispersion = 0.3)
+        } else {
+          dds = estimateCommonDisp(dds)
+          dds = estimateTagwiseDisp(dds)
+          res = exactTest(dds)
+        }
+        top = topTags(res, n=1e6, sort.by='none')
+
+        write.table(top, paste('set', t, '/', r, '/', g, '/',
+                               'pvals', s, '_edgeR.txt', sep=''), quote=F, sep='\t')
+      }
+    }
   }
 }

@@ -7,27 +7,15 @@ import matplotlib.pylab as pl
 ########################################################################################################################
 
 
-def compute_cluster_occupancies(nclusters, cluster_indicators):
-    """Calculates cluster occupancies, given a vector of cluster indicators"""
+def compute_occupancies_2d(nclusters, z):
+    """Compute cluster occupancies per row of matrix z"""
 
-    labels = np.arange(nclusters).reshape(-1, 1)               # cluster labels
-    occupancy_matrix = (cluster_indicators == labels)          # N x M occupancy matrix
+    labels = np.arange(nclusters)
+    occ = z[:, :, np.newaxis] == labels
+    occ = np.sum(occ, 1)
 
-    ## return
-    return np.sum(occupancy_matrix, 1), occupancy_matrix
-
-########################################################################################################################
-
-
-def get_cluster_info(nclusters, cluster_indicators):
-    """Returns various cluster info, including cluster occupancies"""
-
-    cluster_occupancies, occupancy_matrix = compute_cluster_occupancies(nclusters, cluster_indicators)
-    iactive = cluster_occupancies > 0           # indicators of active clusters
-    nactive = np.count_nonzero(iactive)         # number of active clusters
-
-    ## return
-    return cluster_occupancies, iactive, nactive, occupancy_matrix
+    ##
+    return occ
 
 ########################################################################################################################
 
@@ -44,50 +32,8 @@ def normalize_log_weights(lw):
 ########################################################################################################################
 
 
-def plot_fitted_model(sample, state, data, model, xmin=-1, xmax=12, npoints=1000, nbins=100, epsilon=0.5,
-                      plot_components=False):
-    """Computes the fitted model"""
-
-    ## fetch group
-    group = [i for i, item in enumerate(data.groups.items()) if sample in item[1]][0]
-
-    ## fetch clusters
-    z = state.z
-    delta = state.delta[:, [group]]
-    pars = state.pars
-
-    occ, _ = compute_cluster_occupancies(len(pars), z)
-
-    ## fetch data
-    counts = data.counts[sample].values.astype('float')
-    counts[counts < 1] = epsilon
-    counts = np.log(counts)
-
-    lib_size = data.lib_sizes[sample].values.ravel()
-
-    ## compute fitted model
-    x = np.reshape(np.linspace(xmin, xmax, npoints), (-1, 1))
-    xx = np.exp(x)
-    y = xx * np.exp(model.compute_loglik((xx[:, :, np.newaxis], lib_size, 1), pars[z], delta).sum(-1))
-
-    ## groups
-    idxs = np.nonzero(occ)[0]
-    yg = np.asarray([np.sum(y[:, z == idx], 1) / z.size for idx in idxs]).T
-
-    ## plot
-    pl.hist(counts, nbins, histtype='stepfilled', linewidth=0, normed=True, color='gray')
-    if plot_components is True:
-        pl.plot(x, yg, 'k')
-    pl.plot(x, yg.sum(1), 'r')
-
-    ## return
-    return x, y
-
-########################################################################################################################
-
-
 def plot_ra(x, y, idxs=None):
-    """Computes the RA plot of two groups of samples. Use the returned arrays to actually plot the diagram"""
+    """Computes the RA plot of two groups of samples"""
 
     ## compute log2 values
     l1 = np.log2(x)
@@ -95,7 +41,7 @@ def plot_ra(x, y, idxs=None):
 
     ## compute A and R
     r = l1 - l2
-    a = (l1 + l2) * 0.5
+    a = np.r_[(l1 + l2) * 0.5]
 
     h = pl.figure()
     if idxs is None:
