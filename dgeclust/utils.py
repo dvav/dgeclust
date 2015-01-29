@@ -57,4 +57,6 @@ def plot_ra(s1, s2, idxs=None, epsilon=0.25, fig=None):
     pl.xlabel('(log2 sample1 + log2 sample2) / 2')
     pl.ylabel('log2 sample1 - log2 sample2')
 
+    pl.tight_layout()
+
 ########################################################################################################################
