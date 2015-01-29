@@ -26,6 +26,7 @@ class NBinomModel(object):
         if os.path.exists(outdir):
             raise Exception("Directory '{}' already exists!".format(outdir))
         else:
+            outdir = os.path.abspath(outdir)
             self.fnames = {
                 'outdir': outdir,
                 'state': os.path.join(outdir, cfg.fnames['state']),
@@ -258,8 +259,17 @@ class NBinomModel(object):
     def load(indir):
         """Initializes model state from file"""
 
+        indir = os.path.abspath(indir)
         with open(os.path.join(indir, cfg.fnames['state']), 'rb') as f:
             state = pkl.load(f)
+
+        ## in case the original output dir was moved
+        state.fnames = {
+            'outdir': indir,
+            'state': os.path.join(indir, cfg.fnames['state']),
+            'pars': os.path.join(indir, cfg.fnames['pars']),
+            'z': os.path.join(indir, cfg.fnames['z'])
+        }
 
         ## return
         return state
