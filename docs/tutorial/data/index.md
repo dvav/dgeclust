@@ -29,14 +29,17 @@ FBgn0000028     0       1       1       0       1       0       0
 The data consists of 7 libraries/samples with 14115 features each. The libraries are grouped in two different 
 classes, *treated* and *untreated*. 
 
-Let's use **IPython** to filter the data. Execute `ipython --pylab` at the terminal and, at the subsequent
+Let's use **IPython** to filter the data. Execute `ipython` at the terminal and, at the subsequent
 **IPython** command prompt, type the following:
 
 {% highlight python linenos %}
+import numpy as np
 import pandas as pd
+import matplotlib.pylab as pl
+
 counts = pd.read_table('/path/to/data.txt')
 row_sums = counts.sum(1)
-idxs = row_sums > percentile(row_sums, 40)   # identifies the upper 60% of the data
+idxs = row_sums > np.percentile(row_sums, 40)   # identifies the upper 60% of the data
 counts_filt = counts[idxs]  
 counts_filt.head()    # inspect the data
 {% endhighlight %}

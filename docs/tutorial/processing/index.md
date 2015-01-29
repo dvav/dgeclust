@@ -48,7 +48,7 @@ Depending on the size of your data and system resources, the above simulation wi
 Its progress can be checked periodically by calling the `plot_progress` method of the `mdl` object:
 
 {% highlight python linenos %}
-mdl.plot_progress(fig=figure(figsize=(10,7)))
+mdl.plot_progress(fig=pl.figure(figsize=(10,7)))
 {% endhighlight %}
 
 After the end of the simulation, the output of the above statement looks as follows: 
@@ -60,7 +60,7 @@ after ~1000 iterations. **DGEclust** uses a Hierarchical Dirichlet Process (HDP)
 the log-fold changes (LFCs) across genes and across groups of samples. The top left plot illustrates that 
 an average of around 12 clusters are supported by the data. The top right plot illustrates the trace of 
 the global concentration parameter of the HDP. In addition, **DGEclust** assumes normal priors for the 
-log-dispersion parameter of the Negative Binomial distribution and the LFCs. The bottom panels illustrate
+log-dispersion parameter of the Negative Binomial distribution and for the LFCs. The bottom panels illustrate
 the traces of the estimated mean and variance for each of these two priors. 
 
 Before attempting any further 
