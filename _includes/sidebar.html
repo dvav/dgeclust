@@ -8,9 +8,10 @@
     <li><a class="text-muted" data-toggle="collapse" href="#tut"><strong>{{ tut.title }}</strong></a></li>
 	<ul class="nav nav-pills nav-stacked collapse in" id="tut">
 		<li {% if page.url contains tut.data.url %}class="active"{% endif %}><a href="{{ site.baseurl }}{{ tut.data.url }}">{{ tut.data.title }}</a></li>
-		<li {% if page.url contains tut.clust.url %}class="active"{% endif %}><a href="{{ site.baseurl }}{{ tut.clust.url }}">{{ tut.clust.title }}</a></li>
+		<li {% if page.url contains tut.processing.url %}class="active"{% endif %}><a href="{{ site.baseurl }}{{ tut.processing.url }}">{{ tut.processing.title }}</a></li>
 		<li {% if page.url contains tut.detest.url %}class="active"{% endif %}><a href="{{ site.baseurl }}{{ tut.detest.url }}">{{ tut.detest.title }}</a></li>
-	</ul>	
+		<li {% if page.url contains tut.clust.url %}class="active"{% endif %}><a href="{{ site.baseurl }}{{ tut.clust.url }}">{{ tut.clust.title }}</a></li>
+	</ul>
 </ul>
 
 <!-- <ul class="pager">

@@ -3,10 +3,10 @@ title: Tutorial
 layout: docs
 ---
 
-Clustering the data
+Processing the data
 ===================
 
-Next, we need to cluster the data. For this purpose, we shall use the program `clust`, which comes with **DGEclust**. 
+Next, we need to process the data using **DGEclust**. For this purpose, we shall use the program `clust`, which comes with **DGEclust**. 
 From your terminal, do the following:
 
 {% highlight bash linenos %}
