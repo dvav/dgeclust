@@ -1,6 +1,5 @@
 fnames = {
-    'clust': '_clust',
-    'config': 'config.json',
+    'outdir': '_clust',
     'state': 'state.pkl',
     'pars': 'pars.txt',
     'z': 'z'

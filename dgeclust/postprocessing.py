@@ -1,15 +1,11 @@
 from __future__ import division
 
 import os
-import json
 import itertools as it
-import collections as cl
 import multiprocessing as mp
 
 import numpy as np
 import pandas as pd
-
-import config as cfg
 
 ########################################################################################################################
 
@@ -32,16 +28,14 @@ def _compute_pvals(args):
 ########################################################################################################################
 
 
-def compare_groups(indir, group1, group2, t0=5000, tend=10000, dt=1, nthreads=None):
+def compare_groups(data, model, group1, group2, t0=5000, tend=10000, dt=1, nthreads=None):
     """For each gene, compute the posterior probability of non-differential expression between group1 and group2"""
 
-    full_indir = os.path.join(indir, cfg.fnames['z'])
+    indir = model.fnames['z']
 
     ## fetch feature names and groups
-    with open(os.path.join(indir, cfg.fnames['config'])) as f:
-        config = json.load(f, object_pairs_hook=cl.OrderedDict)
-        gene_names = config['geneNames']
-        groups = config['groups'].keys()  # order is preserved here
+    gene_names = data.counts.index
+    groups = data.groups.keys()  # order is preserved here
 
     igroup1 = groups.index(group1)
     igroup2 = groups.index(group2)
@@ -51,7 +45,7 @@ def compare_groups(indir, group1, group2, t0=5000, tend=10000, dt=1, nthreads=No
     pool = None if nthreads == 1 else mp.Pool(processes=nthreads)
 
     ## prepare samples
-    samples = np.asarray(os.listdir(full_indir), dtype='int')
+    samples = np.asarray(os.listdir(indir), dtype='int')
     idxs = (samples >= t0) & (samples <= tend) & (np.arange(samples.size) % dt == 0)
     samples = samples[idxs]
     nsamples = samples.size
@@ -59,7 +53,7 @@ def compare_groups(indir, group1, group2, t0=5000, tend=10000, dt=1, nthreads=No
     ## compute un-normalized values of posteriors
     chunk_size = int(nsamples / nthreads + 1)
     chunks = [samples[i:i+chunk_size] for i in range(0, nsamples, chunk_size)]
-    args = zip(chunks, it.repeat((full_indir, igroup1, igroup2)))
+    args = zip(chunks, it.repeat((indir, igroup1, igroup2)))
     if pool is None:
         p = map(_compute_pvals, args)
     else:
@@ -106,17 +100,17 @@ def _compute_similarity_vector(args):
     return sim_vec / samples.size
 
 
-def compute_similarity_vector(indir, t0=5000, tend=10000, dt=1, inc=None, compare_genes=False, nthreads=None):
+def compute_similarity_vector(model, t0=5000, tend=10000, dt=1, inc=None, compare_genes=False, nthreads=None):
     """Calculate gene- or group-wise similarity matrix"""
 
-    full_indir = os.path.join(indir, cfg.fnames['z'])
+    indir = model.fnames['z']
 
     ## prepare for multiprocessing
     nthreads = mp.cpu_count() if nthreads is None or nthreads <= 0 else nthreads
     pool = None if nthreads == 1 else mp.Pool(processes=nthreads)
 
     ## prepare samples
-    samples = np.asarray(os.listdir(full_indir), dtype='int')
+    samples = np.asarray(os.listdir(indir), dtype='int')
     idxs = (samples >= t0) & (samples <= tend) & (np.arange(samples.size) % dt == 0)
     samples = samples[idxs]
     nsamples = samples.size
@@ -124,7 +118,7 @@ def compute_similarity_vector(indir, t0=5000, tend=10000, dt=1, inc=None, compar
     ## compute similarity matrices for each sample
     chunk_size = int(nsamples / nthreads + 1)
     chunks = [samples[i:i+chunk_size] for i in range(0, nsamples, chunk_size)]
-    args = zip(chunks, it.repeat((full_indir, inc, compare_genes)))
+    args = zip(chunks, it.repeat((indir, inc, compare_genes)))
     if pool is None:
         vec = map(_compute_similarity_vector, args)
     else:

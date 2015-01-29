@@ -32,27 +32,29 @@ def normalize_log_weights(lw):
 ########################################################################################################################
 
 
-def plot_ra(x, y, idxs=None):
+def plot_ra(s1, s2, idxs=None, epsilon=0.25, fig=None):
     """Computes the RA plot of two groups of samples"""
 
     ## compute log2 values
-    l1 = np.log2(x)
-    l2 = np.log2(y)
+    l1 = np.log2(s1 + epsilon)
+    l2 = np.log2(s2 + epsilon)
 
     ## compute A and R
     r = l1 - l2
-    a = np.r_[(l1 + l2) * 0.5]
+    a = (l1 + l2) * 0.5
 
-    h = pl.figure()
+    fig = pl.figure() if fig is None else fig
+    pl.figure(fig.number)
+
     if idxs is None:
         pl.plot(a, r, '.k', markersize=2)
     else:
         pl.plot(a[~idxs], r[~idxs], '.k', markersize=2)
         pl.plot(a[idxs], r[idxs], '.r')
 
-    pl.plot(pl.gca().get_xlim(), [0, 0], '--k')
+    pl.axhline(0, linestyle='--', color='k')
 
-    ## return
-    return h
+    pl.xlabel('(log2 sample1 + log2 sample2) / 2')
+    pl.ylabel('log2 sample1 - log2 sample2')
 
 ########################################################################################################################

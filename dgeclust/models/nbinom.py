@@ -19,8 +19,20 @@ class NBinomModel(object):
     """Class representing a negative binomial model"""
 
     ## constructor
-    def __init__(self, data, ntrunc=(100, 50), hpars=(0, 1)):
+    def __init__(self, data, ntrunc=(100, 50), hpars=(0, 1), outdir=cfg.fnames['outdir']):
         """Initialize model from raw data"""
+
+        ## file names
+        if os.path.exists(outdir):
+            raise Exception("Directory '{}' already exists!".format(outdir))
+        else:
+            self.fnames = {
+                'outdir': outdir,
+                'state': os.path.join(outdir, cfg.fnames['state']),
+                'pars': os.path.join(outdir, cfg.fnames['pars']),
+                'z': os.path.join(outdir, cfg.fnames['z'])
+            }
+            os.makedirs(self.fnames['z'])
 
         ## various parameters
         self.ngroups = len(data.groups)
@@ -74,24 +86,24 @@ class NBinomModel(object):
             pkl.dump(self, f)
 
     ##
-    def save(self, outdir):
+    def save(self):
         """Save current model state and state traces"""
 
         ## save state
-        self.dump(os.path.join(outdir, cfg.fnames['state']))
+        self.dump(self.fnames['state'])
 
         ## save chains
         pars = np.hstack([self.iter, self.nact, self.eta, self.mu, self.tau, self.m0, self.t0])
-        with open(os.path.join(outdir, cfg.fnames['pars']), 'a') as f:
+        with open(self.fnames['pars'], 'a') as f:
             np.savetxt(f, np.atleast_2d(pars), fmt='%d\t%d' + '\t%f' * 5)
 
         ## save z
-        fout = os.path.join(outdir, cfg.fnames['z'], str(self.iter))
+        fout = os.path.join(self.fnames['z'], str(self.iter))
         with open(fout, 'w') as f:
             np.savetxt(f, self.z.T, fmt='%d', delimiter='\t')
 
     ##
-    def plot_fitted_model(self, sample, data, fig=None, xmin=-1, xmax=12, npoints=1000, nbins=100, epsilon=0.5):
+    def plot_fitted_model(self, sample, data, fig=None, xmin=-1, xmax=12, npoints=1000, nbins=100, epsilon=0.25):
         """Plot fitted model"""
 
         ## fetch group
@@ -115,8 +127,84 @@ class NBinomModel(object):
         pl.hist(counts, nbins, histtype='stepfilled', linewidth=0, normed=True, color='gray')
         pl.plot(x, np.sum(y, 1), 'r')
 
-        ## return
-        return x, y
+        pl.grid()
+        pl.xlabel('log counts')
+        pl.ylabel('density')
+        pl.legend(['model', 'data'], loc=0)
+        pl.tight_layout()
+
+    ##
+    def plot_clusters(self, fig=None, npoints=100):
+        """Plot LFC clusters"""
+
+        ## data
+        beta = self.beta[self.iact]
+        occ = self.occ[self.iact]
+        x = np.linspace(beta.min()-1, beta.max()+1, npoints)
+        y = np.exp(st.normalln(x, self.m0, 1 / np.sqrt(self.t0)))
+
+        ## plot
+        fig = pl.figure() if fig is None else fig
+        pl.figure(fig.number)
+
+        pl.plot(x, y)
+        pl.axvline(0, linestyle='--', color='k')
+        pl.vlines(beta[1:], [0], occ[1:] / occ[1:].sum(), color='r')
+
+        pl.grid()
+        pl.xlabel('LFC')
+        pl.ylabel('density')
+        pl.legend(['LFC prior', 'null cluster', 'non-null clusters'], loc=0)
+
+        pl.tight_layout()
+
+    ##
+    def plot_progress(self, fig=None):
+        """Plot simulation progress"""
+
+        ## load data
+        pars = np.loadtxt(self.fnames['pars'])
+
+        t = pars[:, [0]]
+        nact = pars[:, [1]]
+        eta = pars[:, [2]]
+        mu = pars[:, [3]]
+        tau = pars[:, [4]]
+        m0 = pars[:, [5]]
+        t0 = pars[:, [6]]
+
+        ## plot
+        fig = pl.figure() if fig is None else fig
+        pl.figure(fig.number)
+
+        pl.subplot(2, 2, 1)
+        pl.plot(t, nact)
+        pl.ylim([0, self.lw.size])
+        pl.grid()
+        pl.xlabel('# of iterations')
+        pl.ylabel('# of LFC clusters')
+
+        pl.subplot(2, 2, 2)
+        pl.plot(t, eta)
+        pl.grid()
+        pl.xlabel('# of iterations')
+        pl.ylabel('global concentration parameter')
+
+        pl.subplot(2, 2, 3)
+        pl.plot(t, np.c_[mu, 1/tau])
+        pl.grid()
+        pl.xlabel('# of iterations')
+        pl.ylabel('log-dispersion prior')
+        pl.legend(['mean', 'variance'], loc=0)
+
+        pl.subplot(2, 2, 4)
+        pl.plot(t, np.c_[m0, 1/t0])
+        pl.grid()
+        pl.xlabel('# of iterations')
+        pl.ylabel('LFC prior')
+        pl.legend(['mean', 'variance'], loc=0)
+
+        pl.tight_layout()
 
     ##
     def update(self, data, pool):
@@ -175,54 +263,6 @@ class NBinomModel(object):
 
         ## return
         return state
-
-    ##
-    @staticmethod
-    def plot_progress(indir, fig=None, npoints=100):
-        """Plot simulation progress"""
-
-        ## load data
-        pars = np.loadtxt(os.path.join(indir, cfg.fnames['pars']))
-        model = NBinomModel.load(indir)
-
-        t = pars[:, [0]]
-        nact = pars[:, [1]]
-        eta = pars[:, [2]]
-        mu = pars[:, [3]]
-        tau = pars[:, [4]]
-        m0 = pars[:, [5]]
-        t0 = pars[:, [6]]
-
-        ## plot
-        fig = pl.figure() if fig is None else fig
-        pl.figure(fig.number)
-
-        pl.subplot(3, 2, 1)
-        pl.plot(t, nact)
-        pl.ylim([0, model.lw.size])
-        pl.grid()
-
-        pl.subplot(3, 2, 2)
-        pl.plot(t, eta)
-        pl.grid()
-
-        pl.subplot(3, 2, 3)
-        pl.plot(t, np.c_[mu, 1/tau])
-        pl.grid()
-
-        pl.subplot(3, 2, 4)
-        pl.plot(t, np.c_[m0, 1/t0])
-        pl.grid()
-
-        pl.subplot(3, 2, 5)
-        beta = model.beta[model.iact]
-        occ = model.occ[model.iact]
-        pl.vlines(beta[1:], [0], occ[1:] / occ[1:].sum(), color='r')
-        pl.axvline(0, linestyle='--', color='k')
-        x = np.linspace(beta.min()-1, beta.max()+1, npoints)
-        y = np.exp(st.normalln(x, model.m0, 1 / np.sqrt(model.t0)))
-        pl.plot(x, y)
-        pl.grid()
 
 
 ########################################################################################################################
@@ -381,18 +421,6 @@ def _update_hpars(model):
 
 ########################################################################################################################
 
-def _compute_loglik(counts_norm, log_phi, log_mu, beta):
-
-    ##
-    alpha = 1 / np.exp(log_phi)
-    p = alpha / (alpha + np.exp(log_mu + beta))
-
-    ##
-    return st.nbinomln(counts_norm, alpha, p)
-
-
-########################################################################################################################
-
 def _update_group_vars(args):
     c, _, lu, zeta, counts_norm, (log_phi, log_mu, beta, lw) = args
 
@@ -437,3 +465,17 @@ def _update_group_vars(args):
 
     ##
     return c, d, c[d], lu, zeta
+
+########################################################################################################################
+
+
+def _compute_loglik(counts_norm, log_phi, log_mu, beta):
+
+    ##
+    alpha = 1 / np.exp(log_phi)
+    p = alpha / (alpha + np.exp(log_mu + beta))
+
+    ##
+    return st.nbinomln(counts_norm, alpha, p)
+
+########################################################################################################################
