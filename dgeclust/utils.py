@@ -1,4 +1,4 @@
-from __future__ import division
+# from __future__ import division
 
 import numpy as np
 import scipy.misc as ms
@@ -26,7 +26,7 @@ def normalize_log_weights(lw):
     ref = lw.max(0)
     lsum = ms.logsumexp(lw - ref, 0) + ref      # more stable than np.log(np.exp(lw - ref).sum(0)) + ref
 
-    ## return
+    # return
     return lw - lsum
  
 ########################################################################################################################
@@ -35,11 +35,11 @@ def normalize_log_weights(lw):
 def plot_ra(s1, s2, idxs=None, epsilon=0.25, fig=None):
     """Computes the RA plot of two groups of samples"""
 
-    ## compute log2 values
+    # compute log2 values
     l1 = np.log2(s1 + epsilon)
     l2 = np.log2(s2 + epsilon)
 
-    ## compute A and R
+    # compute A and R
     r = l1 - l2
     a = (l1 + l2) * 0.5
 
