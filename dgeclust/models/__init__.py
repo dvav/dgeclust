@@ -1,2 +1,2 @@
-from .model import Model
-from .nbinom import NBinomModel
+from dgeclust.models.model import Model
+from dgeclust.models.nbinom import NBinomModel
