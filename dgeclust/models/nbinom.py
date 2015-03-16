@@ -44,8 +44,8 @@ class NBinomModel(Model):
         self.m0, self.t0 = hpars
 
         # initial log-values for phi and mu
-        self.log_phi = rn.normal(self.mu, 1 / np.sqrt(self.tau), self.nfeatures)
-        self.log_mu = rn.normal(mean, np.sqrt(var), self.nfeatures)
+        self.log_phi = self.mu + rn.randn(self.nfeatures) / np.sqrt(self.tau)
+        self.log_mu = mean + rn.randn(self.nfeatures) * np.sqrt(var)
 
         # concentration parameters
         self.eta = 1
@@ -56,7 +56,7 @@ class NBinomModel(Model):
         self.lu = np.tile(-np.log(ntrunc[1]), (self.ngroups, ntrunc[1]))
 
         # initial cluster centers
-        self.beta = np.r_[0, rn.normal(self.m0, 1/np.sqrt(self.t0), self.lw.size-1)]
+        self.beta = np.r_[0, self.m0 + rn.randn(self.lw.size-1) / np.sqrt(self.t0)]
 
         # indicators
         self.c = rn.choice(self.lw.size, (self.ngroups, ntrunc[1]), p=np.exp(self.lw))
