@@ -41,7 +41,7 @@ def run(data, model='NegativeBinomial', outdir=cfg.fnames['outdir'], extend=Fals
     # reformat data
     counts_norm = [data.counts_norm[samples].values for samples in data.groups.values()]
     nreplicas = data.nreplicas.values()
-    data = counts_norm, nreplicas
+    data = {'norm_counts': counts_norm, 'nreplicas': nreplicas}
 
     # start new job
     if bg is True:
