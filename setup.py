@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name='DGEclust',
-      version='15.1.29',
+      version='15.6.07',
       description='Hierarchical non-parametric Bayesian clustering of digital expression data',
       long_description=open('README.md').read(),
       classifiers=[
@@ -13,7 +13,7 @@ setup(name='DGEclust',
       ],
       url='http://dvav.me/dgeclust/',
       author='Dimitrios V. Vavoulis',
-      author_email='dimitris.vavoulis@bristol.ac.uk',
+      author_email='dimitris.vavoulis@ndcls.ox.ac.uk',
       platforms=['UNIX'],
       license='MIT',
       packages=['dgeclust', 'dgeclust.models'],
