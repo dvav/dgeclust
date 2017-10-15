@@ -9,7 +9,7 @@ This program is part of the software collection of the [Computational Genomics G
 at the University of Bristol and it is under continuous development. You can find more technical details on the
 statistical methodologies used in this software in the following papers:
 
-1. http://www.genomebiology.com/2015/16/1/39 (Vavoulis et al., *Genome Biology* 16:39,  **2014**)
+1. http://www.genomebiology.com/2015/16/1/39 (Vavoulis et al., *Genome Biology* 16:39,  **2015**)
 2. http://arxiv.org/abs/1301.4144 (Vavoulis & Gough, *J Comput Sci Syst Biol* 7:001-009, **2013**)
 
 For more information, including bug reports, send an email to <Dimitris.Vavoulis@ndcls.ox.ac.uk> or <Julian.Gough@bristol.ac.uk>

@@ -228,10 +228,10 @@ def sample_categorical(w, nsamples=1):
     ws[-1] = 1                                      # sum of ws along rows should be equal to 1
 
     idxs = np.sum(ws[:, :, np.newaxis] < rn.rand(ncols, nsamples), 0)
-        
+
     ## return
     return idxs.T
-        
+
 ########################################################################################################################
 
 
@@ -240,18 +240,19 @@ def sample_stick(cluster_occupancies, eta):
 
     ## compute the cumulative sum of the count vector
     cs = cluster_occupancies.cumsum()
-    
-    ## generate beta variates 
+
+    ## generate beta variates
     v = rn.beta(1 + cluster_occupancies, eta + cs[-1] - cs)
     v[-1] = 1                  # this ensures that sum(w) = 1
+    v = np.clip(v, 1e-12, 1 - 1e-12)
 
     ## compute weights
     lv = np.log(v)
     lcp = np.log(1-v).cumsum()
-    
+
     lw = np.r_[lv[0], lv[1:] + lcp[:-1]]
-    
-    ## return        
+
+    ## return
     return lw, lv
 
 ########################################################################################################################

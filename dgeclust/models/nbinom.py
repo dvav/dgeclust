@@ -215,12 +215,6 @@ class NBinomModel(object):
         self.iter += 1
 
         ##
-        # self._update_phi_global(data)
-        # self._update_phi_local(data)
-        # self._update_mu(data)
-        # self._update_beta_global(data)
-        # self._update_beta_local(data)
-
         if rn.rand() < 0.5:
             _update_phi_global(self, data)
             _update_mu(self, data)
@@ -300,7 +294,7 @@ def _update_phi_local(model, data):
     logpost_ = loglik_ + logprior_
 
     # update
-    idxs = (logpost_ >= logpost) | (rn.rand(model.nfeatures) < np.exp(logpost_ - logpost))
+    idxs = np.log(rn.rand(model.nfeatures)) < logpost_ - logpost
     model.log_phi[idxs] = log_phi_[idxs]
 
 
@@ -313,7 +307,7 @@ def _update_phi_global(model, data):
     counts_norm = np.hstack(counts_norm)
 
     ##
-    log_phi_ = rn.normal(model.mu, 1/np.sqrt(model.tau), model.nfeatures).reshape(-1, 1)
+    log_phi_ = rn.normal(model.mu, 1/np.sqrt(model.tau), model.nfeatures)
 
     ##
     beta = np.repeat(model.beta[model.z.T], nreplicas, axis=1)
@@ -321,7 +315,7 @@ def _update_phi_global(model, data):
     loglik_ = _compute_loglik(counts_norm, log_phi_.reshape(-1, 1), model.log_mu.reshape(-1, 1), beta).sum(-1)
 
     ##
-    idxs = (loglik_ >= loglik) | (rn.rand(model.nfeatures) < np.exp(loglik_ - loglik))
+    idxs = np.log(rn.rand(model.nfeatures)) < loglik_ - loglik
     model.log_phi[idxs] = log_phi_[idxs]
 
 
@@ -368,7 +362,7 @@ def _update_beta_global(model, data):
     loglik_ = np.bincount(z.ravel(), loglik_.ravel(), minlength=model.lw.size)
 
     ##
-    idxs = (loglik_ >= loglik) | (rn.rand(model.lw.size) < np.exp(loglik_ - loglik))
+    idxs = np.log(rn.rand(model.lw.size)) < loglik_ - loglik
     model.beta[model.iact & idxs] = beta_[model.iact & idxs]
 
     ##
@@ -403,7 +397,7 @@ def _update_beta_local(model, data):
     logpost_ = loglik_ + logprior_
 
     ##
-    idxs = (logpost_ >= logpost) | (rn.rand(model.lw.size) < np.exp(logpost_ - logpost))
+    idxs = np.log(rn.rand(model.lw.size)) < logpost_ - logpost
     model.beta[model.iact & idxs] = beta_[model.iact & idxs]
 
     ##
@@ -452,7 +446,7 @@ def _update_group_vars(args):
     ll = _compute_loglik(counts_norm, log_phi.reshape(-1, 1), log_mu.reshape(-1, 1), beta[c[d]].reshape(-1, 1)).sum(-1)
     ll_ = _compute_loglik(counts_norm, log_phi.reshape(-1, 1), log_mu.reshape(-1, 1), beta[c[d_]].reshape(-1, 1)).sum(-1)
 
-    idxs = (ll_ >= ll) | (rn.rand(nfeatures) < np.exp(ll_ - ll))
+    idxs = np.log(rn.rand(nfeatures)) < ll_ - ll
     d[idxs] = d_[idxs]
 
     ##

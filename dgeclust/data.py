@@ -62,16 +62,16 @@ def estimate_lib_sizes_quantile(counts, quant=75):
 def estimate_lib_sizes_deseq(counts, locfcn=np.median):
     """Estimates normalization factors, using the same method as DESeq"""
 
-    ## compute geometric mean of each row in log-scale
-    logcounts = np.log(counts.T)
-    logmeans = np.mean(logcounts, 0)
+    # compute geometric mean of each row in log-scale
+    idxs = np.all(counts > 0, 1)
+    logcounts = np.log(counts[idxs, :])
+    logmeans = np.mean(logcounts, 1)
 
-    ## take the ratios
-    logcounts -= logmeans
+    # take the ratios
+    logcounts = logcounts - logmeans[:, None]
 
-    ## get median (or other central tendency metric) of ratios excluding rows with 0 mean
-    logcounts = logcounts[:, np.isfinite(logmeans)]
-    lib_sizes = np.exp(locfcn(logcounts, 1))
+    # get median (or other central tendency metric) of ratios excluding rows with at least one zero entry
+    lib_sizes = np.exp(locfcn(logcounts, 0))
 
     ## return
     return lib_sizes
