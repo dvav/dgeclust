@@ -1,6 +1,7 @@
 .DS_Store
 *.pyc
 .idea
+.coverage.*
 data
 results
 _clust*
@@ -9,4 +10,3 @@ _pvals*
 _simmat*
 _site
 figs
-

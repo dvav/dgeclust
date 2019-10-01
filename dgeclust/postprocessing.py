@@ -35,10 +35,11 @@ def compare_groups(data, model, group1, group2, t0=5000, tend=10000, dt=1, nthre
 
     ## fetch feature names and groups
     gene_names = data.counts.index
+
     groups = data.groups.keys()  # order is preserved here
 
-    igroup1 = groups.index(group1)
-    igroup2 = groups.index(group2)
+    igroup1 = [i for i, v in enumerate(groups) if v == group1][0]
+    igroup2 = [i for i, v in enumerate(groups) if v == group2][0]
 
     ## prepare for multiprocessing
     nthreads = mp.cpu_count() if nthreads is None or nthreads <= 0 else nthreads
@@ -60,7 +61,7 @@ def compare_groups(data, model, group1, group2, t0=5000, tend=10000, dt=1, nthre
         p = pool.map(_compute_pvals, args)
 
     ## compute posteriors, FDR and FWER
-    post = np.sum(p, 0) / nsamples
+    post = np.sum(list(p), 0) / nsamples
     ii = post.argsort()
 
     tmp = post[ii].cumsum() / np.arange(1, post.size+1)
@@ -68,9 +69,9 @@ def compare_groups(data, model, group1, group2, t0=5000, tend=10000, dt=1, nthre
     fdr[ii] = tmp
 
     # pro = post / post.sum()
-    # tmp = pro[ii].cumsum() / pro.size
+    # run = pro[ii].cumsum() / pro.size
     # fwer = np.zeros(pro.shape)
-    # fwer[ii] = tmp
+    # fwer[ii] = run
 
     ## return
     return pd.DataFrame(np.vstack((post, fdr)).T, columns=('Posteriors', 'FDR'), index=gene_names), nsamples

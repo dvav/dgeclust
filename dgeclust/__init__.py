@@ -1,3 +1,3 @@
-from manager import SimulationManager
-from data import CountData
-from postprocessing import compare_groups, compute_similarity_vector
+from dgeclust.manager import SimulationManager
+from dgeclust.data import CountData
+from dgeclust.postprocessing import compare_groups, compute_similarity_vector

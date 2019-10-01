@@ -1,7 +1,7 @@
 from __future__ import division
 
 import numpy as np
-import scipy.misc as ms
+import scipy.special as sp
 import matplotlib.pylab as pl
 
 ########################################################################################################################
@@ -24,7 +24,7 @@ def normalize_log_weights(lw):
     """Normalises a matrix of log-weights, row-wise"""
 
     ref = lw.max(0)
-    lsum = ms.logsumexp(lw - ref, 0) + ref      # more stable than np.log(np.exp(lw - ref).sum(0)) + ref
+    lsum = sp.logsumexp(lw - ref, 0) + ref      # more stable than np.log(np.exp(lw - ref).sum(0)) + ref
 
     ## return
     return lw - lsum
