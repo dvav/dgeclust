@@ -1,1 +1,1 @@
-from nbinom import NBinomModel
+from dgeclust.models.nbinom import NBinomModel

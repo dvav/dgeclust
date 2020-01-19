@@ -6,6 +6,8 @@ import itertools as it
 
 import numpy as np
 import numpy.random as rn
+import matplotlib
+matplotlib.use('agg')
 import matplotlib.pylab as pl
 
 import dgeclust.stats as st
@@ -281,7 +283,7 @@ def _update_phi_local(model, data):
     log_phi_ = model.log_phi + 0.01 * rn.randn(model.nfeatures)
 
     # log-likelihood
-    beta = np.repeat(model.beta[model.z.T], nreplicas, axis=1)
+    beta = np.repeat(model.beta[model.z.T], list(nreplicas), axis=1)
     loglik = _compute_loglik(counts_norm, model.log_phi.reshape(-1, 1), model.log_mu.reshape(-1, 1), beta).sum(-1)
     loglik_ = _compute_loglik(counts_norm, log_phi_.reshape(-1, 1), model.log_mu.reshape(-1, 1), beta).sum(-1)
 
@@ -310,7 +312,7 @@ def _update_phi_global(model, data):
     log_phi_ = rn.normal(model.mu, 1/np.sqrt(model.tau), model.nfeatures)
 
     ##
-    beta = np.repeat(model.beta[model.z.T], nreplicas, axis=1)
+    beta = np.repeat(model.beta[model.z.T], list(nreplicas), axis=1)
     loglik = _compute_loglik(counts_norm, model.log_phi.reshape(-1, 1), model.log_mu.reshape(-1, 1), beta).sum(-1)
     loglik_ = _compute_loglik(counts_norm, log_phi_.reshape(-1, 1), model.log_mu.reshape(-1, 1), beta).sum(-1)
 
@@ -329,7 +331,7 @@ def _update_mu(model, data):
 
     ##
     beta = np.exp(model.beta)[model.z.T]
-    beta = np.repeat(beta, nreplicas, axis=1)
+    beta = np.repeat(beta, list(nreplicas), axis=1)
 
     ##
     c1 = model.nsamples / np.exp(model.log_phi)
@@ -352,12 +354,12 @@ def _update_beta_global(model, data):
     beta_ = np.r_[0, rn.normal(model.m0, 1/np.sqrt(model.t0), model.lw.size-1)]
 
     ##
-    beta1 = np.repeat(model.beta[model.z.T], nreplicas, axis=1)
-    beta2 = np.repeat(beta_[model.z.T], nreplicas, axis=1)
+    beta1 = np.repeat(model.beta[model.z.T], list(nreplicas), axis=1)
+    beta2 = np.repeat(beta_[model.z.T], list(nreplicas), axis=1)
     loglik = _compute_loglik(counts_norm, model.log_phi.reshape(-1, 1), model.log_mu.reshape(-1, 1), beta1)
     loglik_ = _compute_loglik(counts_norm, model.log_phi.reshape(-1, 1), model.log_mu.reshape(-1, 1), beta2)
 
-    z = np.repeat(model.z.T, nreplicas, axis=1)
+    z = np.repeat(model.z.T, list(nreplicas), axis=1)
     loglik = np.bincount(z.ravel(), loglik.ravel(), minlength=model.lw.size)
     loglik_ = np.bincount(z.ravel(), loglik_.ravel(), minlength=model.lw.size)
 
@@ -381,12 +383,12 @@ def _update_beta_local(model, data):
     beta_ = np.r_[0, model.beta[1:] * np.exp(0.01 * rn.randn(model.lw.size-1))]
 
     ##
-    beta1 = np.repeat(model.beta[model.z.T], nreplicas, axis=1)
-    beta2 = np.repeat(beta_[model.z.T], nreplicas, axis=1)
+    beta1 = np.repeat(model.beta[model.z.T], list(nreplicas), axis=1)
+    beta2 = np.repeat(beta_[model.z.T], list(nreplicas), axis=1)
     loglik = _compute_loglik(counts_norm, model.log_phi.reshape(-1, 1), model.log_mu.reshape(-1, 1), beta1)
     loglik_ = _compute_loglik(counts_norm, model.log_phi.reshape(-1, 1), model.log_mu.reshape(-1, 1), beta2)
 
-    z = np.repeat(model.z.T, nreplicas, axis=1)
+    z = np.repeat(model.z.T, list(nreplicas), axis=1)
     loglik = np.bincount(z.ravel(), loglik.ravel(), minlength=model.lw.size)
     loglik_ = np.bincount(z.ravel(), loglik_.ravel(), minlength=model.lw.size)
 

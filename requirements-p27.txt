@@ -1,0 +1,6 @@
+pandas==0.19
+numpy>=1.13,<=1.16.5
+scipy>=0.19
+matplotlib>=2.1
+ipython>=5.4
+backports.tempfile
